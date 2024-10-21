@@ -1,27 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sequence = void 0;
-class Sequence {
+const SequencerBase_1 = require("./SequencerBase");
+class Sequence extends SequencerBase_1.SequencerBase {
+    onReady() {
+    }
     constructor(bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, scenes, audioFile) {
+        super(scenes);
         this.bpm = 0;
         this.ticksPerBeat = 0;
         this.lastBeatTime = 0;
         this.currentTick = 0;
+        this.currentBar = 0;
         this.beatsPerBar = 0;
         this.currentBeat = 0;
         this.beatListeners = [];
         this.tickListeners = [];
         this.barListeners = [];
-        this.scenes = [];
-        this.currentSceneIndex = 0;
-        this.isPlaying = false;
-        this.durationMs = 0;
-        this.scenes = scenes || [];
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
         this.beatsPerBar = beatsPerBar;
         if (audioFile) {
             this.loadAudio(audioFile);
+        }
+        else {
+            this.onReady();
         }
         this.durationMs = 0;
         if (this.scenes.length > 0) {
@@ -32,11 +35,13 @@ class Sequence {
     }
     loadAudio(audioFile) {
         this.audioContext = new AudioContext();
+        this.analyser = this.audioContext.createAnalyser(); // Create analyser node
         fetch(audioFile)
             .then(response => response.arrayBuffer())
             .then(arrayBuffer => this.audioContext.decodeAudioData(arrayBuffer))
             .then(audioBuffer => {
             this.audioBuffer = audioBuffer;
+            this.onReady();
         })
             .catch(error => console.error("Error loading audio:", error));
     }
@@ -73,9 +78,12 @@ class Sequence {
         this.currentTick = 0;
         // Start audio playback
         if (this.audioBuffer) {
+            // Create a NEW AudioBufferSourceNode each time
             this.audioSource = this.audioContext.createBufferSource();
             this.audioSource.buffer = this.audioBuffer;
-            this.audioSource.connect(this.audioContext.destination);
+            this.audioSource.connect(this.analyser);
+            this.analyser.connect(this.audioContext.destination);
+            this.fftData = new Uint8Array(this.analyser.frequencyBinCount);
             this.audioSource.start();
         }
         const animate = (ts) => {
@@ -125,6 +133,12 @@ class Sequence {
                 // You might want to add an event here for when a scene ends
             });
         }
+        // FFT analysis
+        if (this.analyser) {
+            this.analyser.getByteFrequencyData(this.fftData);
+            const avgFrequency = this.fftData.reduce((sum, val) => sum + val, 0) / this.fftData.length;
+            // console.log("Average frequency:", avgFrequency);
+        }
         // BPM and event handling
         const beatIntervalMs = 60000 / this.bpm;
         const tickIntervalMs = beatIntervalMs / this.ticksPerBeat;
@@ -135,8 +149,9 @@ class Sequence {
             // Bar event handling
             this.currentBeat++;
             if (this.currentBeat > this.beatsPerBar) {
+                this.currentBar++;
                 this.currentBeat = 1; // Reset to 1 after a bar is complete
-                this.barListeners.forEach(listener => listener());
+                this.barListeners.forEach(listener => listener(this.currentBar));
             }
         }
         if (timeStamp - this.lastBeatTime >= this.currentTick * tickIntervalMs) {

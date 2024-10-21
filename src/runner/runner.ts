@@ -1,42 +1,45 @@
 import { Scene } from "./Scene";
+import { SequencerBase } from "./SequencerBase";
 
-
-
-export class Sequence {
+export class Sequence extends SequencerBase {
     public bpm: number = 0;
     public ticksPerBeat: number = 0;
     private lastBeatTime: number = 0;
     private currentTick: number = 0;
+    private currentBar: number = 0;
 
     public beatsPerBar: number = 0;
     private currentBeat: number = 0;
 
     private beatListeners: ((scene: number, time: number) => void)[] = [];
     private tickListeners: ((scene: number, time: number) => void)[] = [];
-    private barListeners: (() => void)[] = []
-
-    private scenes: Scene[] = [];
-    private currentSceneIndex: number = 0;
-    private isPlaying: boolean = false;
-    requestAnimationFrameID!: number;
-
-    public durationMs: number = 0;
+    private barListeners: ((bar:number) => void)[] = []
 
     private audioContext!: AudioContext;
     private audioBuffer!: AudioBuffer;
     private audioSource!: AudioBufferSourceNode;
 
-    constructor(bpm: number = 120, ticksPerBeat: number = 4, beatsPerBar: number = 4, scenes?: Scene[], audioFile?: string) {
-        this.scenes = scenes || [];
+    private analyser!: AnalyserNode;
+    private fftData!: Uint8Array;
+
+
+
+    onReady() {
+
+    }
+
+    constructor(bpm: number = 120, ticksPerBeat: number = 4, beatsPerBar: number = 4, scenes: Scene[], audioFile?: string) {
+
+        super(scenes);
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
-
         this.beatsPerBar = beatsPerBar;
 
         if (audioFile) {
             this.loadAudio(audioFile);
+        } else {
+            this.onReady();
         }
-
         this.durationMs = 0;
         if (this.scenes.length > 0) {
             this.durationMs = Math.max(...this.scenes.map((scene) => {
@@ -47,19 +50,24 @@ export class Sequence {
 
     private loadAudio(audioFile: string) {
         this.audioContext = new AudioContext();
+        this.analyser = this.audioContext.createAnalyser(); // Create analyser node
+
         fetch(audioFile)
             .then(response => response.arrayBuffer())
             .then(arrayBuffer => this.audioContext.decodeAudioData(arrayBuffer))
             .then(audioBuffer => {
                 this.audioBuffer = audioBuffer;
 
+                this.onReady();
+
             })
             .catch(error => console.error("Error loading audio:", error));
     }
 
 
+
     // Add event listener for bars
-    onBar(listener: () => void) {
+    onBar(listener: (bar:number) => void) {
         this.barListeners.push(listener);
     }
 
@@ -98,9 +106,13 @@ export class Sequence {
 
         // Start audio playback
         if (this.audioBuffer) {
+            // Create a NEW AudioBufferSourceNode each time
             this.audioSource = this.audioContext.createBufferSource();
             this.audioSource.buffer = this.audioBuffer;
-            this.audioSource.connect(this.audioContext.destination);
+            this.audioSource.connect(this.analyser);
+
+            this.analyser.connect(this.audioContext.destination);
+            this.fftData = new Uint8Array(this.analyser.frequencyBinCount);
             this.audioSource.start();
 
         }
@@ -159,8 +171,13 @@ export class Sequence {
                 // You might want to add an event here for when a scene ends
             });
         }
+        // FFT analysis
+        if (this.analyser) {
+            this.analyser.getByteFrequencyData(this.fftData);
 
-
+            const avgFrequency = this.fftData.reduce((sum, val) => sum + val, 0) / this.fftData.length;
+            // console.log("Average frequency:", avgFrequency);
+        }
 
         // BPM and event handling
         const beatIntervalMs = 60000 / this.bpm;
@@ -174,12 +191,11 @@ export class Sequence {
             // Bar event handling
             this.currentBeat++;
             if (this.currentBeat > this.beatsPerBar) {
+                this.currentBar++;
                 this.currentBeat = 1; // Reset to 1 after a bar is complete
-                this.barListeners.forEach(listener => listener());
+                this.barListeners.forEach(listener => listener(this.currentBar));
             }
-
         }
-
         if (timeStamp - this.lastBeatTime >= this.currentTick * tickIntervalMs) {
             this.tickListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));
             this.currentTick++;

@@ -24,7 +24,7 @@ scene2.addEntity(entity2);
 scene2.addEntity(entity3);
 
 // Create a Sequence
-const sequence = new Sequence(125, 4,4, [scene1, scene2], "/wwwroot/assets/music.mp3");
+const sequence = new Sequence(125, 4, 4, [scene1, scene2], "/wwwroot/assets/music.mp3");
 
 sequence.onBeat((scene: number, ts: number) => {
     console.log(`Beat! ${scene}:${ts}`);
@@ -35,8 +35,8 @@ sequence.onTick((scene: number, ts: number) => {
 
 });
 
-sequence.onBar(() => {
-    console.log(`Bar!`);
+sequence.onBar((bar) => {
+    console.log(`Bar! ${bar} `);
 
 });
 
@@ -48,10 +48,23 @@ console.log(`Total duration ${sequence.durationMs}`);
 
 // Start the animation
 
-console.log(`Click to start..`);
-document.addEventListener("click", () => {
 
 
 
-    sequence.play();
-})
+
+console.log(`Await ready`);
+
+sequence.onReady = () => {
+    console.log(`Click to start..`);
+
+
+
+    document.addEventListener("click", () => {
+
+
+
+        sequence.play();
+    })
+}
+
+

@@ -25,13 +25,16 @@ sequence.onBeat((scene, ts) => {
 sequence.onTick((scene, ts) => {
     console.log(`Tick! ${scene}:${ts}`);
 });
-sequence.onBar(() => {
-    console.log(`Bar!`);
+sequence.onBar((bar) => {
+    console.log(`Bar! ${bar} `);
 });
 // Show Sequence properties
 console.log(`Total duration ${sequence.durationMs}`);
 // Start the animation
-console.log(`Click to start..`);
-document.addEventListener("click", () => {
-    sequence.play();
-});
+console.log(`Await ready`);
+sequence.onReady = () => {
+    console.log(`Click to start..`);
+    document.addEventListener("click", () => {
+        sequence.play();
+    });
+};
