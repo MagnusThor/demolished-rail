@@ -10,6 +10,7 @@ import { ITypeWriterEffectProps, typeWriterEffect } from "./effects/typeWriterEf
 import { IRandomSquareEffectProps, randomSquareEffect } from "./effects/ranndomSquareByTickEffect";
 import { expandingCircleEffect, IExpandingCircleEffectProps } from "./effects/expandingCircleEffect";
 import { IStarburstProps, starburstEffect } from "./effects/starBurstEffct";
+import { ITextEffectProps, textEffect } from "./effects/textEffect";
 
 
 
@@ -18,6 +19,8 @@ const iRailGraph = {
     canvasWidth: 800,
     canvasHeight: 450,
     audioProperties: {
+        bpm: 125,
+        ticks:4,
         beat: 0,
         tick: 0,
         bar: 0,
@@ -78,13 +81,13 @@ scene1.addEntity(starburstEntity);
 const typeWriterProps: ITypeWriterEffectProps = {
     x: 100,
     y: 100,
-    text: "This is the typewriter effect - Simple but neat?",
+    text: "Scene with typewriter & randomSquare effects - Simple but neat?",
     index: 0,
     speed: 5, // 5 characters per second
     lastCharacterTime: 0,
     useBPM: true,
-    bpm: 125,
-    ticksPerBeat: 4
+    bpm: iRailGraph.audioProperties.bpm,
+    ticksPerBeat: iRailGraph.audioProperties.ticks
 };
 
 const typeWriterEntity = new Entity<ITypeWriterEffectProps>(
@@ -115,7 +118,7 @@ const randomSquareEntity = new Entity<IRandomSquareEffectProps>(
 
 
 
-const scene2 = new Scene("Scene 2", 5000, 25000); // Starts at 1000ms, duration 5000ms
+const scene2 = new Scene("Scene 2", 5000, 15000); // Starts at 1000ms, duration 5000ms
 scene2.addEntity(randomSquareEntity);
 scene2.addEntity(typeWriterEntity);
 
@@ -139,12 +142,29 @@ const shaderProps: IShaderProperties = {
 
 const fractalShaderEntity = new ShaderEntity("ShaderEnriry", 1200, iRailGraph.canvasHeight, shaderProps, (ts, render, propertybag) => {
     // access render here, i'e set uniforms etc using propertyBag or anyting;
-}
-);
+});
 
+const textProps: ITextEffectProps = {
+    x: 100,
+    y: 100,
+    text: "Hello, world!",
+    font: "Arial",
+    size: 30,
+    duration: 15 // 5 seconds
+  };
+  
+  const textEntity = new Entity<ITextEffectProps>(
+    "TextEffect",
+    1280,
+    720,
+    textProps,
+    (ts, ctx, props) => textEffect(ts, ctx, props, sequence) // Pass the sequence instance
+  );
 
-const scene3 = new Scene("Scene 3", 25000, 139200); // Starts at 1000ms, duration 5000ms
+const scene3 = new Scene("Scene 3", 15000, 139200); // Starts at 1000ms, duration 5000ms
 scene3.addEntity(fractalShaderEntity);
+scene3.addEntity(textEntity);
+
 
 
 // Create a Sequence

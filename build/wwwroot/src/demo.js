@@ -11,10 +11,13 @@ const typeWriterEffet_1 = require("./effects/typeWriterEffet");
 const ranndomSquareByTickEffect_1 = require("./effects/ranndomSquareByTickEffect");
 const expandingCircleEffect_1 = require("./effects/expandingCircleEffect");
 const starBurstEffct_1 = require("./effects/starBurstEffct");
+const textEffect_1 = require("./effects/textEffect");
 const iRailGraph = {
     canvasWidth: 800,
     canvasHeight: 450,
     audioProperties: {
+        bpm: 125,
+        ticks: 4,
         beat: 0,
         tick: 0,
         bar: 0,
@@ -52,13 +55,13 @@ scene1.addEntity(starburstEntity);
 const typeWriterProps = {
     x: 100,
     y: 100,
-    text: "This is the typewriter effect - Simple but neat?",
+    text: "Scene with typewriter & randomSquare effects - Simple but neat?",
     index: 0,
     speed: 5, // 5 characters per second
     lastCharacterTime: 0,
     useBPM: true,
-    bpm: 125,
-    ticksPerBeat: 4
+    bpm: iRailGraph.audioProperties.bpm,
+    ticksPerBeat: iRailGraph.audioProperties.ticks
 };
 const typeWriterEntity = new Entity_1.Entity("Typewriter", iRailGraph.canvasWidth, iRailGraph.canvasHeight, typeWriterProps, typeWriterEffet_1.typeWriterEffect);
 const randomSquareProps = {
@@ -70,7 +73,7 @@ const randomSquareProps = {
 };
 const randomSquareEntity = new Entity_1.Entity("RandomSquare", iRailGraph.canvasWidth, iRailGraph.canvasHeight, randomSquareProps, (ts, ctx, props) => (0, ranndomSquareByTickEffect_1.randomSquareEffect)(ts, ctx, props, sequence.tickCounter) // Pass currentBar from Sequence
 );
-const scene2 = new Scene_1.Scene("Scene 2", 5000, 25000); // Starts at 1000ms, duration 5000ms
+const scene2 = new Scene_1.Scene("Scene 2", 5000, 15000); // Starts at 1000ms, duration 5000ms
 scene2.addEntity(randomSquareEntity);
 scene2.addEntity(typeWriterEntity);
 const shaderProps = {
@@ -88,8 +91,19 @@ const shaderProps = {
 const fractalShaderEntity = new ShaderEntity_1.ShaderEntity("ShaderEnriry", 1200, iRailGraph.canvasHeight, shaderProps, (ts, render, propertybag) => {
     // access render here, i'e set uniforms etc using propertyBag or anyting;
 });
-const scene3 = new Scene_1.Scene("Scene 3", 25000, 139200); // Starts at 1000ms, duration 5000ms
+const textProps = {
+    x: 100,
+    y: 100,
+    text: "Hello, world!",
+    font: "Arial",
+    size: 30,
+    duration: 15 // 5 seconds
+};
+const textEntity = new Entity_1.Entity("TextEffect", 1280, 720, textProps, (ts, ctx, props) => (0, textEffect_1.textEffect)(ts, ctx, props, sequence) // Pass the sequence instance
+);
+const scene3 = new Scene_1.Scene("Scene 3", 15000, 139200); // Starts at 1000ms, duration 5000ms
 scene3.addEntity(fractalShaderEntity);
+scene3.addEntity(textEntity);
 // Create a Sequence
 const sequence = new Sequence_1.Sequence(document.querySelector("canvas"), 125, 4, 4, [scene1, scene2, scene3], "/wwwroot/assets/music/music.mp3");
 sequence.onBeat((scene, ts) => {
