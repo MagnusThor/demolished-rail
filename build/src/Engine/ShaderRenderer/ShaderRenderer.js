@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShaderRenderer = exports.RenderTarget = void 0;
 class RenderTarget {
@@ -91,9 +82,9 @@ class ShaderRenderer {
         gl.activeTexture(33985 + d);
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
         const fetchAll = (src, key) => {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                const response = yield fetch(src);
-                const blob = yield response.blob();
+            return new Promise(async (resolve, reject) => {
+                const response = await fetch(src);
+                const blob = await response.blob();
                 let image = new Image();
                 image.dataset.key = key;
                 image.onerror = reject;
@@ -101,7 +92,7 @@ class ShaderRenderer {
                     resolve(image);
                 };
                 image.src = src;
-            }));
+            });
         };
         Promise.all(sources.map(i => {
             return fetchAll(i.d, i.t);
