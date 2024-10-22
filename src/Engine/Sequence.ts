@@ -13,7 +13,7 @@ export class Sequence extends SequencerBase {
 
     private beatListeners: ((scene: number, time: number) => void)[] = [];
     private tickListeners: ((scene: number, time: number) => void)[] = [];
-    private barListeners: ((bar:number) => void)[] = []
+    private barListeners: ((bar: number) => void)[] = []
 
     private audioContext!: AudioContext;
     private audioBuffer!: AudioBuffer;
@@ -21,16 +21,27 @@ export class Sequence extends SequencerBase {
 
     private analyser!: AnalyserNode;
     private fftData!: Uint8Array;
+    targetCtx!: CanvasRenderingContext2D | null;
+
 
 
 
     onReady() {
-
+        throw "not implemeted";
     }
 
-    constructor(bpm: number = 120, ticksPerBeat: number = 4, beatsPerBar: number = 4, scenes: Scene[], audioFile?: string) {
+    constructor(
+        public target:HTMLCanvasElement,
+        bpm: number = 120, ticksPerBeat: number = 4, beatsPerBar: number = 4, scenes: Scene[], audioFile?: string) {
 
+      
         super(scenes);
+    
+        this.targetCtx = target.getContext("2d"); 
+
+
+      
+        
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
         this.beatsPerBar = beatsPerBar;
@@ -64,10 +75,8 @@ export class Sequence extends SequencerBase {
             .catch(error => console.error("Error loading audio:", error));
     }
 
-
-
     // Add event listener for bars
-    onBar(listener: (bar:number) => void) {
+    onBar(listener: (bar: number) => void) {
         this.barListeners.push(listener);
     }
 
@@ -166,6 +175,8 @@ export class Sequence extends SequencerBase {
         if (this.currentSceneIndex !== currentSceneIndex) {
             this.currentSceneIndex = currentSceneIndex;
 
+
+
             let elapsedTime = timeStamp - this.currentScene!.startTimeinMs;
             this.currentScene!.play(elapsedTime).then(() => {
                 // You might want to add an event here for when a scene ends
@@ -178,6 +189,15 @@ export class Sequence extends SequencerBase {
             const avgFrequency = this.fftData.reduce((sum, val) => sum + val, 0) / this.fftData.length;
             // console.log("Average frequency:", avgFrequency);
         }
+
+        // Call update() on all entities in the new scene
+        this.currentScene!.entities.forEach(entity => {
+            entity.update(timeStamp);            
+            if (this.target) {
+                this.targetCtx?.clearRect(0,0,this.target.width,this.target.height);
+                entity.copyToCanvas(this.target);
+              }
+        });
 
         // BPM and event handling
         const beatIntervalMs = 60000 / this.bpm;

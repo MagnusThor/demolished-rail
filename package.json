@@ -10,5 +10,8 @@
   "description": "",
   "devDependencies": {
     "webpack": "^5.95.0"
+  },
+  "dependencies": {
+    "demolishedrenderer": "^3.1.0"
   }
 }

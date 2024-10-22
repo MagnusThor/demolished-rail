@@ -1,15 +1,16 @@
-import { Entity } from "./Entity";
+import { Entity, IEntity } from "./Entity";
+import { ShaderEntity } from "./ShaderEntity";
 
 export class Scene {
-  private entities: Entity[] = [];
+  public entities: IEntity[] = [];
 
   constructor(public name: string, public startTimeinMs: number, public durationInMs: number) {}
 
-  addEntity(entity: Entity): void {
+  addEntity<T>(entity: Entity<T> | ShaderEntity): void {
     this.entities.push(entity);
   }
 
-  getEntity(key: string): Entity | undefined {
+  getEntity<T>(key: string): IEntity | undefined {
     return this.entities.find ( pre => pre.key === key);
   }
 
@@ -23,19 +24,22 @@ export class Scene {
         const adjustedSceneElapsedTime = sceneElapsedTime - this.startTimeinMs;
   
         if (adjustedSceneElapsedTime >= 0) {
+
           this.entities.forEach((entity) => {
-            entity.draw(adjustedSceneElapsedTime);
+            console.log(entity.key)
+            entity.update(adjustedSceneElapsedTime);
           });
         }
   
         if (sceneElapsedTime < this.durationInMs + this.startTimeinMs) {
-          requestAnimationFrame(animate); // Keep this animation loop
+        //  requestAnimationFrame(animate); // Keep this animation loop
         } else {
           resolve(true);
         }
       };
   
-      requestAnimationFrame(animate);
+      animate();
+     // requestAnimationFrame(animate);
     });
   }
 

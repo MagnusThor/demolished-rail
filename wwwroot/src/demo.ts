@@ -1,37 +1,104 @@
-import { Sequence } from "../../src/runner/runner";
-import { Scene } from "../../src/runner/Scene";
-import { Entity } from "../../src/runner/Entity";
+import { Sequence } from "../../src/Engine/Sequence";
+import { Scene } from "../../src/Engine/Scene";
+import { Entity, IEntity } from "../../src/Engine/Entity";
+import { IShaderProperties, ShaderEntity } from "../../src/Engine/ShaderEntity";
+import { mainFragment } from "../assets/shaders/mainFragment";
+import { mainVertex } from "../assets/shaders/mainVertex";
+import { shaderScene } from "../assets/shaders/ShaderScene";
 
 
 // Mock Entities
 
-const uniforms = new Map<string, number>();
+const demoPros = {
+    w:800,
+    h:450
+}
 
-uniforms.set("a", 1)
-uniforms.set("b", 2)
-uniforms.set("c", 3)
 
-const entity1 = new Entity("Shader 1", uniforms);
-const entity2 = new Entity("Shader 2");
-const entity3 = new Entity("Shader 3");
+interface ISample2dEntity {
+    x: number
+    y: number
+    xSpeed: number
+    ySpeed: number
+}
 
-// Mock Scenes
-const scene1 = new Scene("Scene 1", 0, 5000); // Starts at 0ms, duration 10000ms (10 second)
-scene1.addEntity(entity1);
+const movingCircle_props: ISample2dEntity = {
+    x: demoPros.w / 2,
+    y: demoPros.h / 2,
+    xSpeed: 5,
+    ySpeed: 5
+}
 
-const scene2 = new Scene("Scene 2", 5000, 15000); // Starts at 1000ms, duration 5000ms
-scene2.addEntity(entity2);
+const movingCircle = new Entity<ISample2dEntity>("MovingCircle", demoPros.w, demoPros.h, movingCircle_props, (ts, ctx, propertybag) => {
+
+    propertybag.x += propertybag.xSpeed;
+    propertybag.y += propertybag.ySpeed;
+
+    ctx.strokeStyle = "red";
+
+    // Bounce off the edges of the canvas
+    if (propertybag.x + 40 > ctx.canvas.width || propertybag.x - 40 < 0) {
+        propertybag.xSpeed = -propertybag.xSpeed;
+    }
+    if (propertybag.y + 40 > ctx.canvas.height || propertybag.y - 40 < 0) {
+        propertybag.ySpeed = -propertybag.ySpeed;
+    }
+
+    ctx.beginPath();
+    ctx.arc(propertybag.x, propertybag.y, 40, 0, 2 * Math.PI);
+    ctx.stroke();
+
+
+});
+
+const entity2 = new Entity("Shader 2", demoPros.w, demoPros.h, null, (ts, ctx, props) => {
+
+});
+
+
+
+const scene1 = new Scene("Scene 1", 0, 15000); // Starts at 0ms, duration 10000ms (10 second)
+scene1.addEntity(movingCircle);
+
+
+
+const shaderProps: IShaderProperties = {
+    mainFragmentShader: mainFragment,
+    mainShaderVertex: mainVertex,
+    rendeBuffers: [
+        {
+            name: "MyShader",
+            fragment: shaderScene,
+            vertex: mainVertex,
+            textures: []
+        }
+    ]
+
+}
+
+const entity3 = new ShaderEntity("ShaderEnriry", 1200, demoPros.h, shaderProps, (ts, ctx, propertybag) => {
+
+   
+
+}
+);
+
+
+const scene2 = new Scene("Scene 2", 15000, 139200); // Starts at 1000ms, duration 5000ms
 scene2.addEntity(entity3);
 
+
 // Create a Sequence
-const sequence = new Sequence(125, 4, 4, [scene1, scene2], "/wwwroot/assets/music.mp3");
+const sequence = new Sequence(
+    document.querySelector("canvas") as HTMLCanvasElement,
+    125, 4, 4, [scene1, scene2], "/wwwroot/assets/music/music.mp3");
 
 sequence.onBeat((scene: number, ts: number) => {
-    console.log(`Beat! ${scene}:${ts}`);
+    //  console.log(`Beat! ${scene}:${ts}`);
 });
 
 sequence.onTick((scene: number, ts: number) => {
-    console.log(`Tick! ${scene}:${ts}`);
+    // console.log(`Tick! ${scene}:${ts}`);
 
 });
 
