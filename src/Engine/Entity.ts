@@ -1,3 +1,5 @@
+import { Sequence } from "./Sequence";
+
 export interface IEntity {
     update(timeStamp: number): void
     key:string
@@ -8,7 +10,7 @@ export class Entity<T> implements IEntity {
     canvas: HTMLCanvasElement;
     ctx!: CanvasRenderingContext2D | null;
     constructor(public key: string,w:number,h:number, public props?: T,
-        public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T) => void) {
+        public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T,sequence?:Sequence) => void) {
        
         this.canvas = document.createElement("canvas");
         this.canvas.width = w;

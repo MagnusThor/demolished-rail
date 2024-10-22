@@ -18,7 +18,7 @@ export const typeWriterEffect = (
 
 ) => {
 
-    ctx.font = "30px Big Shoulders Stencil Text";
+    ctx.font = "68px Big Shoulders Stencil Text";
     ctx.fillStyle = "white";
 
     let elapsedTime = 0;

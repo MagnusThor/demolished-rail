@@ -2,7 +2,7 @@ import { ITexture } from "../ShaderRenderer/ShaderRenderer";
 
 export class TextureCacheHelper {
 
-    private static textureCache = new Map<string, ITexture>();
+    public static textureCache = new Map<string, ITexture>();
 
     static async loadImage(url: string): Promise<HTMLImageElement> {
 
@@ -17,6 +17,7 @@ export class TextureCacheHelper {
     
           img.onload = () => {
             this.textureCache.set(filename, { src: img }); 
+            
             resolve(img);
           };
     
