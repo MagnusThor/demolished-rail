@@ -4,7 +4,9 @@ export interface IEntity {
     update(timeStamp: number): void
     key:string
     copyToCanvas(targetCanvas: HTMLCanvasElement):void
-}
+    transitionIn?: (ctx: CanvasRenderingContext2D, progress: number) => void;
+    transitionOut?: (ctx: CanvasRenderingContext2D, progress: number) => void;
+  }
 
 export class Entity<T> implements IEntity {
     canvas: HTMLCanvasElement;

@@ -239,12 +239,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
     scene3.addEntity(fractalShaderEntity);
     scene3.addEntity(imageOverlayEntity);
     scene3.addEntity(textOverlay);
-    scene3.addEntity(textArrayDisplayEntity);
-
-
-
-
-
+    scene3.addEntity(textArrayDisplayEntity)
 
     instance.addScene(scene3);
 
