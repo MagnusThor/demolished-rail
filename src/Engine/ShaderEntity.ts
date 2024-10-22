@@ -23,6 +23,11 @@ export class ShaderEntity implements IEntity {
     canvas: HTMLCanvasElement;
     shaderRenderer: ShaderRenderer;
     update(timeStamp: number): void {
+
+        if (this.action && this.shaderRenderer && this.props)
+            this.action(timeStamp, this.shaderRenderer, this.props);
+
+        
         this.shaderRenderer.update(timeStamp / 1000);
     }
 
@@ -34,7 +39,7 @@ export class ShaderEntity implements IEntity {
     }
 
     constructor(public key: string, w: number, h: number, public props?: IShaderProperties,
-        public action?: (time: number, ctx: CanvasRenderingContext2D, properties: IShaderProperties) => void) {
+        public action?: (time: number, shaderRender: ShaderRenderer, properties: IShaderProperties) => void) {
 
 
         this.canvas = document.createElement("canvas");

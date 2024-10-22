@@ -6,6 +6,13 @@ class Sequence extends SequencerBase_1.SequencerBase {
     onReady() {
         throw "not implemeted";
     }
+    getSceneRemainingTime(timeStamp) {
+        if (!this.currentScene) {
+            return 0;
+        }
+        const elapsedTime = timeStamp - this.currentScene.startTimeinMs;
+        return Math.max(0, this.currentScene.durationInMs - elapsedTime); // Ensure remainingTime is not negative
+    }
     constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, scenes, audioFile) {
         super(scenes);
         this.target = target;
@@ -14,6 +21,8 @@ class Sequence extends SequencerBase_1.SequencerBase {
         this.lastBeatTime = 0;
         this.currentTick = 0;
         this.currentBar = 0;
+        this.tickCounter = 0;
+        this.beatCounter = 0;
         this.beatsPerBar = 0;
         this.currentBeat = 0;
         this.beatListeners = [];
@@ -111,6 +120,7 @@ class Sequence extends SequencerBase_1.SequencerBase {
         return this.scenes[this.currentSceneIndex];
     }
     playCurrentScene(timeStamp) {
+        var _a;
         if (!this.isPlaying) {
             return;
         }
@@ -143,11 +153,10 @@ class Sequence extends SequencerBase_1.SequencerBase {
             // console.log("Average frequency:", avgFrequency);
         }
         // Call update() on all entities in the new scene
+        (_a = this.targetCtx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.target.width, this.target.height);
         this.currentScene.entities.forEach(entity => {
-            var _a;
             entity.update(timeStamp);
             if (this.target) {
-                (_a = this.targetCtx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.target.width, this.target.height);
                 entity.copyToCanvas(this.target);
             }
         });
@@ -156,10 +165,11 @@ class Sequence extends SequencerBase_1.SequencerBase {
         const tickIntervalMs = beatIntervalMs / this.ticksPerBeat;
         if (timeStamp - this.lastBeatTime >= beatIntervalMs) {
             this.lastBeatTime = timeStamp;
-            this.beatListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));
+            this.beatListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp, this.beatCounter));
             this.currentTick = 0;
-            // Bar event handling
             this.currentBeat++;
+            // Bar event handling
+            this.beatCounter++;
             if (this.currentBeat > this.beatsPerBar) {
                 this.currentBar++;
                 this.currentBeat = 1; // Reset to 1 after a bar is complete
@@ -167,8 +177,9 @@ class Sequence extends SequencerBase_1.SequencerBase {
             }
         }
         if (timeStamp - this.lastBeatTime >= this.currentTick * tickIntervalMs) {
-            this.tickListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));
+            this.tickListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp, this.tickCounter));
             this.currentTick++;
+            this.tickCounter++;
         }
     }
 }

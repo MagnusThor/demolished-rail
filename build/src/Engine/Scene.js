@@ -23,7 +23,7 @@ class Scene {
                 const adjustedSceneElapsedTime = sceneElapsedTime - this.startTimeinMs;
                 if (adjustedSceneElapsedTime >= 0) {
                     this.entities.forEach((entity) => {
-                        console.log(entity.key);
+                        const remainingTime = this.durationInMs - adjustedSceneElapsedTime; // Calculate remaining time
                         entity.update(adjustedSceneElapsedTime);
                     });
                 }

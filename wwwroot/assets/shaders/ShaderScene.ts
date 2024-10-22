@@ -7,9 +7,7 @@ out vec4 fragColor;
 #define iTime  time
 #define iResolution  resolution
 
-
 #define R(p,a,r)mix(a*dot(p,a),p,cos(r))+sin(r)*cross(p,a)
-
 
 void mainImage(out vec4 O, vec2 C)
 {

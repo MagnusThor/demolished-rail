@@ -4,6 +4,8 @@ exports.ShaderEntity = void 0;
 const ShaderRenderer_1 = require("./ShaderRenderer/ShaderRenderer");
 class ShaderEntity {
     update(timeStamp) {
+        if (this.action && this.shaderRenderer && this.props)
+            this.action(timeStamp, this.shaderRenderer, this.props);
         this.shaderRenderer.update(timeStamp / 1000);
     }
     copyToCanvas(targetCanvas) {
