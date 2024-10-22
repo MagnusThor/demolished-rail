@@ -80,7 +80,7 @@ scene1.addEntity(starburstEntity);
 
 const typeWriterProps: ITypeWriterEffectProps = {
     x: 100,
-    y: 100,
+    y: 300,
     text: "Scene with typewriter & randomSquare effects - Simple but neat?",
     index: 0,
     speed: 5, // 5 characters per second
@@ -146,7 +146,7 @@ const fractalShaderEntity = new ShaderEntity("ShaderEnriry", 1200, iRailGraph.ca
 
 const textProps: ITextEffectProps = {
     x: 100,
-    y: 100,
+    y: 300,
     text: "Hello, world!",
     font: "Arial",
     size: 30,

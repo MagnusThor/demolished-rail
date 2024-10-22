@@ -54,7 +54,7 @@ scene1.addEntity(expandingCircleEntity);
 scene1.addEntity(starburstEntity);
 const typeWriterProps = {
     x: 100,
-    y: 100,
+    y: 300,
     text: "Scene with typewriter & randomSquare effects - Simple but neat?",
     index: 0,
     speed: 5, // 5 characters per second
@@ -93,7 +93,7 @@ const fractalShaderEntity = new ShaderEntity_1.ShaderEntity("ShaderEnriry", 1200
 });
 const textProps = {
     x: 100,
-    y: 100,
+    y: 300,
     text: "Hello, world!",
     font: "Arial",
     size: 30,
