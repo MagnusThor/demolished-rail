@@ -16,6 +16,7 @@ class Sequence extends SequencerBase_1.SequencerBase {
     constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, scenes, audioFile) {
         super(scenes);
         this.target = target;
+        this.startTime = 0;
         this.bpm = 0;
         this.ticksPerBeat = 0;
         this.lastBeatTime = 0;
@@ -88,6 +89,7 @@ class Sequence extends SequencerBase_1.SequencerBase {
         this.currentSceneIndex = 0;
         this.lastBeatTime = 0;
         this.currentTick = 0;
+        this.startTime = performance.now();
         // Start audio playback
         if (this.audioBuffer) {
             // Create a NEW AudioBufferSourceNode each time
@@ -100,7 +102,8 @@ class Sequence extends SequencerBase_1.SequencerBase {
         }
         const animate = (ts) => {
             // Call playCurrentScene even if there is no current scene
-            this.playCurrentScene(ts);
+            const adjustedTimeStamp = ts - this.startTime;
+            this.playCurrentScene(adjustedTimeStamp);
             if (this.isPlaying) {
                 this.requestAnimationFrameID = requestAnimationFrame(animate);
             }

@@ -185,12 +185,6 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
         // access render here, i'e set uniforms etc using propertyBag or anyting;
     });
 
-
-
-
-
-
-
     const textOverlayProps: ITextEffectProps = {
         x: 100,
         y: 100,

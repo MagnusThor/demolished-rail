@@ -2,6 +2,9 @@ import { Scene } from "./Scene";
 import { SequencerBase } from "./SequencerBase";
 
 export class Sequence extends SequencerBase {
+
+    private startTime: number = 0; 
+
     public bpm: number = 0;
     public ticksPerBeat: number = 0;
     public lastBeatTime: number = 0;
@@ -123,6 +126,8 @@ export class Sequence extends SequencerBase {
         this.lastBeatTime = 0;
         this.currentTick = 0;
 
+        this.startTime = performance.now(); 
+
         // Start audio playback
         if (this.audioBuffer) {
             // Create a NEW AudioBufferSourceNode each time
@@ -138,7 +143,10 @@ export class Sequence extends SequencerBase {
 
         const animate = (ts: number) => {
             // Call playCurrentScene even if there is no current scene
-            this.playCurrentScene(ts);
+            const adjustedTimeStamp = ts - this.startTime
+
+
+            this.playCurrentScene(adjustedTimeStamp);
 
             if (this.isPlaying) {
                 this.requestAnimationFrameID = requestAnimationFrame(animate);
