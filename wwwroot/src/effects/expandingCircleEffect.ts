@@ -1,5 +1,5 @@
-import { Scene } from "../../../src/Engine/Scene";
-import { Sequence } from "../../../src/Engine/Sequence";
+import { Scene } from "../../../src/Engine/scene";
+import { Sequence } from "../../../src/Engine/sequence";
 
 export interface IExpandingCircleEffectProps {
     x: number;

@@ -1,4 +1,4 @@
-import { Sequence } from "../../../src/Engine/Sequence";
+import { Sequence } from "../../../src/Engine/sequence";
 
 
 export interface ITextArrayDisplayProps {
@@ -20,8 +20,6 @@ export const textArrayDisplayEffect = (
     sequence: Sequence // Pass the Sequence instance
 ) => {
     const { x, y, texts, font, size } = propertybag;
-
-    console.log("caling");
 
     ctx.font = `${size}px ${font}`;
     ctx.fillStyle = "white";

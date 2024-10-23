@@ -1,5 +1,8 @@
-import { Entity, IEntity } from "./Entity";
-import { ShaderEntity } from "./ShaderEntity";
+import { Entity, IEntity } from "./entity";
+import { ShaderEntity } from "./shaderEntity";
+
+
+
 
 export class Scene {
   public entities: IEntity[] = [];

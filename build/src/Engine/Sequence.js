@@ -1,8 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sequence = void 0;
-const SequencerBase_1 = require("./SequencerBase");
-class Sequence extends SequencerBase_1.SequencerBase {
+const sequencerBase_1 = require("./sequencerBase");
+class Sequence extends sequencerBase_1.SequencerBase {
+    addPostProcessor(processor) {
+        this.postProcessors.push(processor);
+    }
     onReady() {
         throw "not implemeted";
     }
@@ -29,6 +32,7 @@ class Sequence extends SequencerBase_1.SequencerBase {
         this.beatListeners = [];
         this.tickListeners = [];
         this.barListeners = [];
+        this.postProcessors = [];
         this.targetCtx = target.getContext("2d");
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
@@ -152,7 +156,7 @@ class Sequence extends SequencerBase_1.SequencerBase {
         // FFT analysis
         if (this.analyser) {
             this.analyser.getByteFrequencyData(this.fftData);
-            const avgFrequency = this.fftData.reduce((sum, val) => sum + val, 0) / this.fftData.length;
+            // const avgFrequency = this.fftData.reduce((sum, val) => sum + val, 0) / this.fftData.length;
             // console.log("Average frequency:", avgFrequency);
         }
         // Call update() on all entities in the new scene
@@ -160,9 +164,12 @@ class Sequence extends SequencerBase_1.SequencerBase {
         this.currentScene.entities.forEach(entity => {
             entity.update(timeStamp);
             if (this.target) {
-                entity.copyToCanvas(this.target);
+                entity.copyToCanvas(this.target, this);
             }
         });
+        if (this.targetCtx) {
+            this.postProcessors.forEach(processor => processor(this.targetCtx, this)); // Apply each processor
+        }
         // BPM and event handling
         const beatIntervalMs = 60000 / this.bpm;
         const tickIntervalMs = beatIntervalMs / this.ticksPerBeat;

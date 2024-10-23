@@ -6,15 +6,20 @@ class Entity {
         this.key = key;
         this.props = props;
         this.action = action;
+        this.postProcessors = [];
         this.canvas = document.createElement("canvas");
         this.canvas.width = w;
         this.canvas.height = h;
         this.ctx = this.canvas.getContext("2d");
     }
-    copyToCanvas(targetCanvas) {
+    addPostProcessor(processor) {
+        this.postProcessors.push(processor);
+    }
+    copyToCanvas(targetCanvas, sequence) {
         const targetCtx = targetCanvas.getContext("2d");
         if (targetCtx) {
             targetCtx.drawImage(this.canvas, 0, 0);
+            this.postProcessors.forEach(processor => processor(targetCtx, sequence));
         }
     }
     update(timeStamp) {

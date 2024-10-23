@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShaderEntity = void 0;
-const ShaderRenderer_1 = require("./ShaderRenderer/ShaderRenderer");
+const shaderRenderer_1 = require("./ShaderRenderer/shaderRenderer");
 class ShaderEntity {
     update(timeStamp) {
         if (this.action && this.shaderRenderer && this.props)
@@ -22,7 +22,7 @@ class ShaderEntity {
         this.canvas.width = w;
         this.canvas.height = h;
         if ((props === null || props === void 0 ? void 0 : props.mainFragmentShader) && props.mainShaderVertex) {
-            this.shaderRenderer = new ShaderRenderer_1.ShaderRenderer(this.canvas, props === null || props === void 0 ? void 0 : props.mainShaderVertex, props === null || props === void 0 ? void 0 : props.mainFragmentShader);
+            this.shaderRenderer = new shaderRenderer_1.ShaderRenderer(this.canvas, props === null || props === void 0 ? void 0 : props.mainShaderVertex, props === null || props === void 0 ? void 0 : props.mainFragmentShader);
             props.rendeBuffers.forEach(buffer => {
                 this.shaderRenderer.addBuffer(buffer.name, buffer.vertex, buffer.fragment, buffer.textures, buffer.customUniforms);
             });

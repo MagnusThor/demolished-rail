@@ -4,7 +4,6 @@ exports.textArrayDisplayEffect = void 0;
 const textArrayDisplayEffect = (ts, ctx, propertybag, sequence // Pass the Sequence instance
 ) => {
     const { x, y, texts, font, size } = propertybag;
-    console.log("caling");
     ctx.font = `${size}px ${font}`;
     ctx.fillStyle = "white";
     // Se till att currentBeat är inom gränserna för texts-arrayen

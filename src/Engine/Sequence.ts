@@ -1,9 +1,9 @@
-import { Scene } from "./Scene";
-import { SequencerBase } from "./SequencerBase";
+import { Scene } from "./scene";
+import { SequencerBase } from "./sequencerBase";
 
 export class Sequence extends SequencerBase {
 
-    private startTime: number = 0; 
+    private startTime: number = 0;
 
     public bpm: number = 0;
     public ticksPerBeat: number = 0;
@@ -27,14 +27,17 @@ export class Sequence extends SequencerBase {
     private audioSource!: AudioBufferSourceNode;
 
     private analyser!: AnalyserNode;
-    private fftData!: Uint8Array;
+    public fftData!: Uint8Array;
 
     targetCtx!: CanvasRenderingContext2D | null;
 
-    onReady() {
-        throw "not implemeted";
-    }
+    private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
 
+    addPostProcessor(processor: (ctx: CanvasRenderingContext2D, sequence: Sequence) => void) {
+        this.postProcessors.push(processor);
+    }
+    onReady() {
+    }
     getSceneRemainingTime(timeStamp: number): number {
         if (!this.currentScene) {
             return 0;
@@ -126,7 +129,7 @@ export class Sequence extends SequencerBase {
         this.lastBeatTime = 0;
         this.currentTick = 0;
 
-        this.startTime = performance.now(); 
+        this.startTime = performance.now();
 
         // Start audio playback
         if (this.audioBuffer) {
@@ -204,20 +207,24 @@ export class Sequence extends SequencerBase {
         if (this.analyser) {
             this.analyser.getByteFrequencyData(this.fftData);
 
-            const avgFrequency = this.fftData.reduce((sum, val) => sum + val, 0) / this.fftData.length;
+            // const avgFrequency = this.fftData.reduce((sum, val) => sum + val, 0) / this.fftData.length;
             // console.log("Average frequency:", avgFrequency);
         }
 
         // Call update() on all entities in the new scene
-         this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
+        this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
         this.currentScene!.entities.forEach(entity => {
 
             entity.update(timeStamp);
             if (this.target) {
-             
-                entity.copyToCanvas(this.target);
+
+                entity.copyToCanvas(this.target, this);
             }
         });
+
+        if (this.targetCtx) {
+            this.postProcessors.forEach(processor => processor(this.targetCtx!, this)); // Apply each processor
+        }
 
         // BPM and event handling
         const beatIntervalMs = 60000 / this.bpm;

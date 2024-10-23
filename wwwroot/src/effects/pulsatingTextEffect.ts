@@ -1,4 +1,4 @@
-import { Sequence } from "../../../src/Engine/Sequence";
+import { Sequence } from "../../../src/Engine/sequence";
 
 export interface IPulsatingTextEffectProps {
     x: number;

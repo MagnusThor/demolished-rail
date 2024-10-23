@@ -1,6 +1,7 @@
+import { IEntity } from "./entity"
+import { ShaderRenderer } from "./ShaderRenderer/shaderRenderer"
 
-import { IEntity } from "./Entity";
-import { ShaderRenderer } from "./ShaderRenderer/ShaderRenderer";
+
 
 
 export interface IShaderRenderBuffer {

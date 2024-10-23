@@ -1,4 +1,4 @@
-import { ITexture } from "../ShaderRenderer/ShaderRenderer";
+import { ITexture } from "../ShaderRenderer/shaderRenderer";
 
 export class TextureCacheHelper {
 
