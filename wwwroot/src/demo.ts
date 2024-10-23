@@ -4,7 +4,7 @@ import { Entity, IEntity } from "../../src/Engine/entity";
 import { IShaderProperties, ShaderEntity } from "../../src/Engine/shaderEntity";
 import { mainFragment } from "../assets/shaders/mainFragment";
 import { mainVertex } from "../assets/shaders/mainVertex";
-import { shaderScene } from "../assets/shaders/shaderScene";
+import { fractalOne } from "../assets/shaders/fractalOne";
 import { ITypeWriterEffectProps, typeWriterEffect } from "./effects/typeWriterEffet";
 import { IRandomSquareEffectProps, randomSquareEffect } from "./effects/ranndomSquareByTickEffect";
 import { expandingCircleEffect, IExpandingCircleEffectProps } from "./effects/expandingCircleEffect";
@@ -20,6 +20,7 @@ import { audioVisualizerEffect, IAudioVisualizerProps } from "./effects/fftAnaly
 import { IStrobeEffectProps, strobeEffect } from "./effects/strobeEffect";
 import { createBlurPostProcessor } from "../../src/Engine/Helpers/postProcessors";
 import { createBeatShakePostProcessor } from "./postprocessors/createBeatShakePostProcessor";
+import { fractalTwo } from "../assets/shaders/fractalTwo";
 
 
 
@@ -222,7 +223,26 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
       );
     
 
+      const fractalShaderEntityTwo = new ShaderEntity("ShaderEnriry", 
+        instance.MockedGraph.canvasWidth
+        , instance.MockedGraph.canvasHeight, 
+        {
+            mainFragmentShader: mainFragment,
+            mainShaderVertex: mainVertex,
+            rendeBuffers: [
+                {
+                    name: "MyShader",
+                    fragment: fractalTwo,
+                    vertex: mainVertex,
+                    textures: []
+                }
+            ]
+        }, (ts, render, propertybag) => {
+        // access render here, i'e set uniforms etc using propertyBag or anyting;
+    });
+
       scene3.addEntity(strobeEntity);
+      scene3.addEntity(fractalShaderEntityTwo);
       scene3.addEntity(imageOverlayEntity);
      
 
@@ -230,22 +250,23 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
 
 
 
-    const shaderProps: IShaderProperties = {
-        mainFragmentShader: mainFragment,
-        mainShaderVertex: mainVertex,
-        rendeBuffers: [
-            {
-                name: "MyShader",
-                fragment: shaderScene,
-                vertex: mainVertex,
-                textures: []
-            }
-        ]
-    }
+  
 
-    const fractalShaderEntity = new ShaderEntity("ShaderEnriry", 
+    const fractalShaderEntityOne = new ShaderEntity("ShaderEnriry", 
         instance.MockedGraph.canvasWidth
-        , instance.MockedGraph.canvasHeight, shaderProps, (ts, render, propertybag) => {
+        , instance.MockedGraph.canvasHeight, 
+        {
+            mainFragmentShader: mainFragment,
+            mainShaderVertex: mainVertex,
+            rendeBuffers: [
+                {
+                    name: "MyShader",
+                    fragment: fractalOne,
+                    vertex: mainVertex,
+                    textures: []
+                }
+            ]
+        }, (ts, render, propertybag) => {
         // access render here, i'e set uniforms etc using propertyBag or anyting;
     });
 
@@ -292,7 +313,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
 
 
     const scene4 = new Scene("Scene 4", 40000,140000 );
-    scene4.addEntity(fractalShaderEntity);
+    scene4.addEntity(fractalShaderEntityOne);
     scene4.addEntity(imageOverlayEntity);
     scene4.addEntity(textOverlay);
     
@@ -311,8 +332,12 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
 });
 
 demo.sequence.onReady = () => {
-    console.log(`click to start demo`);
-    document.addEventListener("click", () => {
+
+   
+    const btn = document.querySelector("BUTTON");
+    btn!.textContent = "CLICK TO START!";
+    btn!.addEventListener("click", () => {
+        document.querySelector("#launch")?.remove();
         demo.sequence.play();
     });
 }

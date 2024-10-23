@@ -1,4 +1,7 @@
-export const shaderScene = /*glsl*/ `uniform float time;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.fractalOne = void 0;
+exports.fractalOne = `uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
 
@@ -38,4 +41,4 @@ void main(){
 
 }
 
-`; 
+`;

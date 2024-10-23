@@ -24,10 +24,35 @@
             height: calc((9/16)*100vw);
 
         }
+
+        #launch {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #fff;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;            
+        }
+        button{
+            border: 0;
+            height: 3rem;
+            padding: 1rem;
+            color: #fff;
+            background: #000;
+        }
     </style>
 </head>
 
 <body>
+    <div id="launch">
+        <button>
+            LOADING..
+        </button>
+    </div>
     <canvas id="main-canvas" width="800" height="450"></canvas>
     <script src="js/demo-bundle.js"></script>
 </body>

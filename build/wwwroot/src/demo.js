@@ -6,7 +6,7 @@ const entity_1 = require("../../src/Engine/entity");
 const shaderEntity_1 = require("../../src/Engine/shaderEntity");
 const mainFragment_1 = require("../assets/shaders/mainFragment");
 const mainVertex_1 = require("../assets/shaders/mainVertex");
-const shaderScene_1 = require("../assets/shaders/shaderScene");
+const fractalOne_1 = require("../assets/shaders/fractalOne");
 const typeWriterEffet_1 = require("./effects/typeWriterEffet");
 const ranndomSquareByTickEffect_1 = require("./effects/ranndomSquareByTickEffect");
 const expandingCircleEffect_1 = require("./effects/expandingCircleEffect");
@@ -18,6 +18,7 @@ const assetsHelper_1 = require("../../src/Engine/Helpers/assetsHelper");
 const fftAnalyzerEffect_1 = require("./effects/fftAnalyzerEffect");
 const strobeEffect_1 = require("./effects/strobeEffect");
 const createBeatShakePostProcessor_1 = require("./postprocessors/createBeatShakePostProcessor");
+const fractalTwo_1 = require("../assets/shaders/fractalTwo");
 class SetupDemo {
     constructor() {
         this.scenes = [];
@@ -142,22 +143,36 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         lastBeat: -1, // Initialize to -1 to trigger on the first beat
     };
     const strobeEntity = new entity_1.Entity("Strobe", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, strobeProps, (ts, ctx, props, sequence) => (0, strobeEffect_1.strobeEffect)(ts, ctx, props, instance.sequence));
-    scene3.addEntity(strobeEntity);
-    scene3.addEntity(imageOverlayEntity);
-    instance.addScene(scene3);
-    const shaderProps = {
+    const fractalShaderEntityTwo = new shaderEntity_1.ShaderEntity("ShaderEnriry", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         mainFragmentShader: mainFragment_1.mainFragment,
         mainShaderVertex: mainVertex_1.mainVertex,
         rendeBuffers: [
             {
                 name: "MyShader",
-                fragment: shaderScene_1.shaderScene,
+                fragment: fractalTwo_1.fractalTwo,
                 vertex: mainVertex_1.mainVertex,
                 textures: []
             }
         ]
-    };
-    const fractalShaderEntity = new shaderEntity_1.ShaderEntity("ShaderEnriry", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, shaderProps, (ts, render, propertybag) => {
+    }, (ts, render, propertybag) => {
+        // access render here, i'e set uniforms etc using propertyBag or anyting;
+    });
+    scene3.addEntity(strobeEntity);
+    scene3.addEntity(fractalShaderEntityTwo);
+    scene3.addEntity(imageOverlayEntity);
+    instance.addScene(scene3);
+    const fractalShaderEntityOne = new shaderEntity_1.ShaderEntity("ShaderEnriry", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+        mainFragmentShader: mainFragment_1.mainFragment,
+        mainShaderVertex: mainVertex_1.mainVertex,
+        rendeBuffers: [
+            {
+                name: "MyShader",
+                fragment: fractalOne_1.fractalOne,
+                vertex: mainVertex_1.mainVertex,
+                textures: []
+            }
+        ]
+    }, (ts, render, propertybag) => {
         // access render here, i'e set uniforms etc using propertyBag or anyting;
     });
     const textOverlayProps = {
@@ -186,7 +201,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         (0, textArrayDisplayEffect_1.textArrayDisplayEffect)(ts, ctx, props, instance.sequence);
     });
     const scene4 = new scene_1.Scene("Scene 4", 40000, 140000);
-    scene4.addEntity(fractalShaderEntity);
+    scene4.addEntity(fractalShaderEntityOne);
     scene4.addEntity(imageOverlayEntity);
     scene4.addEntity(textOverlay);
     textArrayDisplayEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
@@ -196,8 +211,11 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
     //instance.sequence.addPostProcessor(createBeatShakePostProcessor(3));
 });
 demo.sequence.onReady = () => {
-    console.log(`click to start demo`);
-    document.addEventListener("click", () => {
+    const btn = document.querySelector("BUTTON");
+    btn.textContent = "CLICK TO START!";
+    btn.addEventListener("click", () => {
+        var _a;
+        (_a = document.querySelector("#launch")) === null || _a === void 0 ? void 0 : _a.remove();
         demo.sequence.play();
     });
 };

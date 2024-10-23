@@ -7,7 +7,6 @@ class Sequence extends sequencerBase_1.SequencerBase {
         this.postProcessors.push(processor);
     }
     onReady() {
-        throw "not implemeted";
     }
     getSceneRemainingTime(timeStamp) {
         if (!this.currentScene) {
