@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequence_1 = require("../../src/Engine/sequence");
-const scene_1 = require("../../src/Engine/scene");
 const entity_1 = require("../../src/Engine/entity");
 const shaderEntity_1 = require("../../src/Engine/shaderEntity");
 const mainFragment_1 = require("../assets/shaders/mainFragment");
@@ -19,6 +18,8 @@ const fftAnalyzerEffect_1 = require("./effects/fftAnalyzerEffect");
 const strobeEffect_1 = require("./effects/strobeEffect");
 const createBeatShakePostProcessor_1 = require("./postprocessors/createBeatShakePostProcessor");
 const fractalTwo_1 = require("../assets/shaders/fractalTwo");
+const gridOverlayEffect_1 = require("./effects/gridOverlayEffect");
+const sceneBuilder_1 = require("../../src/Engine/Helpers/sceneBuilder");
 class SetupDemo {
     constructor() {
         this.scenes = [];
@@ -26,8 +27,8 @@ class SetupDemo {
             canvasWidth: 800,
             canvasHeight: 450,
             audioProperties: {
-                bpm: 125,
-                ticks: 4,
+                bpm: 110,
+                ticks: 8,
                 beat: 0,
                 tick: 0,
                 bar: 0,
@@ -35,10 +36,10 @@ class SetupDemo {
             },
             font: "Big Shoulders Stencil Text"
         };
-        this.sequence = new sequence_1.Sequence(document.querySelector("canvas"), 125, 4, 4, [], "/wwwroot/assets/music/music.mp3");
+        this.sequence = new sequence_1.Sequence(document.querySelector("canvas"), 100, 4, 4, [], "/wwwroot/assets/music/music.mp3");
     }
     async addAsset(url) {
-        await assetsHelper_1.TextureCacheHelper.loadImage(url);
+        await assetsHelper_1.AssetsHelper.loadImage(url);
         return this;
     }
     addScene(scene) {
@@ -57,15 +58,28 @@ class SetupDemo {
 }
 const demo = new SetupDemo();
 demo.addAsset("assets/images/silhouette.png").then((instance) => {
+    // Create the Scenes
+    // Music length = 139200 ms;
     var _a;
-    // Scene 1
-    const scene1 = new scene_1.Scene("Scene 1", 0, 5000);
+    const sceneBuilder = new sceneBuilder_1.SceneBuilder(139200);
+    sceneBuilder.addScene("Scene 0", 10000).
+        addScene("Scene 1", 8000).
+        addScene("Scene 2", 15000).
+        addScene("Scene 4", 15000).
+        addScene("Scene 5", 15000);
+    const scenes = sceneBuilder.getScenes();
+    // Set up all effects;
+    const strobeEntity = new entity_1.Entity("Strobe", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+        color: "white", // You can change the color
+        isOn: false,
+        lastBeat: -1, // Initialize to -1 to trigger on the first beat
+    }, (ts, ctx, props, sequence) => (0, strobeEffect_1.strobeEffect)(ts, ctx, props, instance.sequence));
     const imageOverlayEntity = new entity_1.Entity("ImageOverlay", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         x: 0,
         y: 0,
         width: instance.MockedGraph.canvasWidth,
         height: instance.MockedGraph.canvasHeight,
-        image: (_a = assetsHelper_1.TextureCacheHelper.textureCache.get("silhouette.png")) === null || _a === void 0 ? void 0 : _a.src,
+        image: (_a = assetsHelper_1.AssetsHelper.textureCache.get("silhouette.png")) === null || _a === void 0 ? void 0 : _a.src,
         opacity: 0.7,
         fadeIn: true,
         fadeOut: true,
@@ -94,33 +108,33 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         saturation: 100,
         lightness: 50
     }, starBurstEffct_1.starburstEffect);
-    scene1.addEntity(expandingCircleEntity);
-    scene1.addEntity(starburstEntity);
-    scene1.addEntity(imageOverlayEntity);
-    instance.addScene(scene1);
-    // Scene 2
-    const scene2 = new scene_1.Scene("Scene 2", 5000, 15000);
-    const typeWriterProps = {
+    const typeWriterEntity = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         x: 100,
         y: 300,
-        text: "LEVEL 50 UNLOCKED - TIME TO PARTY!",
+        text: "THIS IS A TYPWRITER-EFFECT",
         index: 0,
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
         useBPM: true,
         bpm: instance.MockedGraph.audioProperties.bpm,
         ticksPerBeat: instance.MockedGraph.audioProperties.ticks
-    };
-    const typeWriterEntity = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, typeWriterProps, typeWriterEffet_1.typeWriterEffect);
-    const randomSquareProps = {
+    }, typeWriterEffet_1.typeWriterEffect);
+    const randomSquareEntity = new entity_1.Entity("RandomSquare", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         x: 0,
         y: 0,
         size: 0,
         color: "red",
         lastTick: -1 // Initialize to -1 to add a square on the first bar
-    };
-    const randomSquareEntity = new entity_1.Entity("RandomSquare", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, randomSquareProps, (ts, ctx, props) => (0, ranndomSquareByTickEffect_1.randomSquareEffect)(ts, ctx, props, instance.sequence.tickCounter) // Pass currentBar from Sequence
+    }, (ts, ctx, props) => (0, ranndomSquareByTickEffect_1.randomSquareEffect)(ts, ctx, props, instance.sequence.tickCounter) // Pass currentBar from Sequence
     );
+    const gridOverlayEntity = new entity_1.Entity("GridOverlay", 800, // Canvas width
+    450, // Canvas height
+    {
+        rows: 5,
+        cols: 8,
+        cellColor: "white",
+        activeCells: new Set(),
+    }, (ts, ctx, props, sequence) => (0, gridOverlayEffect_1.gridOverlayEffect)(ts, ctx, props, instance.sequence));
     const audioVisualizerEntity = new entity_1.Entity("AudioVisualizer", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         x: 0,
         y: 150,
@@ -131,18 +145,6 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         numBars: 100,
         color: "red"
     }, (ts, ctx, props, sequence) => (0, fftAnalyzerEffect_1.audioVisualizerEffect)(ts, ctx, props, instance.sequence));
-    scene2.addEntity(audioVisualizerEntity);
-    scene2.addEntity(randomSquareEntity);
-    scene2.addEntity(imageOverlayEntity);
-    scene2.addEntity(typeWriterEntity);
-    instance.addScene(scene2);
-    const scene3 = new scene_1.Scene("Scene 3", 20000, 20000);
-    const strobeProps = {
-        color: "white", // You can change the color
-        isOn: false,
-        lastBeat: -1, // Initialize to -1 to trigger on the first beat
-    };
-    const strobeEntity = new entity_1.Entity("Strobe", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, strobeProps, (ts, ctx, props, sequence) => (0, strobeEffect_1.strobeEffect)(ts, ctx, props, instance.sequence));
     const fractalShaderEntityTwo = new shaderEntity_1.ShaderEntity("ShaderEnriry", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         mainFragmentShader: mainFragment_1.mainFragment,
         mainShaderVertex: mainVertex_1.mainVertex,
@@ -155,12 +157,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
             }
         ]
     }, (ts, render, propertybag) => {
-        // access render here, i'e set uniforms etc using propertyBag or anyting;
     });
-    scene3.addEntity(strobeEntity);
-    scene3.addEntity(fractalShaderEntityTwo);
-    scene3.addEntity(imageOverlayEntity);
-    instance.addScene(scene3);
     const fractalShaderEntityOne = new shaderEntity_1.ShaderEntity("ShaderEnriry", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         mainFragmentShader: mainFragment_1.mainFragment,
         mainShaderVertex: mainVertex_1.mainVertex,
@@ -173,17 +170,15 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
             }
         ]
     }, (ts, render, propertybag) => {
-        // access render here, i'e set uniforms etc using propertyBag or anyting;
     });
-    const textOverlayProps = {
+    const textOverlay = new entity_1.Entity("TextEffect", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         x: 100,
         y: 100,
         text: "Vad du kan förvänta dig....".toUpperCase(),
         font: "Big Shoulders Stencil Text",
         size: 60,
         duration: 15 // 5 seconds
-    };
-    const textOverlay = new entity_1.Entity("TextEffect", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, textOverlayProps, (ts, ctx, props) => (0, textEffect_1.textEffect)(ts, ctx, props, instance.sequence) // Pass the sequence instance
+    }, (ts, ctx, props) => (0, textEffect_1.textEffect)(ts, ctx, props, instance.sequence) // Pass the sequence instance
     );
     const textArrayDisplayEntity = new entity_1.Entity("TextArrayDisplay", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasWidth, {
         x: 100,
@@ -200,13 +195,14 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
     }, (ts, ctx, props) => {
         (0, textArrayDisplayEffect_1.textArrayDisplayEffect)(ts, ctx, props, instance.sequence);
     });
-    const scene4 = new scene_1.Scene("Scene 4", 40000, 140000);
-    scene4.addEntity(fractalShaderEntityOne);
-    scene4.addEntity(imageOverlayEntity);
-    scene4.addEntity(textOverlay);
     textArrayDisplayEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
-    scene4.addEntity(textArrayDisplayEntity);
-    instance.addScene(scene4);
+    // Add Entities to the Scens
+    scenes[0].addEntities(strobeEntity);
+    scenes[1].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
+    scenes[2].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
+    scenes[3].addEntities(strobeEntity, fractalShaderEntityTwo, imageOverlayEntity);
+    scenes[4].addEntities(fractalShaderEntityOne, imageOverlayEntity, textOverlay, textArrayDisplayEntity);
+    instance.sequence.addSceneArray(scenes);
     // add a postprocessor to the RenderResult; 
     //instance.sequence.addPostProcessor(createBeatShakePostProcessor(3));
 });

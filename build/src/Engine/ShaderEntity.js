@@ -3,17 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShaderEntity = void 0;
 const shaderRenderer_1 = require("./ShaderRenderer/shaderRenderer");
 class ShaderEntity {
-    update(timeStamp) {
-        if (this.action && this.shaderRenderer && this.props)
-            this.action(timeStamp, this.shaderRenderer, this.props);
-        this.shaderRenderer.update(timeStamp / 1000);
-    }
-    copyToCanvas(targetCanvas) {
-        const targetCtx = targetCanvas.getContext("2d");
-        if (targetCtx) {
-            targetCtx.drawImage(this.canvas, 0, 0);
-        }
-    }
+    /**
+     * Creates a new ShaderEntity.
+     * @param key - The key or identifier for the entity.
+     * @param w - The width of the entity's canvas.
+     * @param h - The height of the entity's canvas.
+     * @param props - The properties for the entity, including shader code and render buffers.
+     * @param action - An optional action function to be called before rendering the shaders.
+     */
     constructor(key, w, h, props, action) {
         this.key = key;
         this.props = props;
@@ -27,8 +24,30 @@ class ShaderEntity {
                 this.shaderRenderer.addBuffer(buffer.name, buffer.vertex, buffer.fragment, buffer.textures, buffer.customUniforms);
             });
         }
-        else
-            throw "Cannot create shaderRender";
+        else {
+            throw new Error("Cannot create ShaderEntity: Missing main shader code.");
+        }
+    }
+    /**
+     * Updates the ShaderEntity by calling the action function (if provided)
+     * and then updating the ShaderRenderer.
+     * @param timeStamp - The current timestamp in the animation.
+     */
+    update(timeStamp) {
+        if (this.action && this.shaderRenderer && this.props) {
+            this.action(timeStamp, this.shaderRenderer, this.props);
+        }
+        this.shaderRenderer.update(timeStamp / 1000);
+    }
+    /**
+     * Copies the entity's canvas to the target canvas.
+     * @param targetCanvas - The target canvas to copy to.
+     */
+    copyToCanvas(targetCanvas) {
+        const targetCtx = targetCanvas.getContext("2d");
+        if (targetCtx) {
+            targetCtx.drawImage(this.canvas, 0, 0);
+        }
     }
 }
 exports.ShaderEntity = ShaderEntity;

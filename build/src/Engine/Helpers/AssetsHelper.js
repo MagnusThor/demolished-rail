@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TextureCacheHelper = void 0;
-class TextureCacheHelper {
+exports.AssetsHelper = void 0;
+class AssetsHelper {
     static async loadImage(url) {
         const filename = url.split("/").pop();
         if (this.textureCache.has(filename)) {
@@ -23,6 +23,12 @@ class TextureCacheHelper {
         const imagePromises = urls.map(url => this.loadImage(url));
         return Promise.all(imagePromises);
     }
+    static async loadAudio(audioFile, audioContext) {
+        const response = await fetch(audioFile);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        return audioBuffer;
+    }
 }
-exports.TextureCacheHelper = TextureCacheHelper;
-TextureCacheHelper.textureCache = new Map();
+exports.AssetsHelper = AssetsHelper;
+AssetsHelper.textureCache = new Map();

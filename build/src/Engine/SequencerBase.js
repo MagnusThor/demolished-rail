@@ -1,13 +1,12 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SequencerBase = void 0;
-class SequencerBase {
-    constructor(scenes) {
-        this.durationMs = 0;
-        this.scenes = [];
-        this.currentSceneIndex = 0;
-        this.isPlaying = false;
-        this.scenes = scenes || [];
-    }
-}
-exports.SequencerBase = SequencerBase;
+// import { Scene } from "./scene";
+// export class SequencerBase {
+//     public durationMs: number = 0;
+//     public scenes: Scene[] = [];
+//     public currentSceneIndex: number = 0;
+//     public isPlaying: boolean = false;
+//     public requestAnimationFrameID!: number;
+//     constructor(scenes?: Scene[]) {
+//         this.scenes = scenes || [];
+//     }
+// }
