@@ -1,3 +1,4 @@
+
 import { AssetsHelper } from "./Helpers/assetsHelper";
 import { Scene } from "./scene";
 

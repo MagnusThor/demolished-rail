@@ -1,5 +1,6 @@
 import { Sequence } from "./sequence";
 
+
 export interface IEntity {
   key: string;
   update(timeStamp: number): void;
