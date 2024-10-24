@@ -1,8 +1,14 @@
+import { AssetsHelper } from "./Helpers/assetsHelper";
 import { Scene } from "./scene";
-import { SequencerBase } from "./sequencerBase";
 
-export class Sequence extends SequencerBase {
 
+export class Sequence {
+
+    public durationMs: number = 0;
+    public scenes: Scene[] = [];
+    public currentSceneIndex: number = 0;
+    public isPlaying: boolean = false;
+    public requestAnimationFrameID!: number;
     private startTime: number = 0;
 
     public bpm: number = 0;
@@ -19,65 +25,85 @@ export class Sequence extends SequencerBase {
 
     private beatListeners: ((scene: number, time: number, count: number) => void)[] = [];
     private tickListeners: ((scene: number, time: number, count: number) => void)[] = [];
-
-    private barListeners: ((bar: number) => void)[] = []
+    private barListeners: ((bar: number) => void)[] = [];
 
     private audioContext!: AudioContext;
     private audioBuffer!: AudioBuffer;
     private audioSource!: AudioBufferSourceNode;
-
     private analyser!: AnalyserNode;
     public fftData!: Uint8Array;
 
-    targetCtx!: CanvasRenderingContext2D | null;
+    public targetCtx!: CanvasRenderingContext2D | null;
 
     private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
 
+    /**
+     * Adds a post-processing function to the sequence.
+     * @param processor - The post-processing function to add.
+     */
     addPostProcessor(processor: (ctx: CanvasRenderingContext2D, sequence: Sequence) => void) {
         this.postProcessors.push(processor);
     }
-    onReady() {
-    }
+
+    /**
+     * Gets the remaining time in the current scene.
+     * @param timeStamp - The current timestamp in the animation.
+     * @returns The remaining time in milliseconds.
+     */
     getSceneRemainingTime(timeStamp: number): number {
         if (!this.currentScene) {
             return 0;
         }
         const elapsedTime = timeStamp - this.currentScene.startTimeinMs;
-        return Math.max(0, this.currentScene.durationInMs - elapsedTime); // Ensure remainingTime is not negative
+        return Math.max(0, this.currentScene.durationInMs - elapsedTime);
     }
 
+    /**
+     * Creates a new Sequence.
+     * @param target - The canvas element to render the animation on.
+     * @param bpm - The beats per minute for the animation.
+     * @param ticksPerBeat - The number of ticks per beat.
+     * @param beatsPerBar - The number of beats per bar.
+     * @param scenes - An array of scenes to include in the sequence.
+     * @param audioFile - An optional URL to an audio file to synchronize the animation with.
+     */
     constructor(
         public target: HTMLCanvasElement,
-        bpm: number = 120, ticksPerBeat: number = 4, beatsPerBar: number = 4, scenes: Scene[], audioFile?: string) {
+        bpm: number = 120,
+        ticksPerBeat: number = 4,
+        beatsPerBar: number = 4,
+        scenes: Scene[],
+        audioFile?: string
+    ) {
 
-
-        super(scenes);
-
+        this.scenes = scenes || [];
         this.targetCtx = target.getContext("2d");
-
-
-
-
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
         this.beatsPerBar = beatsPerBar;
 
         if (audioFile) {
-            this.loadAudio(audioFile);
+            this.audioContext = new AudioContext();
+            this.analyser = this.audioContext.createAnalyser();
+            AssetsHelper.loadAudio(audioFile,this.audioContext) 
+                .then(audioBuffer => {
+                    this.audioBuffer = audioBuffer;
+                    this.onReady();
+                })
+                .catch(error => console.error("Error loading audio:", error));
         } else {
             this.onReady();
         }
-        this.durationMs = 0;
-        if (this.scenes.length > 0) {
-            this.durationMs = Math.max(...this.scenes.map((scene) => {
-                return scene.startTimeinMs + scene.durationInMs;
-            }));
-        }
+
+        this.recalculateDuration();
     }
 
+    /**
+     * Loads the audio file and initializes the audio context and analyser.
+     * @param audioFile - The URL of the audio file to load.
+     */
     private loadAudio(audioFile: string) {
-        this.audioContext = new AudioContext();
-        this.analyser = this.audioContext.createAnalyser(); // Create analyser node
+    
 
         fetch(audioFile)
             .then(response => response.arrayBuffer())
@@ -86,34 +112,83 @@ export class Sequence extends SequencerBase {
                 this.audioBuffer = audioBuffer;
 
                 this.onReady();
-
             })
             .catch(error => console.error("Error loading audio:", error));
     }
 
-    // Add event listener for bars
+    /**
+     * Called when the audio file is loaded or when no audio is used.
+     */
+    onReady() { }
+
+    /**
+     * Adds an event listener for when a bar is complete.
+     * @param listener - The function to call when a bar is complete.
+     */
     onBar(listener: (bar: number) => void) {
         this.barListeners.push(listener);
     }
 
+    /**
+     * Adds an event listener for when a beat occurs.
+     * @param listener - The function to call when a beat occurs.
+     */
     onBeat(listener: (scene: number, ts: number) => void) {
         this.beatListeners.push(listener);
     }
 
+    /**
+     * Adds an event listener for when a tick occurs.
+     * @param listener - The function to call when a tick occurs.
+     */
     onTick(listener: (scene: number, ts: number) => void) {
         this.tickListeners.push(listener);
     }
 
+    /**
+     * Adds a scene to the sequence.
+     * @param scene - The scene to add.
+     */
     addScene(scene: Scene): void {
         this.scenes.push(scene);
         this.recalculateDuration();
     }
 
+    /**
+     * Adds multiple scenes to the sequence.
+     * @param scenes - The scenes to add.
+     * @returns The Sequence instance for chaining.
+     */
+    addScenes(...scenes: Scene[]): Sequence {
+        this.scenes.push(...scenes);
+        this.recalculateDuration();
+        return this;
+    }
+
+     /**
+     * Adds multiple scenes to the sequence.
+     * @param scenes - The scenes to add.
+     * @returns The Sequence instance for chaining.
+     */
+     addSceneArray(scenes: Scene[]): Sequence {
+        this.scenes.push(...scenes);
+        this.recalculateDuration();
+        return this;
+    }
+
+
+    /**
+     * Removes a scene from the sequence.
+     * @param scene - The scene to remove.
+     */
     removeScene(scene: Scene): void {
         this.scenes = this.scenes.filter((s) => s !== scene);
         this.recalculateDuration();
     }
 
+    /**
+     * Recalculates the total duration of the sequence.
+     */
     private recalculateDuration() {
         this.durationMs = 0;
         if (this.scenes.length > 0) {
@@ -123,17 +198,18 @@ export class Sequence extends SequencerBase {
         }
     }
 
+    /**
+     * Starts the animation sequence.
+     */
     play(): void {
         this.isPlaying = true;
         this.currentSceneIndex = 0;
         this.lastBeatTime = 0;
         this.currentTick = 0;
-
+        this.currentBeat = 0; // Initialize currentBeat to 0
         this.startTime = performance.now();
 
-        // Start audio playback
         if (this.audioBuffer) {
-            // Create a NEW AudioBufferSourceNode each time
             this.audioSource = this.audioContext.createBufferSource();
             this.audioSource.buffer = this.audioBuffer;
             this.audioSource.connect(this.analyser);
@@ -141,14 +217,10 @@ export class Sequence extends SequencerBase {
             this.analyser.connect(this.audioContext.destination);
             this.fftData = new Uint8Array(this.analyser.frequencyBinCount);
             this.audioSource.start();
-
         }
 
         const animate = (ts: number) => {
-            // Call playCurrentScene even if there is no current scene
-            const adjustedTimeStamp = ts - this.startTime
-
-
+            const adjustedTimeStamp = ts - this.startTime;
             this.playCurrentScene(adjustedTimeStamp);
 
             if (this.isPlaying) {
@@ -158,75 +230,95 @@ export class Sequence extends SequencerBase {
         this.requestAnimationFrameID = requestAnimationFrame(animate);
     }
 
+    /**
+     * Pauses   
+   the animation sequence.
+     */
     pause(): void {
         this.isPlaying = false;
         cancelAnimationFrame(this.requestAnimationFrameID);
     }
 
+    /**
+     * Stops the animation sequence.
+     */
     stop(): void {
         this.isPlaying = false;
         this.currentSceneIndex = 0;
         cancelAnimationFrame(this.requestAnimationFrameID);
     }
 
+    /**
+     * Gets the current scene being played.
+     * @returns The current Scene or undefined if no scene is active.
+     */
     get currentScene(): Scene | undefined {
         return this.scenes[this.currentSceneIndex];
     }
 
+    /**
+  * Animates the current scene and handles scene transitions,
+  * audio analysis, and beat/tick events.
+  * @param timeStamp - The adjusted timestamp for the current frame.
+  */
     private playCurrentScene(timeStamp: number): void {
         if (!this.isPlaying) {
             return;
         }
+
         // Determine the current scene based on timeStamp
         let currentSceneIndex = this.scenes.findIndex(scene =>
-            timeStamp >= scene.startTimeinMs &&
-            timeStamp < scene.startTimeinMs + scene.durationInMs
+            timeStamp >= scene.startTimeinMs && timeStamp < scene.startTimeinMs + scene.durationInMs
         );
-        // If no scene is found for the current time, check if there's an upcoming scene
+
+        // If no current scene is found, check for upcoming scenes
         if (currentSceneIndex === -1) {
             currentSceneIndex = this.scenes.findIndex(scene => timeStamp < scene.startTimeinMs);
-            if (currentSceneIndex === -1) { // No upcoming scene, animation finished
+            if (currentSceneIndex === -1) {  // No upcoming scene, end animation
                 this.isPlaying = false;
                 return;
             } else { // Wait for the upcoming scene
                 return;
             }
         }
+
         // If the scene has changed, update currentSceneIndex and play the new scene
         if (this.currentSceneIndex !== currentSceneIndex) {
             this.currentSceneIndex = currentSceneIndex;
+            const elapsedTime = timeStamp - this.currentScene!.startTimeinMs;
 
-
-
-            let elapsedTime = timeStamp - this.currentScene!.startTimeinMs;
             this.currentScene!.play(elapsedTime).then(() => {
-                // You might want to add an event here for when a scene ends
+                // Scene transition completed
             });
         }
-        // FFT analysis
+
+        // FFT analysis (if analyser is available)
         if (this.analyser) {
             this.analyser.getByteFrequencyData(this.fftData);
-
-            // const avgFrequency = this.fftData.reduce((sum, val) => sum + val, 0) / this.fftData.length;
-            // console.log("Average frequency:", avgFrequency);
         }
 
-        // Call update() on all entities in the new scene
+        // Clear the target canvas and update/draw entities
         this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
         this.currentScene!.entities.forEach(entity => {
-
             entity.update(timeStamp);
             if (this.target) {
-
                 entity.copyToCanvas(this.target, this);
             }
         });
 
+        // Apply post-processing effects
         if (this.targetCtx) {
-            this.postProcessors.forEach(processor => processor(this.targetCtx!, this)); // Apply each processor
+            this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
         }
 
-        // BPM and event handling
+        this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
+    }
+
+    /**
+     * Handles beat and tick events based on the current timestamp.
+     * @param timeStamp - The adjusted timestamp for the current frame.
+     */
+    private handleBeatAndTickEvents(timeStamp: number) {
         const beatIntervalMs = 60000 / this.bpm;
         const tickIntervalMs = beatIntervalMs / this.ticksPerBeat;
 
@@ -235,20 +327,20 @@ export class Sequence extends SequencerBase {
             this.beatListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp, this.beatCounter));
             this.currentTick = 0;
             this.currentBeat++;
-            // Bar event handling
-
             this.beatCounter++;
+
             if (this.currentBeat > this.beatsPerBar) {
                 this.currentBar++;
-                this.currentBeat = 1; // Reset to 1 after a bar is complete
+                this.currentBeat = 1;
                 this.barListeners.forEach(listener => listener(this.currentBar));
             }
         }
+
         if (timeStamp - this.lastBeatTime >= this.currentTick * tickIntervalMs) {
             this.tickListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp, this.tickCounter));
             this.currentTick++;
             this.tickCounter++;
-
         }
     }
+
 }
