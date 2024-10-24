@@ -1,3 +1,4 @@
+
 import { AssetsHelper } from "./Helpers/assetsHelper";
 import { Scene } from "./scene";
 
@@ -10,6 +11,7 @@ export class Sequence {
     public isPlaying: boolean = false;
     public requestAnimationFrameID!: number;
     private startTime: number = 0;
+    public currentTime: number = 0; 
 
     public bpm: number = 0;
     public ticksPerBeat: number = 0;
@@ -265,6 +267,8 @@ export class Sequence {
         if (!this.isPlaying) {
             return;
         }
+
+        this.currentTime = timeStamp; // Update currentTime
 
         // Determine the current scene based on timeStamp
         let currentSceneIndex = this.scenes.findIndex(scene =>

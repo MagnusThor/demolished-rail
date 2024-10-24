@@ -38,6 +38,7 @@ class Sequence {
         this.currentSceneIndex = 0;
         this.isPlaying = false;
         this.startTime = 0;
+        this.currentTime = 0;
         this.bpm = 0;
         this.ticksPerBeat = 0;
         this.lastBeatTime = 0;
@@ -217,6 +218,7 @@ class Sequence {
         if (!this.isPlaying) {
             return;
         }
+        this.currentTime = timeStamp; // Update currentTime
         // Determine the current scene based on timeStamp
         let currentSceneIndex = this.scenes.findIndex(scene => timeStamp >= scene.startTimeinMs && timeStamp < scene.startTimeinMs + scene.durationInMs);
         // If no current scene is found, check for upcoming scenes

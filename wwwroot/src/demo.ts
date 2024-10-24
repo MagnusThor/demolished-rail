@@ -300,7 +300,28 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
 
     // Add Entities to the Scens
 
-    scenes[0].addEntities(strobeEntity);
+    // setup a typeWriter, showing after 5 seconds in scene 0
+
+    const typeWriterEntityForFirstScene = new Entity<ITypeWriterEffectProps>(
+        "Typewriter",
+        instance.MockedGraph.canvasWidth,
+        instance.MockedGraph.canvasHeight,
+        {
+            x: 100,
+            y: 300,
+            text: "HELLO WORLD",
+            index: 0,
+            speed: 5, // 5 characters per second
+            lastCharacterTime: 0,
+            useBPM: true,
+            bpm: instance.MockedGraph.audioProperties.bpm,
+            ticksPerBeat: instance.MockedGraph.audioProperties.ticks
+        },
+        typeWriterEffect, 5000, 5000
+    );
+
+
+    scenes[0].addEntities(strobeEntity, typeWriterEntityForFirstScene);
     scenes[1].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
     scenes[2].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
     scenes[3].addEntities(strobeEntity, fractalShaderEntityTwo, imageOverlayEntity);
