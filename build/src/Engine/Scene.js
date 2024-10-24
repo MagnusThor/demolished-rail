@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Scene = void 0;
+const entity_1 = require("./entity");
 class Scene {
     /**
      * Creates a new Scene.
@@ -64,6 +65,13 @@ class Scene {
                 }
             };
             animate(); // Call animate once to start the initial rendering
+        });
+    }
+    addPostProcessorToEntities(processor) {
+        this.entities.forEach(entity => {
+            if (entity instanceof entity_1.Entity) { // Check if the entity is an instance of the Entity class
+                entity.addPostProcessor(processor);
+            }
         });
     }
 }

@@ -1,4 +1,5 @@
-import { IEntity } from "./entity";
+import { Entity, IEntity } from "./entity";
+import { Sequence } from "./sequence";
 import { ShaderEntity } from "./shaderEntity";
 
 export class Scene {
@@ -70,4 +71,13 @@ export class Scene {
       animate(); // Call animate once to start the initial rendering
     });
   }
+
+  public addPostProcessorToEntities(processor: (ctx: CanvasRenderingContext2D) => void): void {
+    this.entities.forEach(entity => {
+      if (entity instanceof Entity) { // Check if the entity is an instance of the Entity class
+        entity.addPostProcessor(processor);
+      }
+    });
+  }
+  
 }
