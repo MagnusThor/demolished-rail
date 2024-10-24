@@ -10,10 +10,12 @@ class Entity {
      * @param props - The properties for the entity.
      * @param action - The action function that defines the entity's behavior.
      */
-    constructor(key, w, h, props, action) {
+    constructor(key, w, h, props, action, startTimeinMs, durationInMs) {
         this.key = key;
         this.props = props;
         this.action = action;
+        this.startTimeinMs = startTimeinMs;
+        this.durationInMs = durationInMs;
         this.postProcessors = [];
         this.canvas = document.createElement("canvas");
         this.canvas.width = w;
@@ -35,19 +37,29 @@ class Entity {
     copyToCanvas(targetCanvas, sequence) {
         const targetCtx = targetCanvas.getContext("2d");
         if (targetCtx) {
-            targetCtx.drawImage(this.canvas, 0, 0);
-            this.postProcessors.forEach(processor => processor(targetCtx, sequence));
+            // Calculate the elapsed time for the entity
+            const elapsed = sequence.currentTime - (this.startTimeinMs || 0);
+            // Check if the entity should be rendered based on its lifetime
+            if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
+                targetCtx.drawImage(this.canvas, 0, 0);
+                this.postProcessors.forEach(processor => processor(targetCtx, sequence));
+            }
         }
     }
     /**
-     * Updates the entity's state, clears the canvas, and calls the action function.
-     * @param timeStamp - The current timestamp in the animation.
-     */
+    * Updates the entity's state, clears the canvas, and calls the action function.
+    * @param timeStamp - The current timestamp in the animation.
+    */
     update(timeStamp) {
         var _a;
         (_a = this.ctx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (this.action && this.ctx && this.props) {
-            this.action(timeStamp, this.ctx, this.props);
+            // Calculate the elapsed time for the entity
+            const elapsed = timeStamp - (this.startTimeinMs || 0);
+            // Check if the entity should be rendered based on its lifetime
+            if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
+                this.action(timeStamp, this.ctx, this.props);
+            }
         }
     }
 }

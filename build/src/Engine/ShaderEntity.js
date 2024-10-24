@@ -11,10 +11,13 @@ class ShaderEntity {
      * @param props - The properties for the entity, including shader code and render buffers.
      * @param action - An optional action function to be called before rendering the shaders.
      */
-    constructor(key, w, h, props, action) {
+    constructor(key, w, h, props, action, startTimeinMs, durationInMs) {
         this.key = key;
         this.props = props;
         this.action = action;
+        this.startTimeinMs = startTimeinMs;
+        this.durationInMs = durationInMs;
+        this.postProcessors = [];
         this.canvas = document.createElement("canvas");
         this.canvas.width = w;
         this.canvas.height = h;
@@ -29,24 +32,41 @@ class ShaderEntity {
         }
     }
     /**
+ * Adds a post-processing function to the entity.
+ * @param processor - The post-processing function to add.
+ */
+    addPostProcessor(processor) {
+        this.postProcessors.push(processor);
+    }
+    /**
      * Updates the ShaderEntity by calling the action function (if provided)
      * and then updating the ShaderRenderer.
      * @param timeStamp - The current timestamp in the animation.
      */
     update(timeStamp) {
         if (this.action && this.shaderRenderer && this.props) {
+            // Calculate the elapsed time for the entity
+            const elapsed = timeStamp - (this.startTimeinMs || 0);
             this.action(timeStamp, this.shaderRenderer, this.props);
+            if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
+                this.action(timeStamp, this.shaderRenderer, this.props);
+                this.shaderRenderer.update(timeStamp / 1000);
+            }
         }
-        this.shaderRenderer.update(timeStamp / 1000);
     }
     /**
      * Copies the entity's canvas to the target canvas.
      * @param targetCanvas - The target canvas to copy to.
      */
-    copyToCanvas(targetCanvas) {
+    copyToCanvas(targetCanvas, sequence) {
         const targetCtx = targetCanvas.getContext("2d");
         if (targetCtx) {
-            targetCtx.drawImage(this.canvas, 0, 0);
+            // Calculate the elapsed time for the entity
+            const elapsed = sequence.currentTime - (this.startTimeinMs || 0);
+            // Check if the entity should be rendered based on its lifetime
+            if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
+                targetCtx.drawImage(this.canvas, 0, 0);
+            }
         }
     }
 }
