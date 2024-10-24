@@ -1,7 +1,7 @@
 import { Sequence } from "../../src/Engine/sequence";
 import { Scene } from "../../src/Engine/scene";
 import { Entity, IEntity } from "../../src/Engine/entity";
-import { IShaderProperties, ShaderEntity } from "../../src/Engine/shaderEntity";
+import { ShaderEntity } from "../../src/Engine/shaderEntity";
 import { mainFragment } from "../assets/shaders/mainFragment";
 import { mainVertex } from "../assets/shaders/mainVertex";
 import { fractalOne } from "../assets/shaders/fractalOne";
@@ -11,19 +11,19 @@ import { expandingCircleEffect, IExpandingCircleEffectProps } from "./effects/ex
 import { IStarburstProps, starburstEffect } from "./effects/starBurstEffct";
 import { ITextEffectProps, textEffect } from "./effects/textEffect";
 import { IImageOverlayEffectProps, imageOverlayEffect } from "./effects/imageOverlayEffect";
-
-
 import { textArrayDisplayEffect, ITextArrayDisplayProps } from './effects/textArrayDisplayEffect'
-
 import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
 import { audioVisualizerEffect, IAudioVisualizerProps } from "./effects/fftAnalyzerEffect";
 import { IStrobeEffectProps, strobeEffect } from "./effects/strobeEffect";
-import { createBlurPostProcessor } from "../../src/Engine/Helpers/postProcessors";
 import { createBeatShakePostProcessor } from "./postprocessors/createBeatShakePostProcessor";
 import { fractalTwo } from "../assets/shaders/fractalTwo";
-import { gridOverlayEffect, IGridOverlayEffectProps } from "./effects/gridOverlayEffect";
 import { SceneBuilder } from "../../src/Engine/Helpers/sceneBuilder";
-
+import { gridOverlayEffect, IGridOverlayEffectProps } from "./effects/gridOverlayEffect";
+import { IParallaxLayerProps, parallaxLayerEffect } from "./effects/paralaxEffect";
+import { ballEffect, IBallEntityProps } from "./effects/bubbleParticles";
+import { createCRTJitterPostProcessor } from "./postprocessors/createCRTJitterPostProcessor";
+import { IStretchingTextProps, stretchingTextEffect } from "./effects/streachingTextEffect";
+import { creditsScrollerEffect, ICreditsScrollerProps } from "./effects/creditsScroller";
 
 
 
@@ -77,12 +77,13 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
 
     const sceneBuilder = new SceneBuilder(139200);
 
-    sceneBuilder.addScene("Scene 0", 10000).
+    sceneBuilder.addScene("Scene 0", 20000).
         addScene("Scene 1", 8000).
         addScene("Scene 2", 15000).
         addScene("Scene 4", 15000).
-        addScene("Scene 5", 15000);
-
+        addScene("Scene 5", 25000).
+        durationUntilEndInMs("Scene 6");
+       
 
     const scenes = sceneBuilder.getScenes();
 
@@ -165,7 +166,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
         {
             x: 100,
             y: 300,
-            text: "THIS IS A TYPWRITER-EFFECT",
+            text: "EASY AUDIO SYNCRONIZATON",
             index: 0,
             speed: 5, // 5 characters per second
             lastCharacterTime: 0,
@@ -265,7 +266,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
         {
             x: 100,
             y: 100,
-            text: "Vad du kan förvänta dig....".toUpperCase(),
+            text: "FULL SHADER SUPPORT".toUpperCase(),
             font: "Big Shoulders Stencil Text",
             size: 60,
             duration: 15 // 5 seconds
@@ -282,10 +283,10 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
             x: 100,
             y: 200,
             texts: [
-                "HELLO".toUpperCase(),
-                "WORLD".toUpperCase(),
-                "KILLROY",
-                "WAS HERE",
+                "1-N RENDERPASS".toUpperCase(),
+                "POSTPROCESSING".toUpperCase(),
+                "1-N TEXTURES",
+                "CUSTOM UNIFORMS",
             ],
             font: instance.MockedGraph.font,
             size: 60,
@@ -300,16 +301,16 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
 
     // Add Entities to the Scens
 
-    // setup a typeWriter, showing after 5 seconds in scene 0
+    // setup a some more test Entities for Scene 0
 
-    const typeWriterEntityForFirstScene = new Entity<ITypeWriterEffectProps>(
+    const typeWriter1EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
         "Typewriter",
         instance.MockedGraph.canvasWidth,
         instance.MockedGraph.canvasHeight,
         {
             x: 100,
-            y: 300,
-            text: "HELLO WORLD",
+            y: 200,
+            text: "DEMOLISHED-RAILS",
             index: 0,
             speed: 5, // 5 characters per second
             lastCharacterTime: 0,
@@ -317,20 +318,140 @@ demo.addAsset("assets/images/silhouette.png").then((instance: SetupDemo) => {
             bpm: instance.MockedGraph.audioProperties.bpm,
             ticksPerBeat: instance.MockedGraph.audioProperties.ticks
         },
-        typeWriterEffect, 5000, 5000
+        typeWriterEffect, 1000, 10000
     );
 
+    const typeWriter2EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
+        "Typewriter",
+        instance.MockedGraph.canvasWidth,
+        instance.MockedGraph.canvasHeight,
+        {
+            x: 0,
+            y: 350,
+            text: "FRAMEWORK DEMO",
+            index: 0,
+            speed: 5, // 5 characters per second
+            lastCharacterTime: 0,
+            useBPM: true,
+            bpm: instance.MockedGraph.audioProperties.bpm,
+            ticksPerBeat: instance.MockedGraph.audioProperties.ticks
+        },
+        typeWriterEffect, 5000, 10000
+    );
 
-    scenes[0].addEntities(strobeEntity, typeWriterEntityForFirstScene);
+    const gridOverlayEffectEntity = new Entity<IGridOverlayEffectProps>("gridOverlayEffets",
+        instance.MockedGraph.canvasWidth,
+        instance.MockedGraph.canvasHeight, {
+        activeCells: new Set<number>(),
+        cellColor: "rgba(255,255,0,0.2)",
+        cols: 4,
+        rows: 4,
+
+    }, (ts, ctx, props) => gridOverlayEffect(ts, ctx, props, instance.sequence));
+
+
+    const ballEntityProps: IBallEntityProps = {
+        numBalls: 20, 
+        balls: [],
+      };
+      
+      const ballEntity = new Entity<IBallEntityProps>(
+        
+        "BallEntity",
+        instance.MockedGraph.canvasWidth,
+        instance.MockedGraph.canvasHeight,
+        ballEntityProps,
+        (ts, ctx, props, sequence) => ballEffect(ts, ctx, props, sequence!)
+      );
+
+      
+      
+      const stretchingTextProps: IStretchingTextProps = {
+        texts: ["BRING", "THE", "BEAT", "BACK"],
+        currentIndex: 0,
+        font: "Poppins", // Or your custom font
+        color: "rgba(255,255,255,0.2)",
+        lastBeat: -1,
+      };
+      
+      const stretchingTextEntity = new Entity<IStretchingTextProps>(
+        "StretchingText",
+        800, // Canvas width
+        450, // Canvas height
+        stretchingTextProps,
+        (ts, ctx, props, sequence) => stretchingTextEffect(ts, ctx, props, instance.sequence)
+      );
+
+
+
+      // set up an endScene ( credits )
+
+      
+      const creditsText = [
+        "FRAMWORK CODE",
+        "MAGNUS 'BAGZY'THOR",
+        "EXAMPLE FX'S",
+        "MAGNUS 'BAGZY'THOR",
+        "MUSIC BY",
+        "VIRGILL / MANIACS OF NOISE",
+        "GRAPHIS",
+        "COOKIEDOUGH",
+
+        // ... more lines
+      ];
+      
+      const creditsScrollerProps: ICreditsScrollerProps = {
+        lines: creditsText.map((text, index) => ({
+          text,
+          y: 100 + index * 30, // Initial y position
+          alpha: 0,
+        })),
+
+        lineHeight: 80,
+        scrollSpeed: 40,
+        fadeInDuration: 0.5,
+        fadeOutDuration: 0.5,
+        font:"40px Poppins",
+      };
+      
+      const creditsEntity = new Entity<ICreditsScrollerProps>(
+        "CreditsScroller",
+        instance.MockedGraph.canvasWidth, // Canvas width
+        instance.MockedGraph.canvasHeight, // Canvas height
+        creditsScrollerProps,
+        (ts, ctx, props, sequence) => creditsScrollerEffect(ts, ctx, props, instance.sequence)
+      );
+
+      creditsEntity.addPostProcessor(createBeatShakePostProcessor(3));
+
+
+
+    // Okey, done setup , add the stuff to scens 
+
+     scenes[0].addEntities(typeWriter1EntityForFirstScene, 
+         typeWriter2EntityForFirstScene,
+         gridOverlayEffectEntity,ballEntity,stretchingTextEntity);
+
+
+
+     
+
+
     scenes[1].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
     scenes[2].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
     scenes[3].addEntities(strobeEntity, fractalShaderEntityTwo, imageOverlayEntity);
     scenes[4].addEntities(fractalShaderEntityOne, imageOverlayEntity, textOverlay, textArrayDisplayEntity);
+    scenes[5].addEntities(creditsEntity,imageOverlayEntity,ballEntity);
+   
+
+    
 
 
 
     instance.sequence.addSceneArray(scenes)
 
+   // instance.sequence.addPostProcessor(createCRTJitterPostProcessor(0.1, 5, 30))
+    
     // add a postprocessor to the RenderResult; 
     //instance.sequence.addPostProcessor(createBeatShakePostProcessor(3));
 

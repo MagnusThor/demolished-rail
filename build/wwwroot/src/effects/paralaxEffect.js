@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ParallaxEntity = void 0;
-const entity_1 = require("../../../src/Engine/entity");
+exports.parallaxLayerEffect = void 0;
 const parallaxLayerEffect = (ts, ctx, propertybag) => {
     const { image, x, y, depth, speed } = propertybag;
     // Calculate movement based on time and speed
@@ -9,11 +8,6 @@ const parallaxLayerEffect = (ts, ctx, propertybag) => {
     // Draw the image with repeating pattern
     const pattern = ctx.createPattern(image, "repeat");
     ctx.fillStyle = pattern;
-    ctx.fillRect(x - movement, y, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillRect(x - movement, y, ctx.canvas.width + Math.abs(movement), ctx.canvas.height);
 };
-class ParallaxEntity extends entity_1.Entity {
-    constructor(key, w, h, props) {
-        super(key, w, h, props, (ts, ctx, props) => parallaxLayerEffect(ts, ctx, props));
-    }
-}
-exports.ParallaxEntity = ParallaxEntity;
+exports.parallaxLayerEffect = parallaxLayerEffect;

@@ -26,6 +26,8 @@ const typeWriterEffect = (ts, ctx, propertybag) => {
     // Measure the full text width
     const fullTextMetrics = ctx.measureText(propertybag.text);
     const fullTextWidth = fullTextMetrics.width;
-    ctx.fillText(displayText, 10, propertybag.y / 2);
+    // Calculate the centered x-coordinate
+    const centeredX = (ctx.canvas.width - fullTextWidth) / 2;
+    ctx.fillText(displayText, centeredX, propertybag.y / 2);
 };
 exports.typeWriterEffect = typeWriterEffect;

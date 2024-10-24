@@ -14,8 +14,6 @@ export const typeWriterEffect = (
     ts: number,
     ctx: CanvasRenderingContext2D,
     propertybag: ITypeWriterEffectProps,
-
-
 ) => {
 
     ctx.font = "68px Big Shoulders Stencil Text";
@@ -47,7 +45,10 @@ export const typeWriterEffect = (
     const fullTextWidth = fullTextMetrics.width;
 
 
-    ctx.fillText(displayText, 10, propertybag.y / 2);
+    // Calculate the centered x-coordinate
+    const centeredX = (ctx.canvas.width - fullTextWidth) / 2;
+
+    ctx.fillText(displayText, centeredX, propertybag.y / 2);
 
 };
 
