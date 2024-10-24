@@ -22,6 +22,7 @@ const sceneBuilder_1 = require("../../src/Engine/Helpers/sceneBuilder");
 const gridOverlayEffect_1 = require("./effects/gridOverlayEffect");
 const bubbleParticles_1 = require("./effects/bubbleParticles");
 const streachingTextEffect_1 = require("./effects/streachingTextEffect");
+const creditsScroller_1 = require("./effects/creditsScroller");
 class SetupDemo {
     constructor() {
         this.scenes = [];
@@ -64,11 +65,12 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
     // Music length = 139200 ms;
     var _a;
     const sceneBuilder = new sceneBuilder_1.SceneBuilder(139200);
-    sceneBuilder.addScene("Scene 0", 10000).
+    sceneBuilder.addScene("Scene 0", 20000).
         addScene("Scene 1", 8000).
         addScene("Scene 2", 15000).
         addScene("Scene 4", 15000).
-        addScene("Scene 5", 15000);
+        addScene("Scene 5", 25000).
+        durationUntilEndInMs("Scene 6");
     const scenes = sceneBuilder.getScenes();
     // Set up all effects;
     const strobeEntity = new entity_1.Entity("Strobe", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
@@ -176,7 +178,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
     const textOverlay = new entity_1.Entity("TextEffect", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         x: 100,
         y: 100,
-        text: "Vad du kan förvänta dig....".toUpperCase(),
+        text: "FULL SHADER SUPPORT".toUpperCase(),
         font: "Big Shoulders Stencil Text",
         size: 60,
         duration: 15 // 5 seconds
@@ -186,10 +188,10 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         x: 100,
         y: 200,
         texts: [
-            "HELLO".toUpperCase(),
-            "WORLD".toUpperCase(),
-            "KILLROY",
-            "WAS HERE",
+            "1-N RENDERPASS".toUpperCase(),
+            "POSTPROCESSING".toUpperCase(),
+            "1-N TEXTURES",
+            "CUSTOM UNIFORMS",
         ],
         font: instance.MockedGraph.font,
         size: 60,
@@ -243,12 +245,41 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
     const stretchingTextEntity = new entity_1.Entity("StretchingText", 800, // Canvas width
     450, // Canvas height
     stretchingTextProps, (ts, ctx, props, sequence) => (0, streachingTextEffect_1.stretchingTextEffect)(ts, ctx, props, instance.sequence));
+    // set up an endScene ( credits )
+    const creditsText = [
+        "FRAMWORK CODE",
+        "MAGNUS 'BAGZY'THOR",
+        "EXAMPLE FX'S",
+        "MAGNUS 'BAGZY'THOR",
+        "MUSIC BY",
+        "VIRGILL / MANIACS OF NOISE",
+        "GRAPHIS",
+        "COOKIEDOUGH",
+        // ... more lines
+    ];
+    const creditsScrollerProps = {
+        lines: creditsText.map((text, index) => ({
+            text,
+            y: 100 + index * 30, // Initial y position
+            alpha: 0,
+        })),
+        lineHeight: 80,
+        scrollSpeed: 40,
+        fadeInDuration: 0.5,
+        fadeOutDuration: 0.5,
+        font: "40px Poppins",
+    };
+    const creditsEntity = new entity_1.Entity("CreditsScroller", instance.MockedGraph.canvasWidth, // Canvas width
+    instance.MockedGraph.canvasHeight, // Canvas height
+    creditsScrollerProps, (ts, ctx, props, sequence) => (0, creditsScroller_1.creditsScrollerEffect)(ts, ctx, props, instance.sequence));
+    creditsEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
     // Okey, done setup , add the stuff to scens 
     scenes[0].addEntities(typeWriter1EntityForFirstScene, typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity);
     scenes[1].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
     scenes[2].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
     scenes[3].addEntities(strobeEntity, fractalShaderEntityTwo, imageOverlayEntity);
     scenes[4].addEntities(fractalShaderEntityOne, imageOverlayEntity, textOverlay, textArrayDisplayEntity);
+    scenes[5].addEntities(creditsEntity, imageOverlayEntity, ballEntity);
     instance.sequence.addSceneArray(scenes);
     // instance.sequence.addPostProcessor(createCRTJitterPostProcessor(0.1, 5, 30))
     // add a postprocessor to the RenderResult; 
