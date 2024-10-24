@@ -18,8 +18,10 @@ const fftAnalyzerEffect_1 = require("./effects/fftAnalyzerEffect");
 const strobeEffect_1 = require("./effects/strobeEffect");
 const createBeatShakePostProcessor_1 = require("./postprocessors/createBeatShakePostProcessor");
 const fractalTwo_1 = require("../assets/shaders/fractalTwo");
-const gridOverlayEffect_1 = require("./effects/gridOverlayEffect");
 const sceneBuilder_1 = require("../../src/Engine/Helpers/sceneBuilder");
+const gridOverlayEffect_1 = require("./effects/gridOverlayEffect");
+const bubbleParticles_1 = require("./effects/bubbleParticles");
+const streachingTextEffect_1 = require("./effects/streachingTextEffect");
 class SetupDemo {
     constructor() {
         this.scenes = [];
@@ -111,7 +113,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
     const typeWriterEntity = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         x: 100,
         y: 300,
-        text: "THIS IS A TYPWRITER-EFFECT",
+        text: "EASY AUDIO SYNCRONIZATON",
         index: 0,
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
@@ -197,24 +199,58 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
     });
     textArrayDisplayEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
     // Add Entities to the Scens
-    // setup a typeWriter, showing after 5 seconds in scene 0
-    const typeWriterEntityForFirstScene = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    // setup a some more test Entities for Scene 0
+    const typeWriter1EntityForFirstScene = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
         x: 100,
-        y: 300,
-        text: "HELLO WORLD",
+        y: 200,
+        text: "DEMOLISHED-RAILS",
         index: 0,
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
         useBPM: true,
         bpm: instance.MockedGraph.audioProperties.bpm,
         ticksPerBeat: instance.MockedGraph.audioProperties.ticks
-    }, typeWriterEffet_1.typeWriterEffect, 5000, 5000);
-    scenes[0].addEntities(strobeEntity, typeWriterEntityForFirstScene);
+    }, typeWriterEffet_1.typeWriterEffect, 1000, 10000);
+    const typeWriter2EntityForFirstScene = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+        x: 0,
+        y: 350,
+        text: "FRAMEWORK DEMO",
+        index: 0,
+        speed: 5, // 5 characters per second
+        lastCharacterTime: 0,
+        useBPM: true,
+        bpm: instance.MockedGraph.audioProperties.bpm,
+        ticksPerBeat: instance.MockedGraph.audioProperties.ticks
+    }, typeWriterEffet_1.typeWriterEffect, 5000, 10000);
+    const gridOverlayEffectEntity = new entity_1.Entity("gridOverlayEffets", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+        activeCells: new Set(),
+        cellColor: "rgba(255,255,0,0.2)",
+        cols: 4,
+        rows: 4,
+    }, (ts, ctx, props) => (0, gridOverlayEffect_1.gridOverlayEffect)(ts, ctx, props, instance.sequence));
+    const ballEntityProps = {
+        numBalls: 20,
+        balls: [],
+    };
+    const ballEntity = new entity_1.Entity("BallEntity", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, ballEntityProps, (ts, ctx, props, sequence) => (0, bubbleParticles_1.ballEffect)(ts, ctx, props, sequence));
+    const stretchingTextProps = {
+        texts: ["BRING", "THE", "BEAT", "BACK"],
+        currentIndex: 0,
+        font: "Poppins", // Or your custom font
+        color: "rgba(255,255,255,0.2)",
+        lastBeat: -1,
+    };
+    const stretchingTextEntity = new entity_1.Entity("StretchingText", 800, // Canvas width
+    450, // Canvas height
+    stretchingTextProps, (ts, ctx, props, sequence) => (0, streachingTextEffect_1.stretchingTextEffect)(ts, ctx, props, instance.sequence));
+    // Okey, done setup , add the stuff to scens 
+    scenes[0].addEntities(typeWriter1EntityForFirstScene, typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity);
     scenes[1].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
     scenes[2].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
     scenes[3].addEntities(strobeEntity, fractalShaderEntityTwo, imageOverlayEntity);
     scenes[4].addEntities(fractalShaderEntityOne, imageOverlayEntity, textOverlay, textArrayDisplayEntity);
     instance.sequence.addSceneArray(scenes);
+    // instance.sequence.addPostProcessor(createCRTJitterPostProcessor(0.1, 5, 30))
     // add a postprocessor to the RenderResult; 
     //instance.sequence.addPostProcessor(createBeatShakePostProcessor(3));
 });
