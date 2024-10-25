@@ -9,10 +9,12 @@ class Scene {
      * @param startTimeinMs - The start time of the scene in milliseconds.
      * @param durationInMs - The duration of the scene in milliseconds.
      */
-    constructor(name, startTimeinMs, durationInMs) {
+    constructor(name, startTimeinMs, durationInMs, width, height) {
         this.name = name;
         this.startTimeinMs = startTimeinMs;
         this.durationInMs = durationInMs;
+        this.width = width;
+        this.height = height;
         this.entities = [];
     }
     /**
@@ -20,6 +22,12 @@ class Scene {
      * @param entity - The entity to add.
      */
     addEntity(entity) {
+        // If the entity's canvas dimensions are not set, use the scene's dimensions
+        if (!entity.w && !entity.h) {
+            console.log(`adding ${entity.key} to ${this.name, this.width, this.height}`);
+            entity.canvas.width = this.width || 800;
+            entity.canvas.height = this.height || 450;
+        }
         this.entities.push(entity);
     }
     /**
@@ -69,6 +77,7 @@ class Scene {
     }
     addPostProcessorToEntities(processor) {
         this.entities.forEach(entity => {
+            console.log(entity);
             if (entity instanceof entity_1.Entity) { // Check if the entity is an instance of the Entity class
                 entity.addPostProcessor(processor);
             }

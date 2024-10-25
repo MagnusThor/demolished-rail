@@ -30,16 +30,20 @@ export class ShaderEntity implements IEntity {
      */
     constructor(
         public key: string,
-        w: number,
-        h: number,
+
         public props?: IShaderProperties,
         public action?: (time: number, shaderRender: ShaderRenderer, properties: IShaderProperties, sequence?: Sequence) => void,
         public startTimeinMs?: number,
-        public durationInMs?: number
+        public durationInMs?: number,
+        public w?: number,
+        public h?: number,
     ) {
         this.canvas = document.createElement("canvas");
-        this.canvas.width = w;
-        this.canvas.height = h;
+        if (w && h) {
+            this.canvas.width = w;
+            this.canvas.height = h;
+        }
+
 
         if (props?.mainFragmentShader && props.mainShaderVertex) {
             this.shaderRenderer = new ShaderRenderer(this.canvas, props?.mainShaderVertex, props?.mainFragmentShader);

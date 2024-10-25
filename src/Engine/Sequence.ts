@@ -11,7 +11,7 @@ export class Sequence {
     public isPlaying: boolean = false;
     public requestAnimationFrameID!: number;
     private startTime: number = 0;
-    public currentTime: number = 0; 
+    public currentTime: number = 0;
 
     public bpm: number = 0;
     public ticksPerBeat: number = 0;
@@ -87,7 +87,7 @@ export class Sequence {
         if (audioFile) {
             this.audioContext = new AudioContext();
             this.analyser = this.audioContext.createAnalyser();
-            AssetsHelper.loadAudio(audioFile,this.audioContext) 
+            AssetsHelper.loadAudio(audioFile, this.audioContext)
                 .then(audioBuffer => {
                     this.audioBuffer = audioBuffer;
                     this.onReady();
@@ -105,7 +105,7 @@ export class Sequence {
      * @param audioFile - The URL of the audio file to load.
      */
     private loadAudio(audioFile: string) {
-    
+
 
         fetch(audioFile)
             .then(response => response.arrayBuffer())
@@ -152,6 +152,10 @@ export class Sequence {
      * @param scene - The scene to add.
      */
     addScene(scene: Scene): void {
+        if(!scene.width && scene.height){
+            scene.width = this.target.width;
+            scene.height = this.target.height;            
+        }
         this.scenes.push(scene);
         this.recalculateDuration();
     }
@@ -167,12 +171,12 @@ export class Sequence {
         return this;
     }
 
-     /**
-     * Adds multiple scenes to the sequence.
-     * @param scenes - The scenes to add.
-     * @returns The Sequence instance for chaining.
-     */
-     addSceneArray(scenes: Scene[]): Sequence {
+    /**
+    * Adds multiple scenes to the sequence.
+    * @param scenes - The scenes to add.
+    * @returns The Sequence instance for chaining.
+    */
+    addSceneArray(scenes: Scene[]): Sequence {
         this.scenes.push(...scenes);
         this.recalculateDuration();
         return this;
@@ -233,7 +237,7 @@ export class Sequence {
     }
 
     /**
-     * Pauses   
+     * Pauses  
    the animation sequence.
      */
     pause(): void {
@@ -291,11 +295,17 @@ export class Sequence {
             this.currentSceneIndex = currentSceneIndex;
             const elapsedTime = timeStamp - this.currentScene!.startTimeinMs;
 
+            // Set scene dimensions if not already set
+            if (!this.currentScene!.width) {
+                this.currentScene!.width = this.target.width;
+            }
+            if (!this.currentScene!.height) {
+                this.currentScene!.height = this.target.height;
+            }
             this.currentScene!.play(elapsedTime).then(() => {
                 // Scene transition completed
             });
         }
-
         // FFT analysis (if analyser is available)
         if (this.analyser) {
             this.analyser.getByteFrequencyData(this.fftData);

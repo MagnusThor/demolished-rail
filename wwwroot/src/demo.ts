@@ -1,5 +1,3 @@
-import { Sequence } from "../../src/Engine/sequence";
-import { Scene } from "../../src/Engine/scene";
 import { Entity, IEntity } from "../../src/Engine/entity";
 import { ShaderEntity } from "../../src/Engine/shaderEntity";
 import { mainFragment } from "../assets/shaders/mainFragment";
@@ -25,51 +23,12 @@ import { createCRTJitterPostProcessor } from "./postprocessors/createCRTJitterPo
 import { IStretchingTextProps, stretchingTextEffect } from "./effects/streachingTextEffect";
 import { creditsScrollerEffect, ICreditsScrollerProps } from "./effects/creditsScroller";
 import { createLensPostProcessor } from "./postprocessors/createLensPostProcessor";
+import { SetupDemo } from "./SetupDemo";
 
-
-class SetupDemo {
-    sequence: Sequence;
-    scenes: Scene[] = [];
-    settings = {
-        width: 800,
-        height: 450,
-        audioProperties: {
-            bpm: 110,
-            ticks: 8,
-            beat: 0,
-            tick: 0,
-            bar: 0,
-            avgFreq: 0
-        },
-        font: "Big Shoulders Stencil Text"
-    };
-    constructor() {
-        this.sequence = new Sequence(
-            document.querySelector("canvas") as HTMLCanvasElement,
-            100, 4, 4, [], "/wwwroot/assets/music/music.mp3");
-
-    }
-    async addAssets(...urls: string[]) {
-        await AssetsHelper.loadImages(urls);
-        return this;
-    }
-    addScene(scene: Scene) {
-        this.sequence.addScene(scene);
-    }
-    addEntity<T>(key: string, entity: Entity<T> | ShaderEntity) {
-        const scene = this.scenes.find(pre => {
-            return pre.name === key
-        });
-        if (scene) {
-            scene.addEntity(entity);
-        } else throw Error("No such scene")
-    }
-
-}
 
 const demo = new SetupDemo();
 
-demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((demo: SetupDemo) => {
+demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((demo: SetupDemo) => {
     // Create the Scenes
     // Music length = 139200 ms;
     const sceneBuilder = new SceneBuilder(139200);
@@ -86,8 +45,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const strobeEntity = new Entity<IStrobeEffectProps>(
         "Strobe",
-        demo.settings.width,
-        demo.settings.height,
+       
         {
             color: "white", // You can change the color
             isOn: false,
@@ -99,8 +57,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const imageOverlayEntity = new Entity<IImageOverlayEffectProps>(
         "ImageOverlay",
-        demo.settings.width,
-        demo.settings.height,
+      
         {
             x: 0,
             y: 0,
@@ -118,8 +75,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const expandingCircleEntity = new Entity<IExpandingCircleEffectProps>(
         "ExpandingCircle",
-        demo.settings.width,
-        demo.settings.height,
+      
         {
             x: demo.settings.width / 2,
             y: demo.settings.height / 2,
@@ -133,8 +89,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const starburstEntity = new Entity<IStarburstProps>(
         "Starburst",
-        demo.settings.width, // Canvas width
-        demo.settings.width,  // Canvas height
+      
         {
             x: demo.settings.width / 2, // Example x-coordinate
             y: demo.settings.height / 2, // Example y-coordinate
@@ -152,8 +107,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const typeWriterEntity = new Entity<ITypeWriterEffectProps>(
         "Typewriter",
-        demo.settings.width,
-        demo.settings.height,
+    
         {
             x: 100,
             y: 300,
@@ -170,8 +124,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const randomSquareEntity = new Entity<IRandomSquareEffectProps>(
         "RandomSquare",
-        demo.settings.width,
-        demo.settings.height,
+     
         {
             x: 0,
             y: 0,
@@ -185,8 +138,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const gridOverlayEntity = new Entity<IGridOverlayEffectProps>(
         "GridOverlay",
-        800, // Canvas width
-        450, // Canvas height
+     
         {
             rows: 5,
             cols: 8,
@@ -198,8 +150,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const audioVisualizerEntity = new Entity<IAudioVisualizerProps>(
         "AudioVisualizer",
-        demo.settings.width,
-        demo.settings.height,
+      
         {
             x: 0,
             y: 150,
@@ -213,10 +164,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
         (ts, ctx, props, sequence) => audioVisualizerEffect(ts, ctx, props, demo.sequence)
     );
 
-
     const fractalShaderEntityTwo = new ShaderEntity("ShaderEnriry",
-        demo.settings.width
-        , demo.settings.height,
         {
             mainFragmentShader: mainFragment,
             mainShaderVertex: mainVertex,
@@ -231,10 +179,8 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
         }, (ts, render, propertybag) => {
         });
 
-
     const fractalShaderEntityOne = new ShaderEntity("ShaderEnriry",
-        demo.settings.width
-        , demo.settings.height,
+     
         {
             mainFragmentShader: mainFragment,
             mainShaderVertex: mainVertex,
@@ -252,8 +198,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const textOverlay = new Entity<ITextEffectProps>(
         "TextEffect",
-        demo.settings.width,
-        demo.settings.height,
+      
         {
             x: 100,
             y: 100,
@@ -268,8 +213,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const textArrayDisplayEntity = new Entity<ITextArrayDisplayProps>(
         "TextArrayDisplay",
-        demo.settings.width,
-        demo.settings.width,
+       
         {
             x: 100,
             y: 200,
@@ -296,8 +240,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const typeWriter1EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
         "Typewriter",
-        demo.settings.width,
-        demo.settings.height,
+      
         {
             x: 100,
             y: 200,
@@ -314,8 +257,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
     const typeWriter2EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
         "Typewriter",
-        demo.settings.width,
-        demo.settings.height,
+   
         {
             x: 0,
             y: 350,
@@ -331,8 +273,7 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
     );
 
     const gridOverlayEffectEntity = new Entity<IGridOverlayEffectProps>("gridOverlayEffets",
-        demo.settings.width,
-        demo.settings.height, {
+      {
         activeCells: new Set<number>(),
         cellColor: "rgba(255,255,0,0.2)",
         cols: 4,
@@ -342,43 +283,41 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
 
 
     const ballEntityProps: IBallEntityProps = {
-        numBalls: 20, 
+        numBalls: 20,
         balls: [],
-      };
-      
-      const ballEntity = new Entity<IBallEntityProps>(
-        
+    };
+
+    const ballEntity = new Entity<IBallEntityProps>(
+
         "BallEntity",
-        demo.settings.width,
-        demo.settings.height,
+       
         ballEntityProps,
         (ts, ctx, props, sequence) => ballEffect(ts, ctx, props, sequence!)
-      );
+    );
 
-      
-      
-      const stretchingTextProps: IStretchingTextProps = {
+
+
+    const stretchingTextProps: IStretchingTextProps = {
         texts: ["BRING", "THE", "BEAT", "BACK"],
         currentIndex: 0,
         font: "Poppins", // Or your custom font
         color: "rgba(255,255,255,0.2)",
         lastBeat: -1,
-      };
-      
-      const stretchingTextEntity = new Entity<IStretchingTextProps>(
+    };
+
+    const stretchingTextEntity = new Entity<IStretchingTextProps>(
         "StretchingText",
-        800, // Canvas width
-        450, // Canvas height
+       
         stretchingTextProps,
         (ts, ctx, props, sequence) => stretchingTextEffect(ts, ctx, props, demo.sequence)
-      );
+    );
 
 
 
-      // set up an endScene ( credits )
+    // set up an endScene ( credits )
 
-      
-      const creditsText = [
+
+    const creditsText = [
         "FRAMWORK CODE",
         "MAGNUS 'BAGZY'THOR",
         "EXAMPLE FX'S",
@@ -389,45 +328,44 @@ demo.addAssets("assets/images/silhouette.png","assets/images/lens.png").then((de
         "COOKIEDOUGH",
 
         // ... more lines
-      ];
-      
-      const creditsScrollerProps: ICreditsScrollerProps = {
+    ];
+
+    const creditsScrollerProps: ICreditsScrollerProps = {
         lines: creditsText.map((text, index) => ({
-          text,
-          y: 100 + index * 30, // Initial y position
-          alpha: 0,
+            text,
+            y: 100 + index * 30, // Initial y position
+            alpha: 0,
         })),
 
         lineHeight: 80,
         scrollSpeed: 40,
         fadeInDuration: 0.5,
         fadeOutDuration: 0.5,
-        font:"40px Poppins",
-      };
-      
-      const creditsEntity = new Entity<ICreditsScrollerProps>(
+        font: "40px Poppins",
+    };
+
+    const creditsEntity = new Entity<ICreditsScrollerProps>(
         "CreditsScroller",
-        demo.settings.width, // Canvas width
-        demo.settings.height, // Canvas height
+   
         creditsScrollerProps,
         (ts, ctx, props, sequence) => creditsScrollerEffect(ts, ctx, props, demo.sequence)
-      );
+    );
 
-      creditsEntity.addPostProcessor(createBeatShakePostProcessor(3));
+    creditsEntity.addPostProcessor(createBeatShakePostProcessor(3));
 
     // Okey, done setup , add the stuff to scens 
 
-     scenes[0].addEntities(typeWriter1EntityForFirstScene, 
-         typeWriter2EntityForFirstScene,
-         gridOverlayEffectEntity,ballEntity,stretchingTextEntity);
-     //    .addPostProcessorToEntities(createLensPostProcessor(AssetsHelper.textureCache!.get("lens.png")?.src));
-    
+    scenes[0].addEntities(typeWriter1EntityForFirstScene,
+        typeWriter2EntityForFirstScene,
+        gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
+        .addPostProcessorToEntities(createLensPostProcessor(AssetsHelper.textureCache!.get("lens.png")?.src));
+
     scenes[1].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
     scenes[2].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
     scenes[3].addEntities(strobeEntity, fractalShaderEntityTwo, imageOverlayEntity);
     scenes[4].addEntities(fractalShaderEntityOne, imageOverlayEntity, textOverlay, textArrayDisplayEntity);
-    scenes[5].addEntities(creditsEntity,imageOverlayEntity,ballEntity);
-   
+    scenes[5].addEntities(creditsEntity, imageOverlayEntity, ballEntity);
+
     demo.sequence.addSceneArray(scenes)
 
 

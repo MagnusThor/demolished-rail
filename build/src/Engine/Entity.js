@@ -10,16 +10,21 @@ class Entity {
      * @param props - The properties for the entity.
      * @param action - The action function that defines the entity's behavior.
      */
-    constructor(key, w, h, props, action, startTimeinMs, durationInMs) {
+    constructor(key, props, action, startTimeinMs, durationInMs, w, h) {
         this.key = key;
         this.props = props;
         this.action = action;
         this.startTimeinMs = startTimeinMs;
         this.durationInMs = durationInMs;
+        this.w = w;
+        this.h = h;
         this.postProcessors = [];
         this.canvas = document.createElement("canvas");
-        this.canvas.width = w;
-        this.canvas.height = h;
+        if (w !== undefined && h !== undefined) {
+            this.canvas.width = w;
+            this.canvas.height = h;
+        }
+        ;
         this.ctx = this.canvas.getContext("2d");
     }
     /**
