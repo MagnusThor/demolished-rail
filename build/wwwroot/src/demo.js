@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const sequence_1 = require("../../src/Engine/sequence");
 const entity_1 = require("../../src/Engine/entity");
 const shaderEntity_1 = require("../../src/Engine/shaderEntity");
 const mainFragment_1 = require("../assets/shaders/mainFragment");
@@ -23,47 +22,13 @@ const gridOverlayEffect_1 = require("./effects/gridOverlayEffect");
 const bubbleParticles_1 = require("./effects/bubbleParticles");
 const streachingTextEffect_1 = require("./effects/streachingTextEffect");
 const creditsScroller_1 = require("./effects/creditsScroller");
-class SetupDemo {
-    constructor() {
-        this.scenes = [];
-        this.MockedGraph = {
-            canvasWidth: 800,
-            canvasHeight: 450,
-            audioProperties: {
-                bpm: 110,
-                ticks: 8,
-                beat: 0,
-                tick: 0,
-                bar: 0,
-                avgFreq: 0
-            },
-            font: "Big Shoulders Stencil Text"
-        };
-        this.sequence = new sequence_1.Sequence(document.querySelector("canvas"), 100, 4, 4, [], "/wwwroot/assets/music/music.mp3");
-    }
-    async addAsset(url) {
-        await assetsHelper_1.AssetsHelper.loadImage(url);
-        return this;
-    }
-    addScene(scene) {
-        this.sequence.addScene(scene);
-    }
-    addEntity(key, entity) {
-        const scene = this.scenes.find(pre => {
-            return pre.name === key;
-        });
-        if (scene) {
-            scene.addEntity(entity);
-        }
-        else
-            throw Error("No such scene");
-    }
-}
-const demo = new SetupDemo();
-demo.addAsset("assets/images/silhouette.png").then((instance) => {
+const createLensPostProcessor_1 = require("./postprocessors/createLensPostProcessor");
+const SetupDemo_1 = require("./SetupDemo");
+const demo = new SetupDemo_1.SetupDemo();
+demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((demo) => {
+    var _a, _b;
     // Create the Scenes
     // Music length = 139200 ms;
-    var _a;
     const sceneBuilder = new sceneBuilder_1.SceneBuilder(139200);
     sceneBuilder.addScene("Scene 0", 20000).
         addScene("Scene 1", 8000).
@@ -73,36 +38,34 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         durationUntilEndInMs("Scene 6");
     const scenes = sceneBuilder.getScenes();
     // Set up all effects;
-    const strobeEntity = new entity_1.Entity("Strobe", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    const strobeEntity = new entity_1.Entity("Strobe", {
         color: "white", // You can change the color
         isOn: false,
         lastBeat: -1, // Initialize to -1 to trigger on the first beat
-    }, (ts, ctx, props, sequence) => (0, strobeEffect_1.strobeEffect)(ts, ctx, props, instance.sequence));
-    const imageOverlayEntity = new entity_1.Entity("ImageOverlay", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    }, (ts, ctx, props, sequence) => (0, strobeEffect_1.strobeEffect)(ts, ctx, props, demo.sequence));
+    const imageOverlayEntity = new entity_1.Entity("ImageOverlay", {
         x: 0,
         y: 0,
-        width: instance.MockedGraph.canvasWidth,
-        height: instance.MockedGraph.canvasHeight,
+        width: demo.settings.width,
+        height: demo.settings.height,
         image: (_a = assetsHelper_1.AssetsHelper.textureCache.get("silhouette.png")) === null || _a === void 0 ? void 0 : _a.src,
         opacity: 0.7,
         fadeIn: true,
         fadeOut: true,
         duration: 5,
     }, (ts, ctx, props) => (0, imageOverlayEffect_1.imageOverlayEffect)(ts, ctx, props));
-    const expandingCircleEntity = new entity_1.Entity("ExpandingCircle", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
-        x: instance.MockedGraph.canvasWidth / 2,
-        y: instance.MockedGraph.canvasHeight / 2,
+    const expandingCircleEntity = new entity_1.Entity("ExpandingCircle", {
+        x: demo.settings.width / 2,
+        y: demo.settings.height / 2,
         radius: 0,
         maxRadius: 450,
         growthRate: 15,
         duration: 5 // Scene duration in seconds
-    }, (ts, ctx, props) => (0, expandingCircleEffect_1.expandingCircleEffect)(ts, ctx, props, instance.sequence) // Pass the sequence instance
+    }, (ts, ctx, props) => (0, expandingCircleEffect_1.expandingCircleEffect)(ts, ctx, props, demo.sequence) // Pass the sequence instance
     );
-    const starburstEntity = new entity_1.Entity("Starburst", instance.MockedGraph.canvasWidth, // Canvas width
-    instance.MockedGraph.canvasWidth, // Canvas height
-    {
-        x: instance.MockedGraph.canvasWidth / 2, // Example x-coordinate
-        y: instance.MockedGraph.canvasHeight / 2, // Example y-coordinate
+    const starburstEntity = new entity_1.Entity("Starburst", {
+        x: demo.settings.width / 2, // Example x-coordinate
+        y: demo.settings.height / 2, // Example y-coordinate
         numPoints: 8, // Example number of points
         outerRadius: 50,
         innerRadius: 25,
@@ -112,7 +75,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         saturation: 100,
         lightness: 50
     }, starBurstEffct_1.starburstEffect);
-    const typeWriterEntity = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    const typeWriterEntity = new entity_1.Entity("Typewriter", {
         x: 100,
         y: 300,
         text: "EASY AUDIO SYNCRONIZATON",
@@ -120,36 +83,34 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
         useBPM: true,
-        bpm: instance.MockedGraph.audioProperties.bpm,
-        ticksPerBeat: instance.MockedGraph.audioProperties.ticks
+        bpm: demo.settings.audioProperties.bpm,
+        ticksPerBeat: demo.settings.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect);
-    const randomSquareEntity = new entity_1.Entity("RandomSquare", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    const randomSquareEntity = new entity_1.Entity("RandomSquare", {
         x: 0,
         y: 0,
         size: 0,
         color: "red",
         lastTick: -1 // Initialize to -1 to add a square on the first bar
-    }, (ts, ctx, props) => (0, ranndomSquareByTickEffect_1.randomSquareEffect)(ts, ctx, props, instance.sequence.tickCounter) // Pass currentBar from Sequence
+    }, (ts, ctx, props) => (0, ranndomSquareByTickEffect_1.randomSquareEffect)(ts, ctx, props, demo.sequence.tickCounter) // Pass currentBar from Sequence
     );
-    const gridOverlayEntity = new entity_1.Entity("GridOverlay", 800, // Canvas width
-    450, // Canvas height
-    {
+    const gridOverlayEntity = new entity_1.Entity("GridOverlay", {
         rows: 5,
         cols: 8,
         cellColor: "white",
         activeCells: new Set(),
-    }, (ts, ctx, props, sequence) => (0, gridOverlayEffect_1.gridOverlayEffect)(ts, ctx, props, instance.sequence));
-    const audioVisualizerEntity = new entity_1.Entity("AudioVisualizer", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    }, (ts, ctx, props, sequence) => (0, gridOverlayEffect_1.gridOverlayEffect)(ts, ctx, props, demo.sequence));
+    const audioVisualizerEntity = new entity_1.Entity("AudioVisualizer", {
         x: 0,
         y: 150,
-        width: instance.MockedGraph.canvasWidth,
+        width: demo.settings.width,
         height: 300,
         barWidth: 5,
         barSpacing: 2,
         numBars: 100,
         color: "red"
-    }, (ts, ctx, props, sequence) => (0, fftAnalyzerEffect_1.audioVisualizerEffect)(ts, ctx, props, instance.sequence));
-    const fractalShaderEntityTwo = new shaderEntity_1.ShaderEntity("ShaderEnriry", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    }, (ts, ctx, props, sequence) => (0, fftAnalyzerEffect_1.audioVisualizerEffect)(ts, ctx, props, demo.sequence));
+    const fractalShaderEntityTwo = new shaderEntity_1.ShaderEntity("ShaderEnriry", {
         mainFragmentShader: mainFragment_1.mainFragment,
         mainShaderVertex: mainVertex_1.mainVertex,
         rendeBuffers: [
@@ -162,7 +123,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         ]
     }, (ts, render, propertybag) => {
     });
-    const fractalShaderEntityOne = new shaderEntity_1.ShaderEntity("ShaderEnriry", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    const fractalShaderEntityOne = new shaderEntity_1.ShaderEntity("ShaderEnriry", {
         mainFragmentShader: mainFragment_1.mainFragment,
         mainShaderVertex: mainVertex_1.mainVertex,
         rendeBuffers: [
@@ -175,16 +136,16 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         ]
     }, (ts, render, propertybag) => {
     });
-    const textOverlay = new entity_1.Entity("TextEffect", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    const textOverlay = new entity_1.Entity("TextEffect", {
         x: 100,
         y: 100,
         text: "FULL SHADER SUPPORT".toUpperCase(),
         font: "Big Shoulders Stencil Text",
         size: 60,
         duration: 15 // 5 seconds
-    }, (ts, ctx, props) => (0, textEffect_1.textEffect)(ts, ctx, props, instance.sequence) // Pass the sequence instance
+    }, (ts, ctx, props) => (0, textEffect_1.textEffect)(ts, ctx, props, demo.sequence) // Pass the sequence instance
     );
-    const textArrayDisplayEntity = new entity_1.Entity("TextArrayDisplay", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasWidth, {
+    const textArrayDisplayEntity = new entity_1.Entity("TextArrayDisplay", {
         x: 100,
         y: 200,
         texts: [
@@ -193,16 +154,16 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
             "1-N TEXTURES",
             "CUSTOM UNIFORMS",
         ],
-        font: instance.MockedGraph.font,
+        font: demo.settings.font,
         size: 60,
         currentBeat: 0,
     }, (ts, ctx, props) => {
-        (0, textArrayDisplayEffect_1.textArrayDisplayEffect)(ts, ctx, props, instance.sequence);
+        (0, textArrayDisplayEffect_1.textArrayDisplayEffect)(ts, ctx, props, demo.sequence);
     });
     textArrayDisplayEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
     // Add Entities to the Scens
     // setup a some more test Entities for Scene 0
-    const typeWriter1EntityForFirstScene = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    const typeWriter1EntityForFirstScene = new entity_1.Entity("Typewriter", {
         x: 100,
         y: 200,
         text: "DEMOLISHED-RAILS",
@@ -210,10 +171,10 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
         useBPM: true,
-        bpm: instance.MockedGraph.audioProperties.bpm,
-        ticksPerBeat: instance.MockedGraph.audioProperties.ticks
+        bpm: demo.settings.audioProperties.bpm,
+        ticksPerBeat: demo.settings.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect, 1000, 10000);
-    const typeWriter2EntityForFirstScene = new entity_1.Entity("Typewriter", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    const typeWriter2EntityForFirstScene = new entity_1.Entity("Typewriter", {
         x: 0,
         y: 350,
         text: "FRAMEWORK DEMO",
@@ -221,20 +182,20 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
         useBPM: true,
-        bpm: instance.MockedGraph.audioProperties.bpm,
-        ticksPerBeat: instance.MockedGraph.audioProperties.ticks
+        bpm: demo.settings.audioProperties.bpm,
+        ticksPerBeat: demo.settings.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect, 5000, 10000);
-    const gridOverlayEffectEntity = new entity_1.Entity("gridOverlayEffets", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, {
+    const gridOverlayEffectEntity = new entity_1.Entity("gridOverlayEffets", {
         activeCells: new Set(),
         cellColor: "rgba(255,255,0,0.2)",
         cols: 4,
         rows: 4,
-    }, (ts, ctx, props) => (0, gridOverlayEffect_1.gridOverlayEffect)(ts, ctx, props, instance.sequence));
+    }, (ts, ctx, props) => (0, gridOverlayEffect_1.gridOverlayEffect)(ts, ctx, props, demo.sequence));
     const ballEntityProps = {
         numBalls: 20,
         balls: [],
     };
-    const ballEntity = new entity_1.Entity("BallEntity", instance.MockedGraph.canvasWidth, instance.MockedGraph.canvasHeight, ballEntityProps, (ts, ctx, props, sequence) => (0, bubbleParticles_1.ballEffect)(ts, ctx, props, sequence));
+    const ballEntity = new entity_1.Entity("BallEntity", ballEntityProps, (ts, ctx, props, sequence) => (0, bubbleParticles_1.ballEffect)(ts, ctx, props, sequence));
     const stretchingTextProps = {
         texts: ["BRING", "THE", "BEAT", "BACK"],
         currentIndex: 0,
@@ -242,9 +203,7 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         color: "rgba(255,255,255,0.2)",
         lastBeat: -1,
     };
-    const stretchingTextEntity = new entity_1.Entity("StretchingText", 800, // Canvas width
-    450, // Canvas height
-    stretchingTextProps, (ts, ctx, props, sequence) => (0, streachingTextEffect_1.stretchingTextEffect)(ts, ctx, props, instance.sequence));
+    const stretchingTextEntity = new entity_1.Entity("StretchingText", stretchingTextProps, (ts, ctx, props, sequence) => (0, streachingTextEffect_1.stretchingTextEffect)(ts, ctx, props, demo.sequence));
     // set up an endScene ( credits )
     const creditsText = [
         "FRAMWORK CODE",
@@ -269,21 +228,17 @@ demo.addAsset("assets/images/silhouette.png").then((instance) => {
         fadeOutDuration: 0.5,
         font: "40px Poppins",
     };
-    const creditsEntity = new entity_1.Entity("CreditsScroller", instance.MockedGraph.canvasWidth, // Canvas width
-    instance.MockedGraph.canvasHeight, // Canvas height
-    creditsScrollerProps, (ts, ctx, props, sequence) => (0, creditsScroller_1.creditsScrollerEffect)(ts, ctx, props, instance.sequence));
+    const creditsEntity = new entity_1.Entity("CreditsScroller", creditsScrollerProps, (ts, ctx, props, sequence) => (0, creditsScroller_1.creditsScrollerEffect)(ts, ctx, props, demo.sequence));
     creditsEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
     // Okey, done setup , add the stuff to scens 
-    scenes[0].addEntities(typeWriter1EntityForFirstScene, typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity);
+    scenes[0].addEntities(typeWriter1EntityForFirstScene, typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
+        .addPostProcessorToEntities((0, createLensPostProcessor_1.createLensPostProcessor)((_b = assetsHelper_1.AssetsHelper.textureCache.get("lens.png")) === null || _b === void 0 ? void 0 : _b.src));
     scenes[1].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
     scenes[2].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
     scenes[3].addEntities(strobeEntity, fractalShaderEntityTwo, imageOverlayEntity);
     scenes[4].addEntities(fractalShaderEntityOne, imageOverlayEntity, textOverlay, textArrayDisplayEntity);
     scenes[5].addEntities(creditsEntity, imageOverlayEntity, ballEntity);
-    instance.sequence.addSceneArray(scenes);
-    // instance.sequence.addPostProcessor(createCRTJitterPostProcessor(0.1, 5, 30))
-    // add a postprocessor to the RenderResult; 
-    //instance.sequence.addPostProcessor(createBeatShakePostProcessor(3));
+    demo.sequence.addSceneArray(scenes);
 });
 demo.sequence.onReady = () => {
     const btn = document.querySelector("BUTTON");

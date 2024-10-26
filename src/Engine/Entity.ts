@@ -9,12 +9,14 @@ export interface IEntity {
   transitionOut?: (ctx: CanvasRenderingContext2D, progress: number) => void;
   startTimeinMs?: number; // Optional start time for the entity within the scene
   durationInMs?: number;  // Optional duration for the entity within the scene
-
+  w?: number,
+  h?: number
+  canvas: HTMLCanvasElement;
 }
 
 export class Entity<T> implements IEntity {
   canvas: HTMLCanvasElement;
-  ctx!: CanvasRenderingContext2D | null;
+  ctx!: CanvasRenderingContext2D;
   private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
 
   /**
@@ -27,17 +29,20 @@ export class Entity<T> implements IEntity {
    */
   constructor(
     public key: string,
-    w: number,
-    h: number,
     public props?: T,
     public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence) => void,
     public startTimeinMs?: number,
-    public durationInMs?: number
+    public durationInMs?: number,
+    public w?: number,
+    public h?: number
   ) {
     this.canvas = document.createElement("canvas");
-    this.canvas.width = w;
-    this.canvas.height = h;
-    this.ctx = this.canvas.getContext("2d");
+    if (w !== undefined && h !== undefined) { 
+      this.canvas.width = w;
+      this.canvas.height = h;
+     
+    };
+    this.ctx = this.canvas.getContext("2d")!;
   }
 
   /**

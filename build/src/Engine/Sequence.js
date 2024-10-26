@@ -116,6 +116,10 @@ class Sequence {
      * @param scene - The scene to add.
      */
     addScene(scene) {
+        if (!scene.width && scene.height) {
+            scene.width = this.target.width;
+            scene.height = this.target.height;
+        }
         this.scenes.push(scene);
         this.recalculateDuration();
     }
@@ -236,6 +240,13 @@ class Sequence {
         if (this.currentSceneIndex !== currentSceneIndex) {
             this.currentSceneIndex = currentSceneIndex;
             const elapsedTime = timeStamp - this.currentScene.startTimeinMs;
+            // Set scene dimensions if not already set
+            if (!this.currentScene.width) {
+                this.currentScene.width = this.target.width;
+            }
+            if (!this.currentScene.height) {
+                this.currentScene.height = this.target.height;
+            }
             this.currentScene.play(elapsedTime).then(() => {
                 // Scene transition completed
             });
