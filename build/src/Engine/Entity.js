@@ -1,17 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Entity = void 0;
+const sequence_1 = require("./sequence");
 class Entity {
     /**
      * Creates a new Entity.
-     * @param key - The key or identifier for the entity.
+     * @param name - The key or identifier for the entity.
      * @param w - The width of the entity's canvas.
      * @param h - The height of the entity's canvas.
      * @param props - The properties for the entity.
      * @param action - The action function that defines the entity's behavior.
      */
-    constructor(key, props, action, startTimeinMs, durationInMs, w, h) {
-        this.key = key;
+    constructor(name, props, action, startTimeinMs, durationInMs, w, h) {
+        this.name = name;
         this.props = props;
         this.action = action;
         this.startTimeinMs = startTimeinMs;
@@ -19,6 +20,9 @@ class Entity {
         this.w = w;
         this.h = h;
         this.postProcessors = [];
+        this.beatListeners = [];
+        this.tickListeners = [];
+        this.barListeners = [];
         this.canvas = document.createElement("canvas");
         if (w !== undefined && h !== undefined) {
             this.canvas.width = w;
@@ -26,6 +30,33 @@ class Entity {
         }
         ;
         this.ctx = this.canvas.getContext("2d");
+    }
+    /**
+    * Adds an event listener for when a beat occurs.
+    * @param listener - The function to call when a beat occurs.
+    * @returns The Entity instance for chaining.
+    */
+    onBeat(listener) {
+        this.beatListeners.push(listener);
+        return this;
+    }
+    /**
+     * Adds an event listener for when a tick occurs.
+     * @param listener - The function to call when a tick occurs.
+     * @returns The Entity instance for chaining.
+     */
+    onTick(listener) {
+        this.tickListeners.push(listener);
+        return this;
+    }
+    /**
+     * Adds an event listener for when a bar is complete.
+     * @param listener - The function to call when a bar is complete.
+     * @returns The Entity instance for chaining.
+     */
+    onBar(listener) {
+        this.barListeners.push(listener);
+        return this;
     }
     /**
      * Adds a post-processing function to the entity.
@@ -65,7 +96,24 @@ class Entity {
             if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
                 this.action(timeStamp, this.ctx, this.props);
             }
+            // const sequence = this.getSequence();
+            // if (sequence) {
+            //   this.triggerEntityListeners(sequence, timeStamp);
+            // }
         }
+    }
+    /**
+   * Retrieves the Sequence instance associated with the entity.
+   * @returns The Sequence instance if available, otherwise null.
+   */
+    getSequence() {
+        if (this.action && this.action.length >= 4) { // Check if the action function accepts the sequence parameter
+            const sequence = this.action.arguments[3]; // Access the fourth argument (sequence)
+            if (sequence instanceof sequence_1.Sequence) {
+                return sequence;
+            }
+        }
+        return null;
     }
 }
 exports.Entity = Entity;

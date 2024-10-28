@@ -1,4 +1,4 @@
-export const fractalOne = /*glsl*/ `uniform float time;
+export const someKindOfFractal = /*glsl*/ `uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
 

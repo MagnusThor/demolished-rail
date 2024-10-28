@@ -1,6 +1,8 @@
 
+import { Entity } from "./entity";
 import { AssetsHelper } from "./Helpers/assetsHelper";
 import { Scene } from "./scene";
+import { ShaderEntity } from "./shaderEntity";
 
 
 export class Sequence {
@@ -18,12 +20,14 @@ export class Sequence {
     public lastBeatTime: number = 0;
     public currentTick: number = 0;
     public currentBar: number = 0;
-
     public tickCounter: number = 0;
     public beatCounter: number = 0;
-
     public beatsPerBar: number = 0;
     public currentBeat: number = 0;
+
+    private previousBeat = 0; // Store the previous beat value
+    private previousTick = 0; // Store the previous tick value
+    private previousBar = 0;  // Store the previous bar value
 
     private beatListeners: ((scene: number, time: number, count: number) => void)[] = [];
     private tickListeners: ((scene: number, time: number, count: number) => void)[] = [];
@@ -152,9 +156,9 @@ export class Sequence {
      * @param scene - The scene to add.
      */
     addScene(scene: Scene): void {
-        if(!scene.width && scene.height){
+        if (!scene.width && scene.height) {
             scene.width = this.target.width;
-            scene.height = this.target.height;            
+            scene.height = this.target.height;
         }
         this.scenes.push(scene);
         this.recalculateDuration();
@@ -318,12 +322,32 @@ export class Sequence {
             if (this.target) {
                 entity.copyToCanvas(this.target, this);
             }
+
+
+            // Trigger entity events only when the values change
+            if (this.currentBeat !== this.previousBeat) {
+                entity.beatListeners!.forEach(listener => listener(timeStamp, this.beatCounter,entity.props));
+                this.previousBeat = this.currentBeat;
+            }
+
+            if (this.currentTick !== this.previousTick) {
+                entity.tickListeners!.forEach(listener => listener(timeStamp, this.tickCounter,entity.props));
+                this.previousTick = this.currentTick;
+            }
+
+            if (this.currentBar !== this.previousBar) {
+                entity.barListeners!.forEach(listener => listener(timeStamp,this.currentBar,entity.props));
+                this.previousBar = this.currentBar;
+            }
+
         });
 
         // Apply post-processing effects
         if (this.targetCtx) {
             this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
         }
+
+
 
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
     }
@@ -355,6 +379,8 @@ export class Sequence {
             this.currentTick++;
             this.tickCounter++;
         }
+
+
     }
 
 }

@@ -4,7 +4,7 @@ const entity_1 = require("../../src/Engine/entity");
 const shaderEntity_1 = require("../../src/Engine/shaderEntity");
 const mainFragment_1 = require("../assets/shaders/mainFragment");
 const mainVertex_1 = require("../assets/shaders/mainVertex");
-const fractalOne_1 = require("../assets/shaders/fractalOne");
+const someKindOfFractal_1 = require("../assets/shaders/someKindOfFractal");
 const typeWriterEffet_1 = require("./effects/typeWriterEffet");
 const ranndomSquareByTickEffect_1 = require("./effects/ranndomSquareByTickEffect");
 const expandingCircleEffect_1 = require("./effects/expandingCircleEffect");
@@ -16,7 +16,7 @@ const assetsHelper_1 = require("../../src/Engine/Helpers/assetsHelper");
 const fftAnalyzerEffect_1 = require("./effects/fftAnalyzerEffect");
 const strobeEffect_1 = require("./effects/strobeEffect");
 const createBeatShakePostProcessor_1 = require("./postprocessors/createBeatShakePostProcessor");
-const fractalTwo_1 = require("../assets/shaders/fractalTwo");
+const pseudoKnightyanFractal_1 = require("../assets/shaders/pseudoKnightyanFractal");
 const sceneBuilder_1 = require("../../src/Engine/Helpers/sceneBuilder");
 const gridOverlayEffect_1 = require("./effects/gridOverlayEffect");
 const bubbleParticles_1 = require("./effects/bubbleParticles");
@@ -30,9 +30,11 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
     // Create the Scenes
     // Music length = 139200 ms;
     const sceneBuilder = new sceneBuilder_1.SceneBuilder(139200);
-    sceneBuilder.addScene("Scene 0", 20000).
-        addScene("Scene 1", 8000).
-        addScene("Scene 2", 15000).
+    sceneBuilder
+        .addScene("Scene 0", 1000).
+        addScene("Scene 1", 20000).
+        addScene("Scene 2", 8000).
+        addScene("Scene 3", 15000).
         addScene("Scene 4", 15000).
         addScene("Scene 5", 25000).
         durationUntilEndInMs("Scene 6");
@@ -110,32 +112,32 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
         numBars: 100,
         color: "red"
     }, (ts, ctx, props, sequence) => (0, fftAnalyzerEffect_1.audioVisualizerEffect)(ts, ctx, props, demo.sequence));
-    const fractalShaderEntityTwo = new shaderEntity_1.ShaderEntity("ShaderEnriry", {
+    const pseudoKnightyanShaderEntity = new shaderEntity_1.ShaderEntity("ShaderEnriry", {
         mainFragmentShader: mainFragment_1.mainFragment,
-        mainShaderVertex: mainVertex_1.mainVertex,
-        rendeBuffers: [
+        mainVertexShader: mainVertex_1.mainVertex,
+        renderBuffers: [
             {
                 name: "MyShader",
-                fragment: fractalTwo_1.fractalTwo,
+                fragment: pseudoKnightyanFractal_1.pseudoKnightyanFractal,
                 vertex: mainVertex_1.mainVertex,
                 textures: []
             }
         ]
     }, (ts, render, propertybag) => {
-    });
-    const fractalShaderEntityOne = new shaderEntity_1.ShaderEntity("ShaderEnriry", {
+    }, demo.settings.width, demo.settings.height);
+    const someKindOfFractalShaderEntity = new shaderEntity_1.ShaderEntity("ShaderEnriry", {
         mainFragmentShader: mainFragment_1.mainFragment,
-        mainShaderVertex: mainVertex_1.mainVertex,
-        rendeBuffers: [
+        mainVertexShader: mainVertex_1.mainVertex,
+        renderBuffers: [
             {
                 name: "MyShader",
-                fragment: fractalOne_1.fractalOne,
+                fragment: someKindOfFractal_1.someKindOfFractal,
                 vertex: mainVertex_1.mainVertex,
                 textures: []
             }
         ]
     }, (ts, render, propertybag) => {
-    });
+    }, demo.settings.width, demo.settings.height);
     const textOverlay = new entity_1.Entity("TextEffect", {
         x: 100,
         y: 100,
@@ -149,7 +151,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
         x: 100,
         y: 200,
         texts: [
-            "1-N RENDERPASS".toUpperCase(),
+            "1-N RENDERPASSES".toUpperCase(),
             "POSTPROCESSING".toUpperCase(),
             "1-N TEXTURES",
             "CUSTOM UNIFORMS",
@@ -162,7 +164,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
     });
     textArrayDisplayEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
     // Add Entities to the Scens
-    // setup a some more test Entities for Scene 0
+    // setup a some more test Entities for § 0
     const typeWriter1EntityForFirstScene = new entity_1.Entity("Typewriter", {
         x: 100,
         y: 200,
@@ -231,13 +233,17 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
     const creditsEntity = new entity_1.Entity("CreditsScroller", creditsScrollerProps, (ts, ctx, props, sequence) => (0, creditsScroller_1.creditsScrollerEffect)(ts, ctx, props, demo.sequence));
     creditsEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
     // Okey, done setup , add the stuff to scens 
-    scenes[0].addEntities(typeWriter1EntityForFirstScene, typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
+    typeWriter1EntityForFirstScene.onBar((ts, count, props) => {
+        console.log(`${ts} bar #${count}.`);
+        // modify props on bar in this case;
+    });
+    scenes[1].addEntities(typeWriter1EntityForFirstScene, typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
         .addPostProcessorToEntities((0, createLensPostProcessor_1.createLensPostProcessor)((_b = assetsHelper_1.AssetsHelper.textureCache.get("lens.png")) === null || _b === void 0 ? void 0 : _b.src));
-    scenes[1].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
-    scenes[2].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
-    scenes[3].addEntities(strobeEntity, fractalShaderEntityTwo, imageOverlayEntity);
-    scenes[4].addEntities(fractalShaderEntityOne, imageOverlayEntity, textOverlay, textArrayDisplayEntity);
-    scenes[5].addEntities(creditsEntity, imageOverlayEntity, ballEntity);
+    scenes[2].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
+    scenes[3].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
+    scenes[4].addEntities(strobeEntity, pseudoKnightyanShaderEntity, imageOverlayEntity);
+    scenes[5].addEntities(someKindOfFractalShaderEntity, imageOverlayEntity, textOverlay, textArrayDisplayEntity);
+    scenes[6].addEntities(creditsEntity, imageOverlayEntity, ballEntity);
     demo.sequence.addSceneArray(scenes);
 });
 demo.sequence.onReady = () => {

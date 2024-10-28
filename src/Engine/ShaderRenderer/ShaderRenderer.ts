@@ -256,7 +256,7 @@ precision mediump sampler3D;
          * @param {boolean} state
          * @memberof DR
          */
-        sP(key: string, state: boolean): void {
+        setProgramState(key: string, state: boolean): void {
                 this.programs.get(key)!.state = state;
         }
         /**
@@ -281,6 +281,7 @@ precision mediump sampler3D;
                         gl.uniform1f(fT!.locations.get("deltaTime")!, this.frameCount);
                         gl.uniform1f(fT!.locations.get("frame")!, this.frameCount);
                         let customUniforms = fT!.uniforms;
+                    
                         customUniforms && Object.keys(customUniforms).forEach((v: string) => {
                                 customUniforms[v](fT!.locations.get(v), gl, current, time);
                         });
