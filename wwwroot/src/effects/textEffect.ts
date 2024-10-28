@@ -9,6 +9,8 @@ export interface ITextEffectProps {
     duration: number; // Duration of the effect in seconds
   }
   
+
+  
   export const textEffect = (
     ts: number,
     ctx: CanvasRenderingContext2D,

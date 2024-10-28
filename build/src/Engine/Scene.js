@@ -60,7 +60,7 @@ class Scene {
                 const adjustedSceneElapsedTime = sceneElapsedTime - this.startTimeinMs;
                 if (adjustedSceneElapsedTime >= 0) {
                     this.entities.forEach((entity) => {
-                        entity.update(adjustedSceneElapsedTime);
+                        entity.update(sceneElapsedTime);
                     });
                 }
                 if (sceneElapsedTime < this.durationInMs + this.startTimeinMs) {
