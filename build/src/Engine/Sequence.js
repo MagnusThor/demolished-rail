@@ -48,6 +48,9 @@ class Sequence {
         this.beatCounter = 0;
         this.beatsPerBar = 0;
         this.currentBeat = 0;
+        this.previousBeat = 0; // Store the previous beat value
+        this.previousTick = 0; // Store the previous tick value
+        this.previousBar = 0; // Store the previous bar value
         this.beatListeners = [];
         this.tickListeners = [];
         this.barListeners = [];
@@ -261,6 +264,19 @@ class Sequence {
             entity.update(timeStamp);
             if (this.target) {
                 entity.copyToCanvas(this.target, this);
+            }
+            // Trigger entity events only when the values change
+            if (this.currentBeat !== this.previousBeat) {
+                entity.beatListeners.forEach(listener => listener(timeStamp, this.beatCounter, entity.props));
+                this.previousBeat = this.currentBeat;
+            }
+            if (this.currentTick !== this.previousTick) {
+                entity.tickListeners.forEach(listener => listener(timeStamp, this.tickCounter, entity.props));
+                this.previousTick = this.currentTick;
+            }
+            if (this.currentBar !== this.previousBar) {
+                entity.barListeners.forEach(listener => listener(timeStamp, this.currentBar, entity.props));
+                this.previousBar = this.currentBar;
             }
         });
         // Apply post-processing effects

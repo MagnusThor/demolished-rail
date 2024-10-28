@@ -23,12 +23,9 @@ export class Scene {
   addEntity(entity: IEntity | ShaderEntity): void {
     // If the entity's canvas dimensions are not set, use the scene's dimensions
     if (!entity.w && !entity.h) { 
-      console.log(`adding ${entity.key} to ${this.name,this.width,this.height}`)
       entity.canvas.width = this.width || 800; 
       entity.canvas.height = this.height || 450; 
-
     }
-
     this.entities.push(entity);
   }
 
@@ -48,7 +45,7 @@ export class Scene {
    * @returns The entity if found, otherwise undefined.
    */
   getEntity<T>(key: string): IEntity | undefined {
-    return this.entities.find(entity => entity.key === key);
+    return this.entities.find(entity => entity.name === key);
   }
 
   /**
@@ -85,7 +82,6 @@ export class Scene {
 
   public addPostProcessorToEntities(processor: (ctx: CanvasRenderingContext2D) => void): void {
     this.entities.forEach(entity => {
-      console.log(entity);
       if (entity instanceof Entity) { // Check if the entity is an instance of the Entity class
         entity.addPostProcessor(processor);
       }

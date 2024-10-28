@@ -205,7 +205,7 @@ class ShaderRenderer {
      * @param {boolean} state
      * @memberof DR
      */
-    sP(key, state) {
+    setProgramState(key, state) {
         this.programs.get(key).state = state;
     }
     /**

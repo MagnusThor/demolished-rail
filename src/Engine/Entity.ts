@@ -2,16 +2,24 @@ import { Sequence } from "./sequence";
 
 
 export interface IEntity {
-  key: string;
+  name: string;
+  canvas: HTMLCanvasElement;
   update(timeStamp: number): void;
   copyToCanvas(targetCanvas: HTMLCanvasElement, sequence: Sequence): void;
   transitionIn?: (ctx: CanvasRenderingContext2D, progress: number) => void;
   transitionOut?: (ctx: CanvasRenderingContext2D, progress: number) => void;
   startTimeinMs?: number; // Optional start time for the entity within the scene
   durationInMs?: number;  // Optional duration for the entity within the scene
-  w?: number,
-  h?: number
-  canvas: HTMLCanvasElement;
+  w?: number;
+  h?: number;
+  props?: any
+  beatListeners?: ((time: number, count: number, propertyBag: any) => void)[];
+  tickListeners?: ((time: number, count: number, propertyBag: any) => void)[];
+  barListeners?: ((time: number, count: number, propertyBag: any) => void)[];
+
+  onBeat(listener?: (time: number, count: number, propertyBag: any) => void): void;
+  onTick(listener?: (time: number, count: number, propertyBag: any) => void): void;
+  onBar(listener?: (time: number, count: number, propertyBag: any) => void): void;
 }
 
 export class Entity<T> implements IEntity {
@@ -19,16 +27,21 @@ export class Entity<T> implements IEntity {
   ctx!: CanvasRenderingContext2D;
   private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
 
+
+  beatListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
+  tickListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
+  barListeners?: ((time: number, count: number, propertyBag: any) => void)[] =  [];
+
   /**
    * Creates a new Entity.
-   * @param key - The key or identifier for the entity.
+   * @param name - The key or identifier for the entity.
    * @param w - The width of the entity's canvas.
    * @param h - The height of the entity's canvas.
    * @param props - The properties for the entity.
    * @param action - The action function that defines the entity's behavior.
    */
   constructor(
-    public key: string,
+    public name: string,
     public props?: T,
     public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence) => void,
     public startTimeinMs?: number,
@@ -36,14 +49,51 @@ export class Entity<T> implements IEntity {
     public w?: number,
     public h?: number
   ) {
+
     this.canvas = document.createElement("canvas");
-    if (w !== undefined && h !== undefined) { 
+    if (w !== undefined && h !== undefined) {
       this.canvas.width = w;
       this.canvas.height = h;
-     
+
     };
     this.ctx = this.canvas.getContext("2d")!;
+
+
+
   }
+  transitionIn?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
+  transitionOut?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
+
+  /**
+  * Adds an event listener for when a beat occurs.
+  * @param listener - The function to call when a beat occurs.
+  * @returns The Entity instance for chaining.
+  */
+  onBeat<T>(listener: (time: number, count: number, propeetyBag: T) => void): this {
+    this.beatListeners!.push(listener as any);
+    return this;
+  }
+
+  /**
+   * Adds an event listener for when a tick occurs.
+   * @param listener - The function to call when a tick occurs.
+   * @returns The Entity instance for chaining.
+   */
+  onTick<T>(listener: (time: number, count: number) => void): this {
+    this.tickListeners!.push(listener as any);
+    return this;
+  }
+
+  /**
+   * Adds an event listener for when a bar is complete.
+   * @param listener - The function to call when a bar is complete.
+   * @returns The Entity instance for chaining.
+   */
+  onBar<T>(listener: (ts: number, count: number, props: T) => void): this {
+    this.barListeners!.push(listener as any);
+    return this;
+  }
+
 
   /**
    * Adds a post-processing function to the entity.
@@ -76,6 +126,7 @@ export class Entity<T> implements IEntity {
   * @param timeStamp - The current timestamp in the animation.
   */
   update(timeStamp: number): void {
+
     this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (this.action && this.ctx && this.props) {
       // Calculate the elapsed time for the entity
@@ -85,7 +136,24 @@ export class Entity<T> implements IEntity {
       if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
         this.action(timeStamp, this.ctx, this.props);
       }
+      // const sequence = this.getSequence();
+      // if (sequence) {
+      //   this.triggerEntityListeners(sequence, timeStamp);
+      // }
     }
+  }
+  /**
+ * Retrieves the Sequence instance associated with the entity.
+ * @returns The Sequence instance if available, otherwise null.
+ */
+  private getSequence(): Sequence | null {
+    if (this.action && this.action.length >= 4) { // Check if the action function accepts the sequence parameter
+      const sequence = (this.action as any).arguments[3]; // Access the fourth argument (sequence)
+      if (sequence instanceof Sequence) {
+        return sequence;
+      }
+    }
+    return null;
   }
 
 }

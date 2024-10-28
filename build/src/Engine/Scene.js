@@ -24,7 +24,6 @@ class Scene {
     addEntity(entity) {
         // If the entity's canvas dimensions are not set, use the scene's dimensions
         if (!entity.w && !entity.h) {
-            console.log(`adding ${entity.key} to ${this.name, this.width, this.height}`);
             entity.canvas.width = this.width || 800;
             entity.canvas.height = this.height || 450;
         }
@@ -45,7 +44,7 @@ class Scene {
      * @returns The entity if found, otherwise undefined.
      */
     getEntity(key) {
-        return this.entities.find(entity => entity.key === key);
+        return this.entities.find(entity => entity.name === key);
     }
     /**
      * Plays the scene by animating its entities.
@@ -77,7 +76,6 @@ class Scene {
     }
     addPostProcessorToEntities(processor) {
         this.entities.forEach(entity => {
-            console.log(entity);
             if (entity instanceof entity_1.Entity) { // Check if the entity is an instance of the Entity class
                 entity.addPostProcessor(processor);
             }

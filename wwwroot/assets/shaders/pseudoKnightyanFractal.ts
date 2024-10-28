@@ -1,4 +1,4 @@
-export const fractalTwo = /*glsl*/ `uniform float time;
+export const pseudoKnightyanFractal = /*glsl*/ `uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
 uniform sampler2D iChannel0;

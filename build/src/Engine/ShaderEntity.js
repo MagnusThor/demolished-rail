@@ -5,35 +5,65 @@ const shaderRenderer_1 = require("./ShaderRenderer/shaderRenderer");
 class ShaderEntity {
     /**
      * Creates a new ShaderEntity.
-     * @param key - The key or identifier for the entity.
+     * @param name - The key or identifier for the entity.
      * @param w - The width of the entity's canvas.
      * @param h - The height of the entity's canvas.
      * @param props - The properties for the entity, including shader code and render buffers.
      * @param action - An optional action function to be called before rendering the shaders.
      */
-    constructor(key, props, action, startTimeinMs, durationInMs, w, h) {
-        this.key = key;
+    constructor(name, props, action, w, h, startTimeinMs, durationInMs) {
+        this.name = name;
         this.props = props;
         this.action = action;
-        this.startTimeinMs = startTimeinMs;
-        this.durationInMs = durationInMs;
         this.w = w;
         this.h = h;
+        this.startTimeinMs = startTimeinMs;
+        this.durationInMs = durationInMs;
+        this.beatListeners = [];
+        this.tickListeners = [];
+        this.barListeners = [];
         this.postProcessors = [];
         this.canvas = document.createElement("canvas");
         if (w && h) {
             this.canvas.width = w;
             this.canvas.height = h;
         }
-        if ((props === null || props === void 0 ? void 0 : props.mainFragmentShader) && props.mainShaderVertex) {
-            this.shaderRenderer = new shaderRenderer_1.ShaderRenderer(this.canvas, props === null || props === void 0 ? void 0 : props.mainShaderVertex, props === null || props === void 0 ? void 0 : props.mainFragmentShader);
-            props.rendeBuffers.forEach(buffer => {
+        if ((props === null || props === void 0 ? void 0 : props.mainFragmentShader) && props.mainVertexShader) {
+            this.shaderRenderer = new shaderRenderer_1.ShaderRenderer(this.canvas, props === null || props === void 0 ? void 0 : props.mainVertexShader, props === null || props === void 0 ? void 0 : props.mainFragmentShader);
+            props.renderBuffers.forEach(buffer => {
                 this.shaderRenderer.addBuffer(buffer.name, buffer.vertex, buffer.fragment, buffer.textures, buffer.customUniforms);
             });
         }
         else {
             throw new Error("Cannot create ShaderEntity: Missing main shader code.");
         }
+    }
+    /**
+ * Adds an event listener for when a beat occurs.
+ * @param listener - The function to call when a beat occurs.
+ * @returns The Entity instance for chaining.
+ */
+    onBeat(listener) {
+        this.beatListeners.push(listener);
+        return this;
+    }
+    /**
+     * Adds an event listener for when a tick occurs.
+     * @param listener - The function to call when a tick occurs.
+     * @returns The Entity instance for chaining.
+     */
+    onTick(listener) {
+        this.tickListeners.push(listener);
+        return this;
+    }
+    /**
+     * Adds an event listener for when a bar is complete.
+     * @param listener - The function to call when a bar is complete.
+     * @returns The Entity instance for chaining.
+     */
+    onBar(listener) {
+        this.barListeners.push(listener);
+        return this;
     }
     /**
  * Adds a post-processing function to the entity.
