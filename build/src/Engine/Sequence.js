@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sequence = void 0;
-const assetsHelper_1 = require("./Helpers/assetsHelper");
 class Sequence {
     /**
      * Adds a post-processing function to the sequence.
@@ -28,10 +27,14 @@ class Sequence {
      * @param bpm - The beats per minute for the animation.
      * @param ticksPerBeat - The number of ticks per beat.
      * @param beatsPerBar - The number of beats per bar.
+     * @param beatsPerBar - The number of beats per bar.
      * @param scenes - An array of scenes to include in the sequence.
-     * @param audioFile - An optional URL to an audio file to synchronize the animation with.
+     * @param audioFile - An array of scenes to include in the sequence.
+     * @param audioLoader
+    
+     
      */
-    constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, scenes, audioFile) {
+    constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, scenes, audioLoader) {
         this.target = target;
         this.durationMs = 0;
         this.scenes = [];
@@ -54,25 +57,21 @@ class Sequence {
         this.beatListeners = [];
         this.tickListeners = [];
         this.barListeners = [];
+        this.frameListeners = [];
         this.postProcessors = [];
         this.scenes = scenes || [];
         this.targetCtx = target.getContext("2d");
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
         this.beatsPerBar = beatsPerBar;
-        if (audioFile) {
-            this.audioContext = new AudioContext();
-            this.analyser = this.audioContext.createAnalyser();
-            assetsHelper_1.AssetsHelper.loadAudio(audioFile, this.audioContext)
-                .then(audioBuffer => {
-                this.audioBuffer = audioBuffer;
-                this.onReady();
-            })
-                .catch(error => console.error("Error loading audio:", error));
-        }
-        else {
+        this.audioContext = new AudioContext();
+        this.analyser = this.audioContext.createAnalyser();
+        audioLoader.loadAudio(this.audioContext)
+            .then(audioBuffer => {
+            this.audioBuffer = audioBuffer;
             this.onReady();
-        }
+        })
+            .catch(error => console.error("Error loading audio:", error));
         this.recalculateDuration();
     }
     /**
@@ -93,6 +92,13 @@ class Sequence {
      * Called when the audio file is loaded or when no audio is used.
      */
     onReady() { }
+    /**
+     * Adds an event listener for each frame.
+     * @param listener - The function to call on each frame.
+     */
+    onFrame(listener) {
+        this.frameListeners.push(listener);
+    }
     /**
      * Adds an event listener for when a bar is complete.
      * @param listener - The function to call when a bar is complete.
@@ -164,6 +170,66 @@ class Sequence {
                 return scene.startTimeinMs + scene.durationInMs;
             }));
         }
+    }
+    /**
+     * Render a specific time
+     *
+     * @param {number} time
+     * @memberof Sequence
+     */
+    renderAtTime(time) {
+        var _a;
+        this.currentTime = time; // Update the currentTime
+        // Find the active scene for the given time
+        const currentSceneIndex = this.scenes.findIndex(scene => time >= scene.startTimeinMs && time < scene.startTimeinMs + scene.durationInMs);
+        if (currentSceneIndex !== -1) {
+            this.currentSceneIndex = currentSceneIndex;
+            const elapsedTime = time - this.currentScene.startTimeinMs;
+            // Render the scene
+            this.currentScene.play(elapsedTime);
+            // Update and draw entities
+            (_a = this.targetCtx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.target.width, this.target.height);
+            this.currentScene.entities.forEach(entity => {
+                entity.update(time);
+                if (this.target) {
+                    entity.copyToCanvas(this.target, this);
+                }
+            });
+            // Apply post-processing
+            if (this.targetCtx) {
+                this.postProcessors.forEach(processor => processor(this.targetCtx, this));
+            }
+            this.triggerEventsForTime(time);
+        }
+    }
+    /**
+ * Triggers beat, tick, and bar listeners for a given time.
+ * @param time - The time in milliseconds.
+ */
+    triggerEventsForTime(time) {
+        const beatIntervalMs = 60000 / this.bpm;
+        const tickIntervalMs = beatIntervalMs / this.ticksPerBeat;
+        // Calculate beat, tick, and bar values for the given time
+        const beat = Math.floor(time / beatIntervalMs) + 1;
+        const tick = Math.floor((time % beatIntervalMs) / tickIntervalMs);
+        const bar = Math.floor(beat / this.beatsPerBar) + 1;
+        // Trigger listeners if the values have changed
+        if (beat !== this.currentBeat) {
+            this.currentBeat = beat;
+            this.beatListeners.forEach(listener => listener(this.currentSceneIndex, time, this.beatCounter));
+            this.beatCounter++;
+        }
+        if (tick !== this.currentTick) {
+            this.currentTick = tick;
+            this.tickListeners.forEach(listener => listener(this.currentSceneIndex, time, this.tickCounter));
+            this.tickCounter++;
+        }
+        if (bar !== this.currentBar) {
+            this.currentBar = bar;
+            this.barListeners.forEach(listener => listener(this.currentBar));
+        }
+        // Trigger frame listeners
+        this.frameListeners.forEach(listener => listener(this.currentSceneIndex, time));
     }
     /**
      * Starts the animation sequence.
@@ -260,7 +326,12 @@ class Sequence {
         }
         // Clear the target canvas and update/draw entities
         (_a = this.targetCtx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.target.width, this.target.height);
-        this.currentScene.entities.forEach(entity => {
+        this
+            .currentScene.entities.forEach(entity => {
+            var _a, _b;
+            // Update the conductor's time and trigger events
+            (_a = this.conductor) === null || _a === void 0 ? void 0 : _a.updateTime(timeStamp);
+            (_b = this.conductor) === null || _b === void 0 ? void 0 : _b.triggerEvents(this);
             entity.update(timeStamp);
             if (this.target) {
                 entity.copyToCanvas(this.target, this);
@@ -284,6 +355,8 @@ class Sequence {
             this.postProcessors.forEach(processor => processor(this.targetCtx, this));
         }
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
+        // Trigger frame listeners
+        this.frameListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));
     }
     /**
      * Handles beat and tick events based on the current timestamp.

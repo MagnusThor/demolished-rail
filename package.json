@@ -3,15 +3,18 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "createBase64": "node build/wwwroot/compressdemo.js"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "crc": "^4.3.2",
     "webpack": "^5.95.0"
   },
   "dependencies": {
-    "demolishedrenderer": "^3.1.0"
+    "demolishedrenderer": "^3.1.0",
+    "sonantx": "^2.0.1"
   }
 }

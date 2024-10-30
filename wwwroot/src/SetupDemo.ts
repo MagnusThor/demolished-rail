@@ -1,3 +1,4 @@
+import { DefaultAudioLoader, IAudioLoader } from "../../src/Engine/Audio/audioLoader";
 import { Entity } from "../../src/Engine/entity";
 import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
 import { Scene } from "../../src/Engine/scene";
@@ -13,7 +14,7 @@ export class SetupDemo {
         width: 800,
         height: 450,
         audioProperties: {
-            bpm: 110,
+            bpm: 123,
             ticks: 8,
             beat: 0,
             tick: 0,
@@ -22,10 +23,10 @@ export class SetupDemo {
         },
         font: "Big Shoulders Stencil Text"
     };
-    constructor() {
+    constructor(audioLoader:IAudioLoader) {
         this.sequence = new Sequence(
             document.querySelector("canvas") as HTMLCanvasElement,
-            100, 4, 4, [], "/wwwroot/assets/music/music.mp3");
+            60, 4, 4, [], audioLoader);
 
     }
     async addAssets(...urls: string[]) {

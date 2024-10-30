@@ -1,4 +1,4 @@
-import { Entity, IEntity } from "../../src/Engine/entity";
+import { Entity } from "../../src/Engine/entity";
 import { ShaderEntity } from "../../src/Engine/shaderEntity";
 import { mainFragment } from "../assets/shaders/mainFragment";
 import { mainVertex } from "../assets/shaders/mainVertex";
@@ -17,17 +17,17 @@ import { createBeatShakePostProcessor } from "./postprocessors/createBeatShakePo
 import { pseudoKnightyanFractal } from "../assets/shaders/pseudoKnightyanFractal";
 import { SceneBuilder } from "../../src/Engine/Helpers/sceneBuilder";
 import { gridOverlayEffect, IGridOverlayEffectProps } from "./effects/gridOverlayEffect";
-import { IParallaxLayerProps, parallaxLayerEffect } from "./effects/paralaxEffect";
 import { ballEffect, IBallEntityProps } from "./effects/bubbleParticles";
-import { createCRTJitterPostProcessor } from "./postprocessors/createCRTJitterPostProcessor";
 import { IStretchingTextProps, stretchingTextEffect } from "./effects/streachingTextEffect";
 import { creditsScrollerEffect, ICreditsScrollerProps } from "./effects/creditsScroller";
 import { createLensPostProcessor } from "./postprocessors/createLensPostProcessor";
 import { SetupDemo } from "./SetupDemo";
-import { IIntroCreditsProps, introCreditsEffect } from "./effects/creditsEffect";
+import { DefaultAudioLoader } from "../../src/Engine/Audio/audioLoader";
 
 
-const demo = new SetupDemo();
+// get the music as baase
+const demo = new SetupDemo(    
+    new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((demo: SetupDemo) => {
     // Create the Scenes
