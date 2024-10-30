@@ -1,6 +1,6 @@
 import { Entity, IEntity } from "./entity";
-import { Sequence } from "./sequence";
 import { ShaderEntity } from "./shaderEntity";
+
 
 export class Scene {
   public entities: IEntity[] = [];

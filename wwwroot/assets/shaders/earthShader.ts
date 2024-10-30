@@ -1,4 +1,4 @@
-import { IShaderProperties } from "../../../src/Engine/shaderEntity";
+;
 
 export const earthShader = /*glsl*/ `uniform float time;
 uniform vec2 mouse;
