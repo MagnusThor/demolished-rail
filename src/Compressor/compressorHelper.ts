@@ -86,4 +86,18 @@ export class CompressorHelper {
             default: return 'application/octet-stream';
         }
     }
+    /**
+  * Loads an HTML file from the file system and returns its content as a string.
+  * @param filePath - The path to the HTML file.
+  * @returns A Promise that resolves to the content of the HTML file as a string.
+  */
+    static async loadHtmlFile(filePath: string): Promise<string> {
+        try {
+            const data = await fs.promises.readFile(filePath, 'utf-8');
+            return data;
+        } catch (error) {
+            console.error(`Error loading HTML file ${filePath}:`, error);
+            return ""; // Or throw an error if you prefer
+        }
+    }
 }

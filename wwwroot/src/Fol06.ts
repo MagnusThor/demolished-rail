@@ -16,6 +16,8 @@ import { DebugHelper } from "../../src/Engine/Helpers/debugHelper";
 import { SequenceHelper } from "../../src/Engine/Helpers/sequenceHelper";
 import { Conductor, ITimelineEvent } from "../../src/Engine/conductor";
 import { atomsmp3 } from "../assets/base64/atomsmp3";
+import { warpSpeedShader } from "../assets/shaders/warpSpeedShader";
+
 
 
 const demo = new SetupDemo(atomsmp3);
@@ -49,9 +51,21 @@ class Fol06 {
                 // Get the "intro-text" entity and modify its properties
                 const introText = entity;
                 introText.props!.size *= 1.05;
-               
+
             },
-            targetEntity: "intro-text" // Target the "intro-text" entity
+            targetEntity: "intro-text", // Target the "intro-text" entity,
+            // Add a criteria to check if the event has already been triggered
+            criteria: () => {
+                if (textEvent.props === undefined) { // Check if props is undefined
+                    textEvent.props = { triggered: false }; // If undefined, initialize it
+                }
+                if (!textEvent.props.triggered) {
+                    textEvent.props.triggered = true; // Mark the event as triggered
+                    return true; // Allow the event to trigger
+                } else {
+                    return false; // Prevent the event from triggering again
+                }
+            }
         };
 
         this.conductor.addEvent(textEvent);
@@ -300,6 +314,30 @@ class Fol06 {
         return mapEntities;
     }
 
+    warpSpeed(): Array<IEntity> {
+        const mapEntities = new Array<IEntity>();
+        const shader = new ShaderEntity("warp-speed-shader",
+            {
+                mainFragmentShader: mainFragment,
+                mainVertexShader: mainVertex,
+                renderBuffers: [
+                    {
+                        name: "a_buffer",
+                        fragment: warpSpeedShader,
+                        vertex: mainVertex,
+                        textures: [],
+                        customUniforms: {
+                        }
+
+                    }
+                ]
+            }, () => {
+            }, this.width, this.height);
+
+        mapEntities.push(shader);
+        return mapEntities;
+    }
+
 }
 
 enum SCENE {
@@ -308,11 +346,12 @@ enum SCENE {
     LONLYPLANET = 2,
     GALAXY = 3,
     GALAXYEXPAND = 4,
-    BLACKHOLE = 5,
-    EVENTHORIZON = 6
+    WARPSPEED = 5,
+    BLACKHOLE = 6,
+    EVENTHORIZON = 7
 }
 
-demo.addAssets("assets/images/silhouette.png").then((demo: SetupDemo) => {
+demo.addAssets().then((demo: SetupDemo) => {
     // Create the Scenes
     // Music length = 139200 ms;
     const fol06 = new Fol06(demo.sequence, 800, 450);
@@ -325,8 +364,10 @@ demo.addAssets("assets/images/silhouette.png").then((demo: SetupDemo) => {
         .addScene("lonly-planet-and-the-sun", 20000)
         .addScene("galaxy", 15000)
         .addScene("galaxy-expand", 15000)
+        .addScene("warp-speed", 15000)
         .addScene("blackhole", 4000).
         durationUntilEndInMs("eventhorizon");
+
 
     const scenes = sceneBuilder.getScenes();
 
@@ -335,6 +376,7 @@ demo.addAssets("assets/images/silhouette.png").then((demo: SetupDemo) => {
     scenes[SCENE.LONLYPLANET].addEntities(...fol06.lonlyPlanet())
     scenes[SCENE.GALAXY].addEntities(...fol06.galaxy())
     scenes[SCENE.GALAXYEXPAND].addEntities(...fol06.expandingGalaxy())
+    scenes[SCENE.WARPSPEED].addEntities(...fol06.warpSpeed())
     scenes[SCENE.BLACKHOLE].addEntities(...fol06.blackhole())
     scenes[SCENE.EVENTHORIZON].addEntities(...fol06.eventHorizon())
 
@@ -365,6 +407,7 @@ demo.sequence.onReady = () => {
 
     const btn = document.querySelector("BUTTON");
     btn!.textContent = "CLICK TO START!";
+    btn!.classList.remove("hide");
     btn!.addEventListener("click", () => {
         document.querySelector("#launch")?.remove();
         demo.sequence.play();
