@@ -1,9 +1,7 @@
 
+import { IAudioLoader } from "./Audio/audioLoader";
 import { Conductor } from "./conductor";
-import { Entity } from "./entity";
-import { AssetsHelper } from "./Helpers/assetsHelper";
 import { Scene } from "./scene";
-import { ShaderEntity } from "./shaderEntity";
 
 
 export class Sequence {
@@ -74,8 +72,12 @@ export class Sequence {
      * @param bpm - The beats per minute for the animation.
      * @param ticksPerBeat - The number of ticks per beat.
      * @param beatsPerBar - The number of beats per bar.
+     * @param beatsPerBar - The number of beats per bar.
      * @param scenes - An array of scenes to include in the sequence.
-     * @param audioFile - An optional URL to an audio file to synchronize the animation with.
+     * @param audioFile - An array of scenes to include in the sequence.
+     * @param audioLoader  
+    
+     
      */
     constructor(
         public target: HTMLCanvasElement,
@@ -83,7 +85,8 @@ export class Sequence {
         ticksPerBeat: number = 4,
         beatsPerBar: number = 4,
         scenes: Scene[],
-        audioFile?: string
+        audioLoader: IAudioLoader
+
     ) {
 
         this.scenes = scenes || [];
@@ -92,18 +95,16 @@ export class Sequence {
         this.ticksPerBeat = ticksPerBeat;
         this.beatsPerBar = beatsPerBar;
 
-        if (audioFile) {
-            this.audioContext = new AudioContext();
-            this.analyser = this.audioContext.createAnalyser();
-            AssetsHelper.loadAudio(audioFile, this.audioContext)
-                .then(audioBuffer => {
-                    this.audioBuffer = audioBuffer;
-                    this.onReady();
-                })
-                .catch(error => console.error("Error loading audio:", error));
-        } else {
-            this.onReady();
-        }
+        this.audioContext = new AudioContext();
+        this.analyser = this.audioContext.createAnalyser();
+      
+
+        audioLoader.loadAudio(this.audioContext)
+            .then(audioBuffer => {
+                this.audioBuffer = audioBuffer;
+                this.onReady();
+            })
+            .catch(error => console.error("Error loading audio:", error));
 
         this.recalculateDuration();
     }
@@ -479,6 +480,6 @@ export class Sequence {
             this.currentTick++;
             this.tickCounter++;
         }
-       }
+    }
 
 }

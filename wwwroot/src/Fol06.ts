@@ -17,10 +17,13 @@ import { SequenceHelper } from "../../src/Engine/Helpers/sequenceHelper";
 import { Conductor, ITimelineEvent } from "../../src/Engine/conductor";
 import { atomsmp3 } from "../assets/base64/atomsmp3";
 import { warpSpeedShader } from "../assets/shaders/warpSpeedShader";
+import { SonantAudioLoader } from "../../src/Engine/Audio/audioLoader";
+import { sonantMusic } from "../assets/music/sonant";
 
 
 
-const demo = new SetupDemo(atomsmp3);
+
+const demo = new SetupDemo(new SonantAudioLoader(sonantMusic));
 /**
  * The darkness at the end of time
  * a Fruit of the Loom demo
@@ -50,7 +53,7 @@ class Fol06 {
             action: (entity: Entity<ITextFadeInOut>) => {
                 // Get the "intro-text" entity and modify its properties
                 const introText = entity;
-                introText.props!.size *= 1.05;
+                introText.props!.size *= 1.15;
 
             },
             targetEntity: "intro-text", // Target the "intro-text" entity,
@@ -70,7 +73,6 @@ class Fol06 {
 
         this.conductor.addEvent(textEvent);
 
-
         const textEffectEntity = new Entity<ITextFadeInOut>("intro-text",
             {
                 y: this.height / 2,
@@ -80,9 +82,9 @@ class Fol06 {
                     "written by professor Ulf Danielsson"],
                 font: "Montserrat",
                 size: 40,
-                fadeInDuration: 2,
-                fadeOutDuration: 2,
-                textDuration: 5,
+                fadeInDuration: 4,
+                fadeOutDuration: 4,
+                textDuration: 10,
                 loop: false
             },
             (ts, ctx, props) => textFadeInOut(ts, ctx, props, this.sequence)
@@ -303,6 +305,10 @@ class Fol06 {
                         vertex: mainVertex,
                         textures: [],
                         customUniforms: {
+                            "NUM_LAYERS": (uniformLoction: WebGLUniformLocation, gl: WebGLRenderingContext, program: WebGLProgram, time: number) => {
+                                gl.uniform1f(uniformLoction!,
+                                    1 * this.sequence.currentBeat)
+                            }
                         }
 
                     }
@@ -359,7 +365,7 @@ demo.addAssets().then((demo: SetupDemo) => {
     const sceneBuilder = new SceneBuilder(139200);
 
     sceneBuilder
-        .addScene("intro", SequenceHelper.getDurationForBars(123, 4, 10))
+        .addScene("intro", SequenceHelper.getDurationForBars(60, 4, 10))
         .addScene("earth", 20000)
         .addScene("lonly-planet-and-the-sun", 20000)
         .addScene("galaxy", 15000)

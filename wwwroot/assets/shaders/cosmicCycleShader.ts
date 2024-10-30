@@ -1,9 +1,10 @@
 export const cosmicCycleShader =  /*glsl*/  `uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
+uniform float NUM_LAYERS;
 out vec4 fragColor;
 
-#define NUM_LAYERS 5.
+
 
 mat2 Rot(float a) {
     float s=sin(a), c=cos(a);

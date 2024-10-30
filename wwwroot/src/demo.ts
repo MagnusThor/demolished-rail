@@ -22,10 +22,12 @@ import { IStretchingTextProps, stretchingTextEffect } from "./effects/streaching
 import { creditsScrollerEffect, ICreditsScrollerProps } from "./effects/creditsScroller";
 import { createLensPostProcessor } from "./postprocessors/createLensPostProcessor";
 import { SetupDemo } from "./SetupDemo";
+import { DefaultAudioLoader } from "../../src/Engine/Audio/audioLoader";
 
 
-// get the music as base 64;
-const demo = new SetupDemo("/wwwroot/assets/music/music.mp3");
+// get the music as baase
+const demo = new SetupDemo(    
+    new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((demo: SetupDemo) => {
     // Create the Scenes

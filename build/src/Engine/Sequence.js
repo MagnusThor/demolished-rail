@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sequence = void 0;
-const assetsHelper_1 = require("./Helpers/assetsHelper");
 class Sequence {
     /**
      * Adds a post-processing function to the sequence.
@@ -28,10 +27,14 @@ class Sequence {
      * @param bpm - The beats per minute for the animation.
      * @param ticksPerBeat - The number of ticks per beat.
      * @param beatsPerBar - The number of beats per bar.
+     * @param beatsPerBar - The number of beats per bar.
      * @param scenes - An array of scenes to include in the sequence.
-     * @param audioFile - An optional URL to an audio file to synchronize the animation with.
+     * @param audioFile - An array of scenes to include in the sequence.
+     * @param audioLoader
+    
+     
      */
-    constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, scenes, audioFile) {
+    constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, scenes, audioLoader) {
         this.target = target;
         this.durationMs = 0;
         this.scenes = [];
@@ -61,19 +64,14 @@ class Sequence {
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
         this.beatsPerBar = beatsPerBar;
-        if (audioFile) {
-            this.audioContext = new AudioContext();
-            this.analyser = this.audioContext.createAnalyser();
-            assetsHelper_1.AssetsHelper.loadAudio(audioFile, this.audioContext)
-                .then(audioBuffer => {
-                this.audioBuffer = audioBuffer;
-                this.onReady();
-            })
-                .catch(error => console.error("Error loading audio:", error));
-        }
-        else {
+        this.audioContext = new AudioContext();
+        this.analyser = this.audioContext.createAnalyser();
+        audioLoader.loadAudio(this.audioContext)
+            .then(audioBuffer => {
+            this.audioBuffer = audioBuffer;
             this.onReady();
-        }
+        })
+            .catch(error => console.error("Error loading audio:", error));
         this.recalculateDuration();
     }
     /**
