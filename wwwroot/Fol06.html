@@ -9,7 +9,7 @@
     <style>
         body {
             margin: 0;
-            background: #000;
+            background: rgb(17, 55, 55);
             overflow: hidden;
             margin: 0;
             padding: 0;
@@ -23,7 +23,7 @@
         canvas {
             width: 100vw;
             height: calc((9/16)*100vw);
-
+            background: rgb(0, 0, 0);
         }
 
         #launch {
@@ -37,6 +37,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+
         }
 
         button {
@@ -45,17 +46,20 @@
             padding: 1rem;
             color: #fff;
             background: #000;
+            border: 1px solid;
         }
     </style>
 </head>
 
 <body>
+
     <div id="launch">
         <button>
             LOADING..
         </button>
     </div>
     <canvas id="main-canvas" width="800" height="450"></canvas>
+
     <script src="js/fol06-bundle.js"></script>
 
 </body>

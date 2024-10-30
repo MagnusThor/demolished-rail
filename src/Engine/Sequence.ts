@@ -1,4 +1,5 @@
 
+import { Conductor } from "./conductor";
 import { Entity } from "./entity";
 import { AssetsHelper } from "./Helpers/assetsHelper";
 import { Scene } from "./scene";
@@ -7,6 +8,7 @@ import { ShaderEntity } from "./shaderEntity";
 
 export class Sequence {
 
+    public conductor?: Conductor
     public durationMs: number = 0;
     public scenes: Scene[] = [];
     public currentSceneIndex: number = 0;
@@ -32,6 +34,8 @@ export class Sequence {
     private beatListeners: ((scene: number, time: number, count: number) => void)[] = [];
     private tickListeners: ((scene: number, time: number, count: number) => void)[] = [];
     private barListeners: ((bar: number) => void)[] = [];
+    private frameListeners: ((scene: number, time: number) => void)[] = [];
+
 
     private audioContext!: AudioContext;
     private audioBuffer!: AudioBuffer;
@@ -127,6 +131,15 @@ export class Sequence {
      */
     onReady() { }
 
+
+    /**
+     * Adds an event listener for each frame.
+     * @param listener - The function to call on each frame.
+     */
+    onFrame(listener: (scene: number, time: number) => void) {
+        this.frameListeners.push(listener);
+    }
+
     /**
      * Adds an event listener for when a bar is complete.
      * @param listener - The function to call when a bar is complete.
@@ -206,6 +219,80 @@ export class Sequence {
                 return scene.startTimeinMs + scene.durationInMs;
             }));
         }
+    }
+
+
+    /**
+     * Render a specific time
+     *
+     * @param {number} time
+     * @memberof Sequence
+     */
+    renderAtTime(time: number) {
+        this.currentTime = time; // Update the currentTime
+        // Find the active scene for the given time
+        const currentSceneIndex = this.scenes.findIndex(scene =>
+            time >= scene.startTimeinMs && time < scene.startTimeinMs + scene.durationInMs
+        );
+        if (currentSceneIndex !== -1) {
+            this.currentSceneIndex = currentSceneIndex;
+            const elapsedTime = time - this.currentScene!.startTimeinMs;
+
+            // Render the scene
+            this.currentScene!.play(elapsedTime);
+
+            // Update and draw entities
+            this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
+            this.currentScene!.entities.forEach(entity => {
+                entity.update(time);
+                if (this.target) {
+                    entity.copyToCanvas(this.target, this);
+                }
+            });
+
+            // Apply post-processing
+            if (this.targetCtx) {
+                this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
+            }
+
+            this.triggerEventsForTime(time);
+
+        }
+    }
+
+    /**
+ * Triggers beat, tick, and bar listeners for a given time.
+ * @param time - The time in milliseconds.
+ */
+    private triggerEventsForTime(time: number) {
+        const beatIntervalMs = 60000 / this.bpm;
+        const tickIntervalMs = beatIntervalMs / this.ticksPerBeat;
+
+        // Calculate beat, tick, and bar values for the given time
+        const beat = Math.floor(time / beatIntervalMs) + 1;
+        const tick = Math.floor((time % beatIntervalMs) / tickIntervalMs);
+        const bar = Math.floor(beat / this.beatsPerBar) + 1;
+
+        // Trigger listeners if the values have changed
+        if (beat !== this.currentBeat) {
+            this.currentBeat = beat;
+            this.beatListeners.forEach(listener => listener(this.currentSceneIndex, time, this.beatCounter));
+            this.beatCounter++;
+        }
+
+        if (tick !== this.currentTick) {
+            this.currentTick = tick;
+            this.tickListeners.forEach(listener => listener(this.currentSceneIndex, time, this.tickCounter));
+            this.tickCounter++;
+        }
+
+        if (bar !== this.currentBar) {
+            this.currentBar = bar;
+            this.barListeners.forEach(listener => listener(this.currentBar));
+        }
+
+        // Trigger frame listeners
+        this.frameListeners.forEach(listener => listener(this.currentSceneIndex, time));
     }
 
     /**
@@ -315,41 +402,54 @@ export class Sequence {
             this.analyser.getByteFrequencyData(this.fftData);
         }
 
+
+
         // Clear the target canvas and update/draw entities
         this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
-        this.currentScene!.entities.forEach(entity => {
-            entity.update(timeStamp);
-            if (this.target) {
-                entity.copyToCanvas(this.target, this);
-            }
+        this
+            .currentScene!.entities.forEach(entity => {
 
 
-            // Trigger entity events only when the values change
-            if (this.currentBeat !== this.previousBeat) {
-                entity.beatListeners!.forEach(listener => listener(timeStamp, this.beatCounter,entity.props));
-                this.previousBeat = this.currentBeat;
-            }
+                // Update the conductor's time and trigger events
+                this.conductor?.updateTime(timeStamp);
+                this.conductor?.triggerEvents(this);
 
-            if (this.currentTick !== this.previousTick) {
-                entity.tickListeners!.forEach(listener => listener(timeStamp, this.tickCounter,entity.props));
-                this.previousTick = this.currentTick;
-            }
+                entity.update(timeStamp);
+                if (this.target) {
+                    entity.copyToCanvas(this.target, this);
+                }
 
-            if (this.currentBar !== this.previousBar) {
-                entity.barListeners!.forEach(listener => listener(timeStamp,this.currentBar,entity.props));
-                this.previousBar = this.currentBar;
-            }
 
-        });
+
+
+                // Trigger entity events only when the values change
+                if (this.currentBeat !== this.previousBeat) {
+                    entity.beatListeners!.forEach(listener => listener(timeStamp, this.beatCounter, entity.props));
+                    this.previousBeat = this.currentBeat;
+                }
+
+                if (this.currentTick !== this.previousTick) {
+                    entity.tickListeners!.forEach(listener => listener(timeStamp, this.tickCounter, entity.props));
+                    this.previousTick = this.currentTick;
+                }
+
+                if (this.currentBar !== this.previousBar) {
+                    entity.barListeners!.forEach(listener => listener(timeStamp, this.currentBar, entity.props));
+                    this.previousBar = this.currentBar;
+                }
+
+            });
 
         // Apply post-processing effects
         if (this.targetCtx) {
             this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
         }
 
-
-
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
+
+        // Trigger frame listeners
+        this.frameListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));
+
     }
 
     /**
@@ -379,8 +479,6 @@ export class Sequence {
             this.currentTick++;
             this.tickCounter++;
         }
-
-
-    }
+       }
 
 }

@@ -24,7 +24,8 @@ const streachingTextEffect_1 = require("./effects/streachingTextEffect");
 const creditsScroller_1 = require("./effects/creditsScroller");
 const createLensPostProcessor_1 = require("./postprocessors/createLensPostProcessor");
 const SetupDemo_1 = require("./SetupDemo");
-const demo = new SetupDemo_1.SetupDemo();
+// get the music as base 64;
+const demo = new SetupDemo_1.SetupDemo("/wwwroot/assets/music/music.mp3");
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((demo) => {
     var _a, _b;
     // Create the Scenes

@@ -13,7 +13,7 @@ export class SetupDemo {
         width: 800,
         height: 450,
         audioProperties: {
-            bpm: 110,
+            bpm: 123,
             ticks: 8,
             beat: 0,
             tick: 0,
@@ -22,10 +22,10 @@ export class SetupDemo {
         },
         font: "Big Shoulders Stencil Text"
     };
-    constructor() {
+    constructor(music:string) {
         this.sequence = new Sequence(
             document.querySelector("canvas") as HTMLCanvasElement,
-            100, 4, 4, [], "/wwwroot/assets/music/music.mp3");
+            123, 4, 4, [], music);
 
     }
     async addAssets(...urls: string[]) {
