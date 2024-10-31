@@ -1,9 +1,12 @@
+import { Scene } from "./scene";
 import { Sequence } from "./sequence";
 
 
 export interface IEntity {
   name: string;
   canvas: HTMLCanvasElement;
+  scene?: Scene
+  setScene(scene:Scene):void;
   update(timeStamp: number): void;
   copyToCanvas(targetCanvas: HTMLCanvasElement, sequence: Sequence): void;
   transitionIn?: (ctx: CanvasRenderingContext2D, progress: number) => void;
@@ -27,6 +30,7 @@ export class Entity<T> implements IEntity {
   ctx!: CanvasRenderingContext2D;
   private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
 
+  scene?: Scene | undefined;
 
   beatListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
   tickListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
@@ -60,6 +64,9 @@ export class Entity<T> implements IEntity {
 
 
 
+  }
+  setScene(scene: Scene): void {
+      this.scene = scene;
   }
   transitionIn?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
   transitionOut?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
@@ -126,34 +133,28 @@ export class Entity<T> implements IEntity {
   * @param timeStamp - The current timestamp in the animation.
   */
   update(timeStamp: number): void {
-
     this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (this.action && this.ctx && this.props) {
-      // Calculate the elapsed time for the entity
-      const elapsed = timeStamp - (this.startTimeinMs || 0);
+      // Calculate elapsed time relative to the scene's start time    
+      const sceneStartTime =  this.getScene()!.startTimeinMs || 0;
+      const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
 
-      // Check if the entity should be rendered based on its lifetime
+     
+  
+      // Log the timing information for debugging
       if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
         this.action(timeStamp, this.ctx, this.props);
+      } else {
+        console.log(`entity ${this.name} should not render, postponed by ${this.startTimeinMs} relative to scene starttime which is ${sceneStartTime}`);
       }
-      // const sequence = this.getSequence();
-      // if (sequence) {
-      //   this.triggerEntityListeners(sequence, timeStamp);
-      // }
     }
   }
+
   /**
  * Retrieves the Sequence instance associated with the entity.
  * @returns The Sequence instance if available, otherwise null.
  */
-  private getSequence(): Sequence | null {
-    if (this.action && this.action.length >= 4) { // Check if the action function accepts the sequence parameter
-      const sequence = (this.action as any).arguments[3]; // Access the fourth argument (sequence)
-      if (sequence instanceof Sequence) {
-        return sequence;
-      }
-    }
-    return null;
+  private getScene(): Scene | undefined {
+    return this.scene;
   }
-
 }

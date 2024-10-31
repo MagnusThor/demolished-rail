@@ -1,5 +1,6 @@
 
 import { IEntity } from "./entity";
+import { Scene } from "./scene";
 import { Sequence } from "./sequence";
 import { ShaderRenderer } from "./ShaderRenderer/shaderRenderer";
 
@@ -60,9 +61,11 @@ export class ShaderEntity implements IEntity {
             throw new Error("Cannot create ShaderEntity: Missing main shader code.");
         }
     }
-   
-
-
+    scene?: Scene | undefined;
+    setScene(scene: Scene): void {
+      this.scene = scene;
+    }
+  
 
     /**
  * Adds an event listener for when a beat occurs.

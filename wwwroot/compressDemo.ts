@@ -1,5 +1,5 @@
 import { Compressor } from "../src/Compressor/compressor";
-import { CompressorHelper } from "../src/Compressor/compressorHelper";
+import { CompressorHelper } from "../src/Engine/Helpers/compressorHelper";
 
 /**
  * This class handles the compression and bundling of the demo scene production.

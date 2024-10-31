@@ -27,6 +27,7 @@ class Scene {
             entity.canvas.width = this.width || 800;
             entity.canvas.height = this.height || 450;
         }
+        entity.setScene(this);
         this.entities.push(entity);
     }
     /**

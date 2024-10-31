@@ -5,7 +5,6 @@
   
 
 ## Features
-## Features
 
 * **Scene-based animation:** Organize animations into scenes with defined start times and durations.
 * **Entity management:** Create and manage individual animatable entities within scenes.
@@ -20,7 +19,7 @@
 * **BPM synchronization:** Synchronize animations with beats per minute (BPM).
 * **Beat and tick events:** Trigger events on beats and ticks for precise timing control.
 * **Audio analysis (FFT):** Analyze audio frequencies to create audio-reactive visualizations.
-* **Asset loading:** Helper functions for loading images and managing a texture cache.
+* **Asset loading:** Helper functions for loading images, audio, and managing a texture cache.
 * **Transitions:** Define transition effects for entities to create smooth entrances and exits.
     * **Easy customization:** Create custom transition functions to achieve a wide range of effects (e.g., fading, scaling, sliding).
     * **Helper functions:** Use `createFadeInTransition` and `createFadeOutTransition` to easily add fade effects.
@@ -32,7 +31,14 @@
 * **Scene Builder:**  Use the `SceneBuilder` class to easily create scenes with automatically calculated start times based on their durations.
 * **Entity Builder:** Use the `EntityBuilder` class to easily arrange entities within a scene with precise timing control.
 * **Sequence Helper:** Use the `SequenceHelper` class to calculate durations based on beats, bars, or ticks, given a specific BPM and time signature.
-
+* **Compressor:** Compress your animation and JavaScript code into a single, self-contained PNG image using the integrated `Compressor` class.
+* **Demoscene Production Helpers:**
+    *   `SetupDemo` class: Provides a structured way to set up and run your demoscene productions.
+    *   `CompressDemo` class:  Simplifies the process of compressing assets and bundling your demo into a single executable file.
+* **Conductor:**  Use the `Conductor` class to create a timeline of events that trigger actions on entities based on time, beats, bars, or custom conditions.
+* **Effects and Helpers:**
+    *   Variety of built-in effects (e.g., `typeWriterEffect`, `randomSquareEffect`, `expandingCircleEffect`, `strobeEffect`, `parallaxLayerEffect`, `creditsScrollerEffect`, `audioVisualizerEffect`, etc.).
+    *   Helper functions for common tasks (e.g., `createFadeInTransition`, `createFadeOutTransition`, `createBlurPostProcessor`, etc.).
 
 
 ## Installation

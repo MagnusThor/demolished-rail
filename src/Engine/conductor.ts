@@ -6,7 +6,7 @@ export interface ITimelineEvent<T, P> {
     time?: number;        // Time in milliseconds
     beatCount?: number;   // Beat count
     barCount?: number;    // Bar count
-    action: (entity: Entity<T>, eventProps: P) => void;
+    action: (entity: Entity<T>, eventProps: P, criteriaResult?: boolean) => void;
     targetEntity: string;   // Key of the entity to target
     criteria?: () => boolean; // Optional criteria function
     props?: any;            // Optional properties for the event
@@ -33,27 +33,29 @@ export class Conductor { // Using Conductor as the class name
         this.currentTime = time;
     }
 
-    /**
-     * Triggers events on the timeline based on the current time, beat count, and bar count.
-     * @param sequence - The Sequence instance to get timing information from.
-     */
+
     triggerEvents(sequence: Sequence) {
         this.events.forEach(event => {
             const { time, beatCount, barCount, action, targetEntity, criteria, props } = event;
 
-            // Check if the event should be triggered based on time, beat, bar, and criteria
+            // Check if the event should be triggered
+            const timeCondition = time !== undefined ? this.currentTime >= time : true; // True if time is not specified
+            const beatCondition = beatCount !== undefined ? sequence.beatCounter >= beatCount : true; // True if beatCount is not specified
+            const barCondition = barCount !== undefined ? sequence.currentBar >= barCount : true; // True if barCount is not specified
+            const criteriaResult = criteria ? criteria() : true;
+
+            // Combine all conditions
             if (
-                (time !== undefined && this.currentTime >= time) ||
-                (beatCount !== undefined && sequence.beatCounter >= beatCount) ||
-                (barCount !== undefined && sequence.currentBar >= barCount)
+                (timeCondition && beatCondition && barCondition) && // All specified conditions must be true
+                criteriaResult // Criteria must also be true (if provided)
             ) {
-                if (!criteria || criteria()) {
-                    const entity = sequence.currentScene?.entities.find(e => e.name === targetEntity);
-                    if (entity instanceof Entity) {
-                        action(entity, props); // Pass props to the action
-                    }
+                const entity = sequence.currentScene?.entities.find(e => e.name === targetEntity);
+                if (entity) {
+                    action(entity as any, props, criteriaResult);
                 }
             }
         });
     }
+
+
 }

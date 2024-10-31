@@ -38,6 +38,9 @@ class ShaderEntity {
             throw new Error("Cannot create ShaderEntity: Missing main shader code.");
         }
     }
+    setScene(scene) {
+        this.scene = scene;
+    }
     /**
  * Adds an event listener for when a beat occurs.
  * @param listener - The function to call when a beat occurs.

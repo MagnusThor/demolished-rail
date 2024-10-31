@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Entity = void 0;
-const sequence_1 = require("./sequence");
 class Entity {
     /**
      * Creates a new Entity.
@@ -30,6 +29,9 @@ class Entity {
         }
         ;
         this.ctx = this.canvas.getContext("2d");
+    }
+    setScene(scene) {
+        this.scene = scene;
     }
     /**
     * Adds an event listener for when a beat occurs.
@@ -90,30 +92,24 @@ class Entity {
         var _a;
         (_a = this.ctx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (this.action && this.ctx && this.props) {
-            // Calculate the elapsed time for the entity
-            const elapsed = timeStamp - (this.startTimeinMs || 0);
-            // Check if the entity should be rendered based on its lifetime
+            // Calculate elapsed time relative to the scene's start time    
+            const sceneStartTime = this.getScene().startTimeinMs || 0;
+            const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
+            // Log the timing information for debugging
             if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
                 this.action(timeStamp, this.ctx, this.props);
             }
-            // const sequence = this.getSequence();
-            // if (sequence) {
-            //   this.triggerEntityListeners(sequence, timeStamp);
-            // }
+            else {
+                console.log(`entity ${this.name} should not render, postponed by ${this.startTimeinMs} relative to scene starttime which is ${sceneStartTime}`);
+            }
         }
     }
     /**
    * Retrieves the Sequence instance associated with the entity.
    * @returns The Sequence instance if available, otherwise null.
    */
-    getSequence() {
-        if (this.action && this.action.length >= 4) { // Check if the action function accepts the sequence parameter
-            const sequence = this.action.arguments[3]; // Access the fourth argument (sequence)
-            if (sequence instanceof sequence_1.Sequence) {
-                return sequence;
-            }
-        }
-        return null;
+    getScene() {
+        return this.scene;
     }
 }
 exports.Entity = Entity;
