@@ -82,12 +82,14 @@ class ShaderEntity {
      */
     update(timeStamp) {
         if (this.action && this.shaderRenderer && this.props) {
-            // Calculate the elapsed time for the entity
-            const elapsed = timeStamp - (this.startTimeinMs || 0);
-            this.action(timeStamp, this.shaderRenderer, this.props);
+            // Calculate elapsed time relative to the scene's start time
+            const sceneStartTime = this.scene ? this.scene.startTimeinMs : 0;
+            const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
             if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
                 this.action(timeStamp, this.shaderRenderer, this.props);
-                this.shaderRenderer.update(timeStamp / 1000);
+                // Calculate shader time relative to the entity's start time (within the scene)
+                const shaderTime = Math.max(0, elapsed);
+                this.shaderRenderer.update(shaderTime / 1000);
             }
         }
     }

@@ -46,6 +46,15 @@ export class SceneBuilder {
   }
 
   /**
+   * Gets the total duration of all scenes added to the builder.
+   * @returns The total duration in milliseconds.
+   */
+  get totalScenesDuration(): number {
+    return this.scenes.reduce((total, scene) => total + scene.durationInMs, 0);
+  }
+
+
+  /**
    * Adds a scene to the builder with a specified name and a duration that extends to the end of the total duration.
    * @param name - The name of the scene.
    * @returns The SceneBuilder instance for chaining.

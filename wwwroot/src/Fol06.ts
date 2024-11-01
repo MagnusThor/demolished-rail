@@ -22,6 +22,7 @@ import { sonantMusic } from "../assets/music/sonant";
 import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
 import { EngineLogger } from "../../src/Engine/EngineLogger";
 import { Scene } from "../../src/Engine/scene";
+import { singularityShader } from "../assets/shaders/singularityShader";
 
 
 // new SonantAudioLoader(sonantMusic) 
@@ -35,7 +36,7 @@ const demo = new SetupDemo(new DefaultAudioLoader("/wwwroot/assets/music/we floa
 class Fol06 {
     conductor: Conductor;
     constructor(public sequence: Sequence, public width: number, public height: number,
-        public bmp:number
+        public bmp: number
 
     ) {
 
@@ -61,16 +62,16 @@ class Fol06 {
                     "written by professor Ulf Danielsson"],
                 font: "Montserrat",
                 size: 40,
-                fadeInDuration: SequenceHelper.getDurationForBeats(this.bmp,4) /1000,
-                fadeOutDuration: SequenceHelper.getDurationForBeats(this.bmp,4) /1000,
-                textDuration: SequenceHelper.getDurationForBeats(this.bmp,8) /1000,
+                fadeInDuration: SequenceHelper.getDurationForBeats(this.bmp, 4) / 1000,
+                fadeOutDuration: SequenceHelper.getDurationForBeats(this.bmp, 4) / 1000,
+                textDuration: SequenceHelper.getDurationForBeats(this.bmp, 8) / 1000,
                 loop: false
             },
             (ts, ctx, props) => textFadeInOut(ts, ctx, props, this.sequence),
-            SequenceHelper.getDurationForBeats(this.bmp,8)
+            SequenceHelper.getDurationForBeats(this.bmp, 8)
         );
 
-       
+
 
         mapEntities.push(textEffectEntity);
         return mapEntities;
@@ -87,12 +88,12 @@ class Fol06 {
             [0.0, 1.2, 0.7],
             [0.5, 1.0, 0.9],
             [1.0, 0.8, 1.1],
-            [0.7, 1.3, 0.6], 
-            [0.2, 1.1, 1.0], 
-            [1.2, 0.9, 0.8], 
-            [0.9, 1.4, 0.5], 
-            [0.4, 1.0, 1.2]  
-          ]
+            [0.7, 1.3, 0.6],
+            [0.2, 1.1, 1.0],
+            [1.2, 0.9, 0.8],
+            [0.9, 1.4, 0.5],
+            [0.4, 1.0, 1.2]
+        ]
         let cameraPos = cameraPositions[0];
         const shader = new ShaderEntity("earthShader",
             {
@@ -116,11 +117,11 @@ class Fol06 {
                 ]
             }, () => {
             }, this.width, this.height);
-           
-            shader.onBar((ts: number, count: number) => {
-                const positionIndex = (count) % cameraPositions.length;
-                cameraPos = cameraPositions[positionIndex];
-            });
+
+        shader.onBar((ts: number, count: number) => {
+            const positionIndex = (count) % cameraPositions.length;
+            cameraPos = cameraPositions[positionIndex];
+        });
 
         const textEffectEntity = new Entity<ITextFadeInOut>("earth-text",
             {
@@ -132,11 +133,11 @@ class Fol06 {
                 size: 20,
                 fadeInDuration: 2,
                 fadeOutDuration: 2,
-                textDuration: (SequenceHelper.getDurationForBeats(this.bmp,4) / 1000) +5,
+                textDuration: (SequenceHelper.getDurationForBeats(this.bmp, 4) / 1000) + 5,
                 loop: false
             },
             (ts, ctx, props) => textFadeInOut(ts, ctx, props, this.sequence),
-            SequenceHelper.getDurationForBeats(this.bmp,4)
+            SequenceHelper.getDurationForBeats(this.bmp, 4)
         );
 
         mapEntities.push(shader, textEffectEntity);
@@ -361,6 +362,31 @@ class Fol06 {
         return mapEntities;
     }
 
+    singularity(): Array<IEntity> {
+        const mapEntities = new Array<IEntity>();
+        const shader = new ShaderEntity("singularity-shader",
+            {
+                mainFragmentShader: mainFragment,
+                mainVertexShader: mainVertex,
+                renderBuffers: [
+                    {
+                        name: "a_buffer",
+                        fragment: singularityShader,
+                        vertex: mainVertex,
+                        textures: [],
+                        customUniforms: {
+                        }
+
+                    }
+                ]
+            }, () => {
+            }, this.width, this.height);
+
+        mapEntities.push(shader);
+        return mapEntities;
+    }
+
+
 }
 
 enum SCENE {
@@ -370,26 +396,30 @@ enum SCENE {
     GALAXY = 3,
     GALAXYEXPAND = 4,
     WARPSPEED = 5,
-    BLACKHOLE = 6,
-    EVENTHORIZON = 7
+    SINGULARITY = 6,
+    BLACKHOLE = 7,
+    EVENTHORIZON = 8
 }
 
 demo.addAssets().then((demo: SetupDemo) => {
-   
+
     const bpm = 123;
-    const fol06 = new Fol06(demo.sequence, 800, 450,bpm);
+    const fol06 = new Fol06(demo.sequence, 800, 450, bpm);
     const sceneBuilder = new SceneBuilder(147600); // 2.46 mins
 
 
     sceneBuilder
-        .addScene("intro", SequenceHelper.getDurationForBeats(bpm,32))
-        .addScene("earth", SequenceHelper.getDurationForBars(bpm,4,16))
+        .addScene("intro", SequenceHelper.getDurationForBeats(bpm, 32))
+        .addScene("earth", SequenceHelper.getDurationForBars(bpm, 4, 16))
         .addScene("lonly-planet-and-the-sun", 15000)
         .addScene("galaxy", 15000)
         .addScene("galaxy-expand", 15000)
         .addScene("warp-speed", 15000)
+        .addScene("singularity", 15000)
         .addScene("blackhole", 4000).
         durationUntilEndInMs("eventhorizon");
+
+    EngineLogger.log(`Total Scene duration ${sceneBuilder.totalScenesDuration}`)
 
 
     const scenes = sceneBuilder.getScenes();
@@ -401,29 +431,27 @@ demo.addAssets().then((demo: SetupDemo) => {
     scenes[SCENE.GALAXY].addEntities(...fol06.galaxy())
     scenes[SCENE.GALAXYEXPAND].addEntities(...fol06.expandingGalaxy())
     scenes[SCENE.WARPSPEED].addEntities(...fol06.warpSpeed())
+    scenes[SCENE.SINGULARITY].addEntities(...fol06.singularity())
     scenes[SCENE.BLACKHOLE].addEntities(...fol06.blackhole())
     scenes[SCENE.EVENTHORIZON].addEntities(...fol06.eventHorizon())
 
     // create and add transitions to scenes
 
-    const transitionIn = (ctx:CanvasRenderingContext2D, scene:Scene, progress:number) => { 
+    const transitionIn = (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => {
         ctx.globalAlpha = progress;
-        EngineLogger.log(`transitionIn ${progress}`);
     };
 
-    const transitionOut = (ctx:CanvasRenderingContext2D, scene:Scene, progress:number) => { 
-        ctx.globalAlpha = 1 -progress;
-        EngineLogger.log(`transitionOut ${progress}`);
-
+    const transitionOut = (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => {
+        ctx.globalAlpha = 1 - progress;
     };
 
     scenes[SCENE.EARTH].transitionIn(
         demo.sequence,
-        0,2000,transitionIn);
+        0, 2000, transitionIn);
 
-        scenes[SCENE.EARTH].transitionOut(
-            demo.sequence,
-            scenes[SCENE.EARTH].durationInMs-2000,2000,transitionOut);
+    scenes[SCENE.EARTH].transitionOut(
+        demo.sequence,
+        scenes[SCENE.EARTH].durationInMs - 2000, 2000, transitionOut);
 
     demo.sequence.addSceneArray(scenes)
 
@@ -433,7 +461,7 @@ demo.addAssets().then((demo: SetupDemo) => {
     demo.sequence.onFrame(() => debugHelper.update());
 
 
-}).catch (err => {
+}).catch(err => {
     EngineLogger.log(err);
 });
 
@@ -457,9 +485,7 @@ demo.sequence.onReady = () => {
     btn!.addEventListener("click", () => {
         document.querySelector("#launch")?.remove();
         demo.sequence.play();
-       // toggleFullscreen(document.querySelector("canvas")!);
+        // toggleFullscreen(document.querySelector("canvas")!);
     });
 }
-
-
 
