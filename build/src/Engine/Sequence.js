@@ -3,6 +3,31 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sequence = void 0;
 class Sequence {
     /**
+* Sets the function to be used for resetting the rendering context when switching scenes.
+* @param resetFunction - The function to call to reset the context.
+*/
+    setContextResetFunction(resetFunction) {
+        this.resetContext = resetFunction;
+    }
+    /**
+     * Adds a transition-out listener for a specific scene.
+     * @param scene - The scene to add the listener to.
+     * @param startTime - The time (in milliseconds) relative to the end of the scene when the transition should start.
+     * @param listener - The transition function to apply.
+     */
+    addSceneTransitionOut(scene, startTime, duration, listener) {
+        this.sceneTransitionOutListeners.push({ scene, startTime, duration, listener });
+    }
+    /**
+     * Adds a transition-in listener for a specific scene.
+     * @param scene - The scene to add the listener to.
+     * @param startTime - The time (in milliseconds) within the scene when the transition should start.
+     * @param listener - The transition function to apply.
+     */
+    addSceneTransitionIn(scene, startTime, duration, listener) {
+        this.sceneTransitionInListeners.push({ scene, startTime, duration, listener });
+    }
+    /**
      * Adds a post-processing function to the sequence.
      * @param processor - The post-processing function to add.
      */
@@ -59,6 +84,11 @@ class Sequence {
         this.barListeners = [];
         this.frameListeners = [];
         this.postProcessors = [];
+        this.sceneTransitionInListeners = [];
+        this.sceneTransitionOutListeners = [];
+        this.resetContext = (ctx) => {
+            ctx.globalAlpha = 1; // Default reset function
+        };
         this.scenes = scenes || [];
         this.targetCtx = target.getContext("2d");
         this.bpm = bpm;
@@ -73,20 +103,6 @@ class Sequence {
         })
             .catch(error => console.error("Error loading audio:", error));
         this.recalculateDuration();
-    }
-    /**
-     * Loads the audio file and initializes the audio context and analyser.
-     * @param audioFile - The URL of the audio file to load.
-     */
-    loadAudio(audioFile) {
-        fetch(audioFile)
-            .then(response => response.arrayBuffer())
-            .then(arrayBuffer => this.audioContext.decodeAudioData(arrayBuffer))
-            .then(audioBuffer => {
-            this.audioBuffer = audioBuffer;
-            this.onReady();
-        })
-            .catch(error => console.error("Error loading audio:", error));
     }
     /**
      * Called when the audio file is loaded or when no audio is used.
@@ -185,8 +201,6 @@ class Sequence {
         if (currentSceneIndex !== -1) {
             this.currentSceneIndex = currentSceneIndex;
             const elapsedTime = time - this.currentScene.startTimeinMs;
-            // Render the scene
-            this.currentScene.play(elapsedTime);
             // Update and draw entities
             (_a = this.targetCtx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.target.width, this.target.height);
             this.currentScene.entities.forEach(entity => {
@@ -308,7 +322,8 @@ class Sequence {
         // If the scene has changed, update currentSceneIndex and play the new scene
         if (this.currentSceneIndex !== currentSceneIndex) {
             this.currentSceneIndex = currentSceneIndex;
-            const elapsedTime = timeStamp - this.currentScene.startTimeinMs;
+            // Reset the rendering context
+            this.resetContext(this.targetCtx);
             // Set scene dimensions if not already set
             if (!this.currentScene.width) {
                 this.currentScene.width = this.target.width;
@@ -316,9 +331,6 @@ class Sequence {
             if (!this.currentScene.height) {
                 this.currentScene.height = this.target.height;
             }
-            this.currentScene.play(elapsedTime).then(() => {
-                // Scene transition completed
-            });
         }
         // FFT analysis (if analyser is available)
         if (this.analyser) {
@@ -326,8 +338,7 @@ class Sequence {
         }
         // Clear the target canvas and update/draw entities
         (_a = this.targetCtx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.target.width, this.target.height);
-        this
-            .currentScene.entities.forEach(entity => {
+        this.currentScene.entities.forEach(entity => {
             var _a, _b;
             // Update the conductor's time and trigger events
             (_a = this.conductor) === null || _a === void 0 ? void 0 : _a.updateTime(timeStamp);
@@ -354,6 +365,24 @@ class Sequence {
         if (this.targetCtx) {
             this.postProcessors.forEach(processor => processor(this.targetCtx, this));
         }
+        this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
+            if (scene === this.currentScene) {
+                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
+                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
+                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
+                    listener(this.targetCtx, scene, transitionProgress);
+                }
+            }
+        });
+        this.sceneTransitionOutListeners.forEach(({ scene, startTime, duration, listener }) => {
+            if (scene === this.currentScene) {
+                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
+                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
+                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
+                    listener(this.targetCtx, scene, transitionProgress);
+                }
+            }
+        });
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
         // Trigger frame listeners
         this.frameListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));

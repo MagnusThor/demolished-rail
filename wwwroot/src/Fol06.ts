@@ -19,7 +19,9 @@ import { atomsmp3 } from "../assets/base64/atomsmp3";
 import { warpSpeedShader } from "../assets/shaders/warpSpeedShader";
 import { DefaultAudioLoader, SonantAudioLoader } from "../../src/Engine/Audio/audioLoader";
 import { sonantMusic } from "../assets/music/sonant";
-
+import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
+import { EngineLogger } from "../../src/Engine/EngineLogger";
+import { Scene } from "../../src/Engine/scene";
 
 
 // new SonantAudioLoader(sonantMusic) 
@@ -31,7 +33,7 @@ const demo = new SetupDemo(new DefaultAudioLoader("/wwwroot/assets/music/we floa
  * @class Fol06
  */
 class Fol06 {
-    conductor: any;
+    conductor: Conductor;
     constructor(public sequence: Sequence, public width: number, public height: number,
         public bmp:number
 
@@ -68,6 +70,8 @@ class Fol06 {
             SequenceHelper.getDurationForBeats(this.bmp,8)
         );
 
+       
+
         mapEntities.push(textEffectEntity);
         return mapEntities;
     }
@@ -83,7 +87,12 @@ class Fol06 {
             [0.0, 1.2, 0.7],
             [0.5, 1.0, 0.9],
             [1.0, 0.8, 1.1],
-        ];
+            [0.7, 1.3, 0.6], 
+            [0.2, 1.1, 1.0], 
+            [1.2, 0.9, 0.8], 
+            [0.9, 1.4, 0.5], 
+            [0.4, 1.0, 1.2]  
+          ]
         let cameraPos = cameraPositions[0];
         const shader = new ShaderEntity("earthShader",
             {
@@ -107,10 +116,11 @@ class Fol06 {
                 ]
             }, () => {
             }, this.width, this.height);
-        shader.onBar((ts: number, count: number) => {
-            const positionIndex = (count) % cameraPositions.length;
-            cameraPos = cameraPositions[positionIndex];
-        });
+           
+            shader.onBar((ts: number, count: number) => {
+                const positionIndex = (count) % cameraPositions.length;
+                cameraPos = cameraPositions[positionIndex];
+            });
 
         const textEffectEntity = new Entity<ITextFadeInOut>("earth-text",
             {
@@ -365,18 +375,15 @@ enum SCENE {
 }
 
 demo.addAssets().then((demo: SetupDemo) => {
-    // Create the Scenes
-    // Music length = 139200 ms;
-
+   
     const bpm = 123;
-
     const fol06 = new Fol06(demo.sequence, 800, 450,bpm);
-
     const sceneBuilder = new SceneBuilder(147600); // 2.46 mins
 
+
     sceneBuilder
-        .addScene("intro", SequenceHelper.getDurationForBeats(bpm,32) )
-        .addScene("earth", 15000)
+        .addScene("intro", SequenceHelper.getDurationForBeats(bpm,32))
+        .addScene("earth", SequenceHelper.getDurationForBars(bpm,4,16))
         .addScene("lonly-planet-and-the-sun", 15000)
         .addScene("galaxy", 15000)
         .addScene("galaxy-expand", 15000)
@@ -387,6 +394,7 @@ demo.addAssets().then((demo: SetupDemo) => {
 
     const scenes = sceneBuilder.getScenes();
 
+
     scenes[SCENE.INTRO].addEntities(...fol06.introScene())
     scenes[SCENE.EARTH].addEntities(...fol06.earthScene())
     scenes[SCENE.LONLYPLANET].addEntities(...fol06.lonlyPlanet())
@@ -396,8 +404,28 @@ demo.addAssets().then((demo: SetupDemo) => {
     scenes[SCENE.BLACKHOLE].addEntities(...fol06.blackhole())
     scenes[SCENE.EVENTHORIZON].addEntities(...fol06.eventHorizon())
 
-    demo.sequence.addSceneArray(scenes)
+    // create and add transitions to scenes
 
+    const transitionIn = (ctx:CanvasRenderingContext2D, scene:Scene, progress:number) => { 
+        ctx.globalAlpha = progress;
+        EngineLogger.log(`transitionIn ${progress}`);
+    };
+
+    const transitionOut = (ctx:CanvasRenderingContext2D, scene:Scene, progress:number) => { 
+        ctx.globalAlpha = 1 -progress;
+        EngineLogger.log(`transitionOut ${progress}`);
+
+    };
+
+    scenes[SCENE.EARTH].transitionIn(
+        demo.sequence,
+        0,2000,transitionIn);
+
+        scenes[SCENE.EARTH].transitionOut(
+            demo.sequence,
+            scenes[SCENE.EARTH].durationInMs-2000,2000,transitionOut);
+
+    demo.sequence.addSceneArray(scenes)
 
     const jumpToScene = new URLSearchParams(location.search).get("scene") || "0"
     const debugHelper = new DebugHelper(demo.sequence, parseInt(jumpToScene!));
@@ -405,6 +433,8 @@ demo.addAssets().then((demo: SetupDemo) => {
     demo.sequence.onFrame(() => debugHelper.update());
 
 
+}).catch (err => {
+    EngineLogger.log(err);
 });
 
 demo.sequence.onReady = () => {

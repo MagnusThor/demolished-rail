@@ -48,8 +48,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
         lastBeat: -1, // Initialize to -1 to trigger on the first beat
     }, (ts, ctx, props, sequence) => (0, strobeEffect_1.strobeEffect)(ts, ctx, props, demo.sequence));
     const imageOverlayEntity = new entity_1.Entity("ImageOverlay", {
-        x: 0,
-        y: 0,
+        position: imageOverlayEffect_1.ImagePosition.FILL,
         width: demo.settings.width,
         height: demo.settings.height,
         image: (_a = assetsHelper_1.AssetsHelper.textureCache.get("silhouette.png")) === null || _a === void 0 ? void 0 : _a.src,
@@ -57,7 +56,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
         fadeIn: true,
         fadeOut: true,
         duration: 5,
-    }, (ts, ctx, props) => (0, imageOverlayEffect_1.imageOverlayEffect)(ts, ctx, props));
+    }, (ts, ctx, props) => (0, imageOverlayEffect_1.imageOverlayEffect)(ts, ctx, props, demo.sequence));
     const expandingCircleEntity = new entity_1.Entity("ExpandingCircle", {
         x: demo.settings.width / 2,
         y: demo.settings.height / 2,

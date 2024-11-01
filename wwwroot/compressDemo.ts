@@ -68,7 +68,7 @@ class CompressDemo {
    * Runs the compression process.
    */
   static async run() {
-    await this.toBase64(["./wwwroot/assets/music/atoms.mp3"]);
+    await this.toBase64(["./wwwroot/assets/music/atoms.mp3","./wwwroot/assets/images/ulfDanielsson.png"]);
     await this.Pngify();
   }
 }

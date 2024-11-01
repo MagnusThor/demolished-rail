@@ -30,7 +30,7 @@ class Entity {
         ;
         this.ctx = this.canvas.getContext("2d");
     }
-    setScene(scene) {
+    bindToScene(scene) {
         this.scene = scene;
     }
     /**
@@ -98,9 +98,6 @@ class Entity {
             // Log the timing information for debugging
             if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
                 this.action(timeStamp, this.ctx, this.props);
-            }
-            else {
-                console.log(`entity ${this.name} should not render, postponed by ${this.startTimeinMs} relative to scene starttime which is ${sceneStartTime}`);
             }
         }
     }

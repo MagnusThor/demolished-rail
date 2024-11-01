@@ -38,7 +38,7 @@ class ShaderEntity {
             throw new Error("Cannot create ShaderEntity: Missing main shader code.");
         }
     }
-    setScene(scene) {
+    bindToScene(scene) {
         this.scene = scene;
     }
     /**

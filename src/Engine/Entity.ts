@@ -1,3 +1,4 @@
+import { EngineLogger } from "./EngineLogger";
 import { Scene } from "./scene";
 import { Sequence } from "./sequence";
 
@@ -6,7 +7,7 @@ export interface IEntity {
   name: string;
   canvas: HTMLCanvasElement;
   scene?: Scene
-  setScene(scene:Scene):void;
+  bindToScene(scene:Scene):void;
   update(timeStamp: number): void;
   copyToCanvas(targetCanvas: HTMLCanvasElement, sequence: Sequence): void;
   transitionIn?: (ctx: CanvasRenderingContext2D, progress: number) => void;
@@ -61,11 +62,8 @@ export class Entity<T> implements IEntity {
 
     };
     this.ctx = this.canvas.getContext("2d")!;
-
-
-
   }
-  setScene(scene: Scene): void {
+  bindToScene(scene: Scene): void {
       this.scene = scene;
   }
   transitionIn?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
@@ -144,9 +142,7 @@ export class Entity<T> implements IEntity {
       // Log the timing information for debugging
       if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
         this.action(timeStamp, this.ctx, this.props);
-      } else {
-        console.log(`entity ${this.name} should not render, postponed by ${this.startTimeinMs} relative to scene starttime which is ${sceneStartTime}`);
-      }
+      } 
     }
   }
 

@@ -62,7 +62,7 @@ export class ShaderEntity implements IEntity {
         }
     }
     scene?: Scene | undefined;
-    setScene(scene: Scene): void {
+    bindToScene(scene: Scene): void {
       this.scene = scene;
     }
   

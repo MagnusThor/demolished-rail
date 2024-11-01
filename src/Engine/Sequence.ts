@@ -1,6 +1,7 @@
 
 import { IAudioLoader } from "./Audio/audioLoader";
 import { Conductor } from "./conductor";
+import { EngineLogger } from "./EngineLogger";
 import { Scene } from "./scene";
 
 
@@ -44,6 +45,42 @@ export class Sequence {
     public targetCtx!: CanvasRenderingContext2D | null;
 
     private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
+
+    private sceneTransitionInListeners: { scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void }[] = [];
+    private sceneTransitionOutListeners: { scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void }[] = [];
+
+
+    private resetContext: (ctx: CanvasRenderingContext2D) => void = (ctx) => {
+        ctx.globalAlpha = 1; // Default reset function
+    };
+
+    /**
+* Sets the function to be used for resetting the rendering context when switching scenes.
+* @param resetFunction - The function to call to reset the context.
+*/
+    setContextResetFunction(resetFunction: (ctx: CanvasRenderingContext2D) => void) {
+        this.resetContext = resetFunction;
+    }
+
+    /**
+     * Adds a transition-out listener for a specific scene.
+     * @param scene - The scene to add the listener to.
+     * @param startTime - The time (in milliseconds) relative to the end of the scene when the transition should start.
+     * @param listener - The transition function to apply.
+     */
+    addSceneTransitionOut(scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void) {
+        this.sceneTransitionOutListeners.push({ scene, startTime, duration, listener });
+    }
+
+    /**
+     * Adds a transition-in listener for a specific scene.
+     * @param scene - The scene to add the listener to.
+     * @param startTime - The time (in milliseconds) within the scene when the transition should start.
+     * @param listener - The transition function to apply.
+     */
+    addSceneTransitionIn(scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void) {
+        this.sceneTransitionInListeners.push({ scene, startTime, duration, listener });
+    }
 
     /**
      * Adds a post-processing function to the sequence.
@@ -97,7 +134,7 @@ export class Sequence {
 
         this.audioContext = new AudioContext();
         this.analyser = this.audioContext.createAnalyser();
-      
+
 
         audioLoader.loadAudio(this.audioContext)
             .then(audioBuffer => {
@@ -110,28 +147,9 @@ export class Sequence {
     }
 
     /**
-     * Loads the audio file and initializes the audio context and analyser.
-     * @param audioFile - The URL of the audio file to load.
-     */
-    private loadAudio(audioFile: string) {
-
-
-        fetch(audioFile)
-            .then(response => response.arrayBuffer())
-            .then(arrayBuffer => this.audioContext.decodeAudioData(arrayBuffer))
-            .then(audioBuffer => {
-                this.audioBuffer = audioBuffer;
-
-                this.onReady();
-            })
-            .catch(error => console.error("Error loading audio:", error));
-    }
-
-    /**
      * Called when the audio file is loaded or when no audio is used.
      */
     onReady() { }
-
 
     /**
      * Adds an event listener for each frame.
@@ -238,10 +256,6 @@ export class Sequence {
         if (currentSceneIndex !== -1) {
             this.currentSceneIndex = currentSceneIndex;
             const elapsedTime = time - this.currentScene!.startTimeinMs;
-
-            // Render the scene
-            this.currentScene!.play(elapsedTime);
-
             // Update and draw entities
             this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
             this.currentScene!.entities.forEach(entity => {
@@ -320,7 +334,6 @@ export class Sequence {
         const animate = (ts: number) => {
             const adjustedTimeStamp = ts - this.startTime;
             this.playCurrentScene(adjustedTimeStamp);
-
             if (this.isPlaying) {
                 this.requestAnimationFrameID = requestAnimationFrame(animate);
             }
@@ -363,7 +376,6 @@ export class Sequence {
         if (!this.isPlaying) {
             return;
         }
-
         this.currentTime = timeStamp; // Update currentTime
 
         // Determine the current scene based on timeStamp
@@ -385,7 +397,9 @@ export class Sequence {
         // If the scene has changed, update currentSceneIndex and play the new scene
         if (this.currentSceneIndex !== currentSceneIndex) {
             this.currentSceneIndex = currentSceneIndex;
-            const elapsedTime = timeStamp - this.currentScene!.startTimeinMs;
+
+          // Reset the rendering context
+            this.resetContext(this.targetCtx!); 
 
             // Set scene dimensions if not already set
             if (!this.currentScene!.width) {
@@ -394,60 +408,65 @@ export class Sequence {
             if (!this.currentScene!.height) {
                 this.currentScene!.height = this.target.height;
             }
-            this.currentScene!.play(elapsedTime).then(() => {
-                // Scene transition completed
-            });
+           
+
         }
         // FFT analysis (if analyser is available)
         if (this.analyser) {
             this.analyser.getByteFrequencyData(this.fftData);
         }
-
-
-
         // Clear the target canvas and update/draw entities
         this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
-        this
-            .currentScene!.entities.forEach(entity => {
-
-
-                // Update the conductor's time and trigger events
-                this.conductor?.updateTime(timeStamp);
-                this.conductor?.triggerEvents(this);
-
-                entity.update(timeStamp);
-                if (this.target) {
-                    entity.copyToCanvas(this.target, this);
-                }
-
-
-
-
-                // Trigger entity events only when the values change
-                if (this.currentBeat !== this.previousBeat) {
-                    entity.beatListeners!.forEach(listener => listener(timeStamp, this.beatCounter, entity.props));
-                    this.previousBeat = this.currentBeat;
-                }
-
-                if (this.currentTick !== this.previousTick) {
-                    entity.tickListeners!.forEach(listener => listener(timeStamp, this.tickCounter, entity.props));
-                    this.previousTick = this.currentTick;
-                }
-
-                if (this.currentBar !== this.previousBar) {
-                    entity.barListeners!.forEach(listener => listener(timeStamp, this.currentBar, entity.props));
-                    this.previousBar = this.currentBar;
-                }
-
-            });
-
+        this.currentScene!.entities.forEach(entity => {
+            // Update the conductor's time and trigger events
+            this.conductor?.updateTime(timeStamp);
+            this.conductor?.triggerEvents(this);
+            entity.update(timeStamp);
+            if (this.target) {
+                entity.copyToCanvas(this.target, this);
+            }
+            // Trigger entity events only when the values change
+            if (this.currentBeat !== this.previousBeat) {
+                entity.beatListeners!.forEach(listener => listener(timeStamp, this.beatCounter, entity.props));
+                this.previousBeat = this.currentBeat;
+            }
+            if (this.currentTick !== this.previousTick) {
+                entity.tickListeners!.forEach(listener => listener(timeStamp, this.tickCounter, entity.props));
+                this.previousTick = this.currentTick;
+            }
+            if (this.currentBar !== this.previousBar) {
+                entity.barListeners!.forEach(listener => listener(timeStamp, this.currentBar, entity.props));
+                this.previousBar = this.currentBar;
+            }
+        });
         // Apply post-processing effects
         if (this.targetCtx) {
             this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
         }
 
-        this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
+        this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
+            if (scene === this.currentScene) {
+                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
 
+                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
+                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
+                    listener(this.targetCtx!, scene, transitionProgress);
+                }
+            }
+        });
+
+
+        this.sceneTransitionOutListeners.forEach(({ scene, startTime, duration, listener }) => {
+            if (scene === this.currentScene) {
+                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
+                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
+                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
+                    listener(this.targetCtx!, scene, transitionProgress);
+                }
+            }
+        });
+
+        this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
         // Trigger frame listeners
         this.frameListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));
 
