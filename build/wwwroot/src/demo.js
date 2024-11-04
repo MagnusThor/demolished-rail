@@ -26,7 +26,11 @@ const createLensPostProcessor_1 = require("./postprocessors/createLensPostProces
 const SetupDemo_1 = require("./SetupDemo");
 const audioLoader_1 = require("../../src/Engine/Audio/audioLoader");
 const WGLShaderEntity_1 = require("../../src/Engine/WGLShaderEntity");
-const wgslShaderRenderar_1 = require("../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderar");
+const wgslShaderRenderer_1 = require("../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer");
+const mainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/mainShader");
+const material_1 = require("../../src/Engine/ShaderRenderers/WebGPU/material");
+const geometry_1 = require("../../src/Engine/ShaderRenderers/WebGPU/geometry");
+const wgslShaderExample_1 = require("../assets/shaders/wglsl/wgslShaderExample");
 // get the music as baase
 const demo = new SetupDemo_1.SetupDemo(new audioLoader_1.DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo) => {
@@ -35,7 +39,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     // Music length = 139200 ms;
     const sceneBuilder = new sceneBuilder_1.SceneBuilder(139200);
     sceneBuilder
-        .addScene("Scene 0", 1000).
+        .addScene("Scene 0", 10000).
         addScene("Scene 1", 20000).
         addScene("Scene 2", 8000).
         addScene("Scene 3", 15000).
@@ -47,24 +51,24 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const wgslCanvas = document.createElement("canvas");
     wgslCanvas.width = 800;
     wgslCanvas.height = 450;
-    const webgpu = await (0, wgslShaderRenderar_1.initWebGPU)(wgslCanvas);
-    console.log(webgpu);
+    const webgpu = await (0, wgslShaderRenderer_1.initWebGPU)(wgslCanvas);
+    const wgslMainShader = mainShader_1.mainShader;
+    const geometry = new geometry_1.Geometry(webgpu.device, wgslShaderRenderer_1.rectGeometry);
     const wgslShaderProps = {
         canvas: wgslCanvas,
         device: webgpu.device,
         context: webgpu.context,
-        mainFragmentShader: "",
-        mainVertexShader: "",
-        renderBuffers: []
+        shader: wgslMainShader,
+        renderBuffers: [
+            {
+                name: "iChannel0",
+                shader: new material_1.Material(webgpu.device, wgslShaderExample_1.blueColorShader),
+                geometry: geometry
+            }
+        ]
     };
-    const wgslShaderEntity = new WGLShaderEntity_1.WGLSLShaderEntity("wgsl-shader", wgslShaderProps, () => {
+    const wgslShaderEntity = new WGLShaderEntity_1.WGLSLShaderEntity("wgsl-shader", wgslShaderProps, (ts, shaderRender) => {
     });
-    // const wgslShaderEntity = new WGLSLShaderEntity("wgsl-shader",
-    //     {
-    //     },() => {
-    //     }
-    // )
-    // Set up all effects;
     const strobeEntity = new entity_1.Entity("Strobe", {
         color: "white", // You can change the color
         isOn: false,
@@ -261,6 +265,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         console.log(`${ts} bar #${count}.`);
         // modify props on bar in this case;
     });
+    scenes[0].addEntities(wgslShaderEntity);
     scenes[1].addEntities(typeWriter1EntityForFirstScene, typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
         .addPostProcessorToEntities((0, createLensPostProcessor_1.createLensPostProcessor)((_b = assetsHelper_1.AssetsHelper.textureCache.get("lens.png")) === null || _b === void 0 ? void 0 : _b.src));
     scenes[2].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);

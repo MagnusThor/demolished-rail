@@ -24,7 +24,12 @@ import { createLensPostProcessor } from "./postprocessors/createLensPostProcesso
 import { SetupDemo } from "./SetupDemo";
 import { DefaultAudioLoader } from "../../src/Engine/Audio/audioLoader";
 import { IWGLSLShaderProperties, WGLSLShaderEntity } from "../../src/Engine/WGLShaderEntity";
-import { initWebGPU, WGLSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderar";
+import { initWebGPU, rectGeometry, WGLSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer";
+import { mainShader } from "../../src/Engine/ShaderRenderers/WebGPU/mainShader";
+import { Material } from "../../src/Engine/ShaderRenderers/WebGPU/material";
+import { Geometry } from "../../src/Engine/ShaderRenderers/WebGPU/geometry";
+import { blueColorShader } from "../assets/shaders/wglsl/wgslShaderExample";
+
 
 
 // get the music as baase
@@ -37,7 +42,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const sceneBuilder = new SceneBuilder(139200);
 
     sceneBuilder
-       .addScene("Scene 0",1000). 
+       .addScene("Scene 0",10000). 
        addScene("Scene 1", 20000).
         addScene("Scene 2", 8000).
         addScene("Scene 3", 15000).
@@ -50,42 +55,36 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     // set up a wgsl shader entity
 
-    const wgslCanvas = document.createElement("canvas");
-   
+    const wgslCanvas = document.createElement("canvas");   
     wgslCanvas.width = 800; wgslCanvas.height = 450;
-
     const webgpu = await initWebGPU(wgslCanvas);
- 
-    console.log(webgpu);
-    
+    const wgslMainShader = mainShader;
+
+
 
     const wgslShaderProps:IWGLSLShaderProperties = {
             canvas: wgslCanvas,
             device: webgpu.device,
             context:webgpu.context!,
-            mainFragmentShader:"",
-            mainVertexShader: "",
-            renderBuffers:[]
+            shader: wgslMainShader,
+            renderBuffers:[
+                {
+                    name:"iChannel0",
+                    shader: new Material(webgpu.device,
+                        blueColorShader
+                    ),
+                    geometry: new Geometry(webgpu.device, rectGeometry)
+                }  
+
+            ]
     }   
     
     const wgslShaderEntity = new WGLSLShaderEntity("wgsl-shader",
-        wgslShaderProps, () => {
+        wgslShaderProps, (ts:number,shaderRender:WGLSLShaderRenderer) => {
 
         });
 
-    // const wgslShaderEntity = new WGLSLShaderEntity("wgsl-shader",
-    //     {
     
-    //     },() => {
-
-    //     }
-
-
-    // )
-
-
-
-    // Set up all effects;
 
     const strobeEntity = new Entity<IStrobeEffectProps>(
         "Strobe",
@@ -405,8 +404,11 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     });
 
 
+    scenes[0].addEntities(wgslShaderEntity);
 
-    scenes[1].addEntities(typeWriter1EntityForFirstScene,
+    scenes[1].addEntities(
+     
+        typeWriter1EntityForFirstScene,
         typeWriter2EntityForFirstScene,
         gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
         .addPostProcessorToEntities(createLensPostProcessor(AssetsHelper.textureCache!.get("lens.png")?.src));

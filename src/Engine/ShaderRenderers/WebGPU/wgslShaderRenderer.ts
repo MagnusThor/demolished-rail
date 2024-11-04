@@ -8,6 +8,7 @@ import { IPass, RenderPass } from "../../Interfaces/IPass";
 import { ITextureData } from "../../Interfaces/ITextureData";
 import { RenderPassBuilder } from "./renderPassBuilder";
 import { ITexture } from "../../Interfaces/ITexture";
+import { IMaterialShader } from "../../Interfaces/IMaterialShader";
 
 
 export const initWebGPU = async (canvas:HTMLCanvasElement) => {
@@ -303,9 +304,13 @@ export class WGLSLShaderRenderer {
    * Adds a main render pass to the backlog.
    * @param material - The material to use for the render pass.
    */
-    addMainRenderPass(material: Material) {
+    addMainRenderPass(shader: IMaterialShader) {
+        const material =  new Material(this.device,shader);
+
+        console.log(material);
+
         this.renderPipleline = this.createMainRenderPipeline(this.uniforms.uniformBuffer,
-            material);
+           material);
     }
 
     /**
@@ -315,27 +320,14 @@ export class WGLSLShaderRenderer {
    * @param geometry - The geometry to use for the render pass.
    * @param textures - An optional array of textures to use in the render pass.
    */
-    async addRenderPass(label: string, material: Material, geometry: Geometry,
-        textures?: Array<ITexture> | [], samplers?: Array<GPUSamplerDescriptor>
-    ) {
+    addRenderPass(label: string, material: Material, geometry: Geometry) {
 
-        if (samplers) throw "Samplers not yet implememted, using default binding 2"
-
+       
         const priorRenderPasses = Array.from(this.renderPassBacklog.values());
         const uniforms = this.uniforms;
     
-        if (textures) {
-            for (let i = 0; i < textures.length; i++) {
-                const texture = textures[i];
-                if (texture.type == 0) {
-                    this.textures.push({ type: 0, data: await TextureLoader.createImageTexture(this.getDevice(), texture) });
-                } else
-                    this.textures.push({ type: 1, data: await TextureLoader.createVideoTextue(this.getDevice(), texture) });
-            }
-        }
-
         const renderPipeline = this.renderPassBuilder.createRenderPipeline(material, geometry,
-            this.textures, priorRenderPasses);
+        this.textures, priorRenderPasses);
 
         const assets = this.createAssets();
         const bindingGroupEntrys: Array<GPUBindGroupEntry> = [];
