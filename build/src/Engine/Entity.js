@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Entity = void 0;
-const EngineLogger_1 = require("./EngineLogger");
 class Entity {
     /**
      * Creates a new Entity.
@@ -96,12 +95,8 @@ class Entity {
             // Calculate elapsed time relative to the scene's start time    
             const sceneStartTime = this.getScene().startTimeinMs || 0;
             const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
-            // Log the timing information for debugging
             if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
                 this.action(timeStamp, this.ctx, this.props);
-            }
-            else {
-                EngineLogger_1.EngineLogger.log(`entity ${this.name} should not render, postponed by ${this.startTimeinMs} relative to scene starttime which is ${sceneStartTime}`);
             }
         }
     }

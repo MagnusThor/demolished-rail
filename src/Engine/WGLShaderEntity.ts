@@ -1,71 +1,72 @@
-
-import { IEntity } from "./entity";
+import { IEntity } from "./Entity";
+import { IMaterialShader } from "./Interfaces/IMaterialShader";
+import { IWgslTextureData } from "./Interfaces/IWgslTextureData";
 import { Scene } from "./scene";
 import { Sequence } from "./sequence";
-import { ShaderRenderer } from "./ShaderRenderer/shaderRenderer";
+import { Geometry } from "./ShaderRenderers/WebGPU/geometry";
+import { Material } from "./ShaderRenderers/WebGPU/material";
+import { WGLSLShaderRenderer } from "./ShaderRenderers/WebGPU/wgslShaderRenderer";
 
-export interface IShaderRenderBuffer {
+
+export interface IWGLSLShaderRenderBuffer {
     name: string;
-    vertex: string;
-    fragment: string;
-    customUniforms?: {};
-    textures: string[];
+    shader: Material;
+    geometry: Geometry;
+    textures?: Array<IWgslTextureData>
 }
 
-export interface IShaderProperties {
-    mainVertexShader: string;
-    mainFragmentShader: string;
-    renderBuffers: IShaderRenderBuffer[];
-}
-
-export class ShaderEntity implements IEntity {
+export interface IWGLSLShaderProperties {
+    shader: IMaterialShader
     canvas: HTMLCanvasElement;
-    shaderRenderer: ShaderRenderer;
+    device: GPUDevice;
+    context: GPUCanvasContext;
+    renderBuffers?: IWGLSLShaderRenderBuffer[];
+}
+export class WGLSLShaderEntity implements IEntity {
+
+    canvas: HTMLCanvasElement;
+    scene?: Scene | undefined;
+
     transitionIn?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
     transitionOut?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
 
     beatListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
     tickListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
     barListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
+    shaderRenderer: WGLSLShaderRenderer;
 
-    private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
-    /**
-     * Creates a new ShaderEntity.
-     * @param name - The key or identifier for the entity.
-     * @param w - The width of the entity's canvas.
-     * @param h - The height of the entity's canvas.
-     * @param props - The properties for the entity, including shader code and render buffers.
-     * @param action - An optional action function to be called before rendering the shaders.
-     */
     constructor(
         public name: string,
-        public props?: IShaderProperties,
-        public action?: (time: number, shaderRender: ShaderRenderer, properties: IShaderProperties, sequence?: Sequence) => void,
+        public props?: IWGLSLShaderProperties,
+        public action?: (time: number, shaderRender: WGLSLShaderRenderer,
+            properties: IWGLSLShaderProperties, sequence?: Sequence) => void,
         public w?: number,
         public h?: number,
         public startTimeinMs?: number,
         public durationInMs?: number
-
     ) {
-        this.canvas = document.createElement("canvas");
-        if (w && h) {
-            this.canvas.width = w;
-            this.canvas.height = h;
-        }
-        if (props?.mainFragmentShader && props.mainVertexShader) {
-            this.shaderRenderer = new ShaderRenderer(this.canvas, props?.mainVertexShader, props?.mainFragmentShader);
-            props.renderBuffers.forEach(buffer => {
-                this.shaderRenderer.addBuffer(buffer.name, buffer.vertex, buffer.fragment, buffer.textures, buffer.customUniforms);
+
+       
+        this.canvas = props?.canvas!;
+
+        if (props?.shader) {
+            this.shaderRenderer = new WGLSLShaderRenderer(this.canvas, this.props?.device!, this.props?.context!);
+            props.renderBuffers!.forEach((buffer, index) => {
+                this.shaderRenderer.addRenderPass(buffer.name,
+                    buffer.shader, buffer.geometry,buffer.textures)
             });
+            this.shaderRenderer.addMainRenderPass(props.shader);
         } else {
-            throw new Error("Cannot create ShaderEntity: Missing main shader code.");
+            throw new Error("Cannot create WGSLShaderEntity: Missing main shader code.");
         }
+
+
     }
-    scene?: Scene | undefined;
+
     bindToScene(scene: Scene): void {
-      this.scene = scene;
+        this.scene = scene;
     }
-  
+
 
     /**
  * Adds an event listener for when a beat occurs.
@@ -99,13 +100,7 @@ export class ShaderEntity implements IEntity {
 
 
 
-    /**
- * Adds a post-processing function to the entity.
- * @param processor - The post-processing function to add.
- */
-    addPostProcessor(processor: (ctx: CanvasRenderingContext2D, sequence: Sequence) => void) {
-        this.postProcessors.push(processor);
-    }
+
 
 
     /**
@@ -115,19 +110,18 @@ export class ShaderEntity implements IEntity {
      */
     update(timeStamp: number): void {
         if (this.action && this.shaderRenderer && this.props) {
-          // Calculate elapsed time relative to the scene's start time
-          const sceneStartTime = this.scene ? this.scene.startTimeinMs : 0;
-          const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
-      
-          if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
-            this.action(timeStamp, this.shaderRenderer, this.props);
-      
-            // Calculate shader time relative to the entity's start time (within the scene)
-            const shaderTime = Math.max(0, elapsed); 
-            this.shaderRenderer.update(shaderTime / 1000);
-          }
+            // Calculate elapsed time relative to the scene's start time
+            const sceneStartTime = this.scene ? this.scene.startTimeinMs : 0;
+            const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
+
+            if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
+                this.action(timeStamp, this.shaderRenderer, this.props);
+                // Calculate shader time relative to the entity's start time (within the scene)
+                const shaderTime = Math.max(0, elapsed);
+                this.shaderRenderer.update(shaderTime / 1000);
+            }
         }
-      }
+    }
 
     /**
      * Copies the entity's canvas to the target canvas.
@@ -144,4 +138,5 @@ export class ShaderEntity implements IEntity {
             }
         }
     }
+
 }

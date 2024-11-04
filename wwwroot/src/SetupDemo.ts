@@ -3,7 +3,7 @@ import { Entity } from "../../src/Engine/entity";
 import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
 import { Scene } from "../../src/Engine/scene";
 import { Sequence } from "../../src/Engine/sequence";
-import { ShaderEntity } from "../../src/Engine/shaderEntity";
+import { GLSLShaderEntity } from "../../src/Engine/GLSLShaderEntity";
 
 
 
@@ -36,7 +36,7 @@ export class SetupDemo {
     addScene(scene: Scene) {
         this.sequence.addScene(scene);
     }
-    addEntity<T>(key: string, entity: Entity<T> | ShaderEntity) {
+    addEntity<T>(key: string, entity: Entity<T> | GLSLShaderEntity) {
         const scene = this.scenes.find(pre => {
             return pre.name === key;
         });

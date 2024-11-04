@@ -7,7 +7,7 @@ export interface IEntity {
   name: string;
   canvas: HTMLCanvasElement;
   scene?: Scene
-  bindToScene(scene:Scene):void;
+  bindToScene(scene: Scene): void;
   update(timeStamp: number): void;
   copyToCanvas(targetCanvas: HTMLCanvasElement, sequence: Sequence): void;
   transitionIn?: (ctx: CanvasRenderingContext2D, progress: number) => void;
@@ -35,7 +35,7 @@ export class Entity<T> implements IEntity {
 
   beatListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
   tickListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
-  barListeners?: ((time: number, count: number, propertyBag: any) => void)[] =  [];
+  barListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
 
   /**
    * Creates a new Entity.
@@ -64,7 +64,7 @@ export class Entity<T> implements IEntity {
     this.ctx = this.canvas.getContext("2d")!;
   }
   bindToScene(scene: Scene): void {
-      this.scene = scene;
+    this.scene = scene;
   }
   transitionIn?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
   transitionOut?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
@@ -134,16 +134,13 @@ export class Entity<T> implements IEntity {
     this.ctx?.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (this.action && this.ctx && this.props) {
       // Calculate elapsed time relative to the scene's start time    
-      const sceneStartTime =  this.getScene()!.startTimeinMs || 0;
+      const sceneStartTime = this.getScene()!.startTimeinMs || 0;
       const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
 
-     
-  
-      // Log the timing information for debugging
+
+
       if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
         this.action(timeStamp, this.ctx, this.props);
-      } else {
-        EngineLogger.log(`entity ${this.name} should not render, postponed by ${this.startTimeinMs} relative to scene starttime which is ${sceneStartTime}`);
       }
     }
   }
