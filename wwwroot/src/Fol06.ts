@@ -23,6 +23,7 @@ import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
 import { EngineLogger } from "../../src/Engine/EngineLogger";
 import { Scene } from "../../src/Engine/scene";
 import { singularityShader } from "../assets/shaders/singularityShader";
+import { exoplanetShader } from "../assets/shaders/exoPlanetShader";
 
 
 // new SonantAudioLoader(sonantMusic) 
@@ -70,9 +71,6 @@ class Fol06 {
             (ts, ctx, props) => textFadeInOut(ts, ctx, props, this.sequence),
             SequenceHelper.getDurationForBeats(this.bmp, 8)
         );
-
-
-
         mapEntities.push(textEffectEntity);
         return mapEntities;
     }
@@ -386,6 +384,31 @@ class Fol06 {
         return mapEntities;
     }
 
+    exoPlanets(): Array<IEntity>{
+        const mapEntities = new Array<IEntity>();
+        const shader = new ShaderEntity("singularity-shader",
+            {
+                mainFragmentShader: mainFragment,
+                mainVertexShader: mainVertex,
+                renderBuffers: [
+                    {
+                        name: "a_buffer",
+                        fragment: exoplanetShader,
+                        vertex: mainVertex,
+                        textures: [],
+                        customUniforms: {
+                        }
+
+                    }
+                ]
+            }, () => {
+            }, this.width, this.height);
+
+        mapEntities.push(shader);
+        return mapEntities;
+
+    } 
+
 
 }
 
@@ -395,17 +418,19 @@ enum SCENE {
     LONLYPLANET = 2,
     GALAXY = 3,
     GALAXYEXPAND = 4,
-    WARPSPEED = 5,
-    SINGULARITY = 6,
-    BLACKHOLE = 7,
-    EVENTHORIZON = 8
+    EXOPLANETS = 5,
+
+    WARPSPEED = 6,
+    SINGULARITY = 7,
+    BLACKHOLE = 8,
+    EVENTHORIZON = 9
 }
 
 demo.addAssets().then((demo: SetupDemo) => {
 
     const bpm = 123;
     const fol06 = new Fol06(demo.sequence, 800, 450, bpm);
-    const sceneBuilder = new SceneBuilder(147600); // 2.46 mins
+    const sceneBuilder = new SceneBuilder(166000); // 2.46 mins
 
 
     sceneBuilder
@@ -413,10 +438,11 @@ demo.addAssets().then((demo: SetupDemo) => {
         .addScene("earth", SequenceHelper.getDurationForBars(bpm, 4, 16))
         .addScene("lonly-planet-and-the-sun", 15000)
         .addScene("galaxy", 15000)
-        .addScene("galaxy-expand", 15000)
-        .addScene("warp-speed", 15000)
-        .addScene("singularity", 15000)
-        .addScene("blackhole", 4000).
+        .addScene("galaxy-expand", 20000)
+        .addScene("warp-speed", 5000)
+        .addScene("explanets", 30000)
+        .addScene("singularity", 25000)
+        .addScene("blackhole", 5000).
         durationUntilEndInMs("eventhorizon");
 
     EngineLogger.log(`Total Scene duration ${sceneBuilder.totalScenesDuration}`)
@@ -424,12 +450,12 @@ demo.addAssets().then((demo: SetupDemo) => {
 
     const scenes = sceneBuilder.getScenes();
 
-
     scenes[SCENE.INTRO].addEntities(...fol06.introScene())
     scenes[SCENE.EARTH].addEntities(...fol06.earthScene())
     scenes[SCENE.LONLYPLANET].addEntities(...fol06.lonlyPlanet())
     scenes[SCENE.GALAXY].addEntities(...fol06.galaxy())
     scenes[SCENE.GALAXYEXPAND].addEntities(...fol06.expandingGalaxy())
+    scenes[SCENE.EXOPLANETS].addEntities(...fol06.exoPlanets())
     scenes[SCENE.WARPSPEED].addEntities(...fol06.warpSpeed())
     scenes[SCENE.SINGULARITY].addEntities(...fol06.singularity())
     scenes[SCENE.BLACKHOLE].addEntities(...fol06.blackhole())
@@ -453,7 +479,7 @@ demo.addAssets().then((demo: SetupDemo) => {
         demo.sequence,
         scenes[SCENE.EARTH].durationInMs - 2000, 2000, transitionOut);
 
-    demo.sequence.addSceneArray(scenes)
+    demo.sequence.addSceneArray(scenes);
 
     const jumpToScene = new URLSearchParams(location.search).get("scene") || "0"
     const debugHelper = new DebugHelper(demo.sequence, parseInt(jumpToScene!));

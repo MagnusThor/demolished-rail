@@ -135,11 +135,16 @@ export class Entity<T> implements IEntity {
     if (this.action && this.ctx && this.props) {
       // Calculate elapsed time relative to the scene's start time    
       const sceneStartTime =  this.getScene()!.startTimeinMs || 0;
-      const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);    
+      const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
+
+     
+  
       // Log the timing information for debugging
       if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
         this.action(timeStamp, this.ctx, this.props);
-      } 
+      } else {
+        EngineLogger.log(`entity ${this.name} should not render, postponed by ${this.startTimeinMs} relative to scene starttime which is ${sceneStartTime}`);
+      }
     }
   }
 

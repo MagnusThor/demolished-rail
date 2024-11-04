@@ -1,4 +1,5 @@
 import * as sonant from 'sonantx'
+import { EngineLogger } from '../EngineLogger';
 
 export interface IAudioLoader {
     loadAudio(audioContext: AudioContext): Promise<AudioBuffer>;
@@ -12,6 +13,7 @@ export interface IAudioLoader {
       const response = await fetch(this.audioFile);
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      EngineLogger.log(`audioBuffer duration after decoding is ${audioBuffer.duration} seconds`);
       return audioBuffer;   
   
     }
@@ -25,7 +27,7 @@ export class SonantAudioLoader implements IAudioLoader {
   async loadAudio(audioContext: AudioContext): Promise<AudioBuffer> {
     console.log(`Generating audioBuffer - it may take a while`);
     const audioBuffer = await sonant.generateSong(this.songData, audioContext.sampleRate);
-  
+    EngineLogger.log(`audioBuffer duration after decoding is ${audioBuffer.duration} seconds`);
     return audioBuffer;
   }
 }
