@@ -1,18 +1,17 @@
 
 import { Uniforms } from "./uniforms";
 import { Material } from "./material";
-import { Geometry, IGeometry, VERTEXType } from "./geometry";
-
 import { TextureLoader } from "./textureLoader";
 import { IPass, RenderPass } from "../../Interfaces/IPass";
-import { ITextureData } from "../../Interfaces/ITextureData";
+import { IWgslTextureData } from "../../Interfaces/IWgslTextureData";
 import { RenderPassBuilder } from "./renderPassBuilder";
-import { ITexture } from "../../Interfaces/ITexture";
+import { IWgslTexture } from "../../Interfaces/IWgslTexture";
 import { IMaterialShader } from "../../Interfaces/IMaterialShader";
+import { Geometry, IGeometry, rectGeometry } from "./geometry";
 
 
-export const initWebGPU = async (canvas:HTMLCanvasElement) => {
-    const adapter = await navigator.gpu?.requestAdapter();      
+export const initWebGPU = async (canvas: HTMLCanvasElement) => {
+    const adapter = await navigator.gpu?.requestAdapter();
     const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
     const device = await adapter?.requestDevice({
         requiredFeatures: hasBGRA8unormStorage
@@ -25,75 +24,46 @@ export const initWebGPU = async (canvas:HTMLCanvasElement) => {
     context?.configure({
         device,
         format: hasBGRA8unormStorage
-        ? navigator.gpu.getPreferredCanvasFormat()
-        : 'rgba8unorm',
+            ? navigator.gpu.getPreferredCanvasFormat()
+            : 'rgba8unorm',
         usage: GPUTextureUsage.TEXTURE_BINDING |
             GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
-    });    
-    return {device,context};
+    });
+    return { device, context };
 };
-
-
-
-
-export const rectGeometry:IGeometry = {
-    verticesType:VERTEXType.xyz,
-       vertices: new Float32Array([
-           -1, 1, 0, 
-           -1, -1, 0,
-           1, -1, 0, 
-           1, 1, 0, 
-           -1, 1, 0,
-           1, -1, 0,
-       ]),
-       indicies:new Uint16Array([ 0, 1, 2,3,4,5 ]),
-}
-
 
 /**
  * The Renderer class is responsible for managing the WebGPU rendering context, 
  * creating and executing render passes, and handling resources like buffers and textures.
  */
 export class WGLSLShaderRenderer {
-
-   
-
     renderPassBacklog: Map<string, IPass>;
-
     renderTarget!: GPUTexture;
     renderPipleline!: GPURenderPipeline;
-
     renderPassBuilder!: RenderPassBuilder;
-
     frameCount: number = 0;
     isPaused: any;
-
     screen_bind_group!: GPUBindGroup;
-
     geometry!: Geometry;
-    textures: Array<ITextureData>;
-
+    textures: Array<IWgslTextureData>;
     frame: number = 0;
     uniforms!: Uniforms;
-    zoomLevel: number = 1.;
-
-    constructor(public canvas: HTMLCanvasElement,public device:GPUDevice, 
-        public context:GPUCanvasContext,geometry?:IGeometry ) 
-    {
+    constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,
+        public context: GPUCanvasContext, geometry?: IGeometry) {
         this.renderPassBacklog = new Map<string, IPass>();
-        this.textures = new Array<ITextureData>();
+        this.textures = new Array<IWgslTextureData>();
         this.renderPassBuilder = new RenderPassBuilder(device, this.canvas);
-        this.geometry = new Geometry(device, geometry || rectGeometry); 
-        this.uniforms = new Uniforms(this.device, this.canvas);      
+        this.geometry = new Geometry(device, geometry || rectGeometry);
+        this.uniforms = new Uniforms(this.device, this.canvas);
 
     }
-     /**
-   * Gets the WebGPU device.
-   * @returns The GPUDevice.
-   * @throws Error if the device is not initialized.
-   */
-    private getDevice():GPUDevice{
-        if(!this.device) throw "Cannot get the GPUDevice";
+    /**
+  * Gets the WebGPU device.
+  * @returns The GPUDevice.
+  * @throws Error if the device is not initialized.
+  */
+    private getDevice(): GPUDevice {
+        if (!this.device) throw "Cannot get the GPUDevice";
         return this.device;
     }
 
@@ -277,13 +247,13 @@ export class WGLSLShaderRenderer {
 
 
 
-  /**
-   * Creates a buffer on the GPU.
-   * @param arr - The data to store in the buffer.
-   * @param usage - The usage flags for the buffer.
-   * @param vertexSize - The size of each vertex in bytes.
-   * @returns The created GPUBuffer.
-   */
+    /**
+     * Creates a buffer on the GPU.
+     * @param arr - The data to store in the buffer.
+     * @param usage - The usage flags for the buffer.
+     * @param vertexSize - The size of each vertex in bytes.
+     * @returns The created GPUBuffer.
+     */
     createBuffer(arr: Float32Array | Uint16Array, usage: number, vertexSize: number) {
         let bufferDescriptor = {
             size: (arr.byteLength + vertexSize) & ~vertexSize,
@@ -305,12 +275,9 @@ export class WGLSLShaderRenderer {
    * @param material - The material to use for the render pass.
    */
     addMainRenderPass(shader: IMaterialShader) {
-        const material =  new Material(this.device,shader);
-
-        console.log(material);
-
+        const material = new Material(this.device, shader);
         this.renderPipleline = this.createMainRenderPipeline(this.uniforms.uniformBuffer,
-           material);
+            material);
     }
 
     /**
@@ -320,18 +287,14 @@ export class WGLSLShaderRenderer {
    * @param geometry - The geometry to use for the render pass.
    * @param textures - An optional array of textures to use in the render pass.
    */
-    addRenderPass(label: string, material: Material, geometry: Geometry,textures?:ITextureData[]) {
-
-       
-        textures?.forEach( texture => {
+    addRenderPass(label: string, material: Material, geometry: Geometry, textures?: IWgslTextureData[]): RenderPass {
+        textures?.forEach(texture => {
             this.textures.push(texture);
         });
-
         const priorRenderPasses = Array.from(this.renderPassBacklog.values());
         const uniforms = this.uniforms;
-    
         const renderPipeline = this.renderPassBuilder.createRenderPipeline(material, geometry,
-        this.textures, priorRenderPasses);
+            this.textures, priorRenderPasses);
 
         const assets = this.createAssets();
         const bindingGroupEntrys: Array<GPUBindGroupEntry> = [];
@@ -342,7 +305,6 @@ export class WGLSLShaderRenderer {
             magFilter: 'linear',
             minFilter: 'nearest'
         });
-
 
         bindingGroupEntrys.push({
             binding: 0,
@@ -363,7 +325,6 @@ export class WGLSLShaderRenderer {
                 resource: pass.bufferView,
             });
         });
-
         // Add the bindings for the textures  
         offset = bindingGroupEntrys.length;
         this.textures.forEach((t, i) => {
@@ -393,6 +354,8 @@ export class WGLSLShaderRenderer {
         );
 
         this.renderPassBacklog.set(label, renderPass); // send it the the renderpass backlog
+
+        return renderPass;
     }
 
     /**
@@ -402,7 +365,7 @@ export class WGLSLShaderRenderer {
    * @param textures - An optional array of textures to use in the compute pass.
    */
     async addComputeRenderPass(label: string, computeShaderCode: string,
-        textures?: Array<ITexture>, samplers?: Array<GPUSamplerDescriptor>
+        textures?: Array<IWgslTexture>, samplers?: Array<GPUSamplerDescriptor>
     ) {
 
         if (samplers) throw "Samplers not yet implememted, using default binding 2"
@@ -562,5 +525,4 @@ export class WGLSLShaderRenderer {
     clear() {
         this.renderPassBacklog.clear();
     }
-           
 }

@@ -1,12 +1,12 @@
-export interface ITexture {
+export interface IWgslTexture {
     key: string
     source: string |MediaStream
     sampler?: any
-    type: TextureType
+    type: WgslTextureType
   
 }
 
-export enum TextureType{
+export enum WgslTextureType{
     IMAGE = 0,
     VIDEO = 1,
     CANVAS = 2,

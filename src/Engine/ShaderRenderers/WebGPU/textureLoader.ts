@@ -1,5 +1,5 @@
-import { ITexture } from "../../Interfaces/ITexture";
-import { ITextureData } from "../../Interfaces/ITextureData";
+import { IWgslTexture } from "../../Interfaces/IWgslTexture";
+import { IWgslTextureData } from "../../Interfaces/IWgslTextureData";
 
 /**
  * A helper class for loading and creating textures for WebGPU.
@@ -12,7 +12,7 @@ export class TextureLoader {
      * @param textures - An array of ITexture objects.
      * @returns A Promise that resolves to an array of ITextureData.
      */
-    static async loadAll(device: GPUDevice, ...textures: ITexture[]): Promise<ITextureData[]> {
+    static async loadAll(device: GPUDevice, ...textures: IWgslTexture[]): Promise<IWgslTextureData[]> {
         return Promise.all(textures.map(async texture => {
             if (texture.type === 0) {
                 return { type: 0, data: await this.createImageTexture(device, texture) };
@@ -28,7 +28,7 @@ export class TextureLoader {
      * @param texture - The ITexture object containing the image source.
      * @returns A Promise that resolves to the created GPUTexture.
      */
-    static async createImageTexture(device: GPUDevice, texture: ITexture): Promise<GPUTexture> {
+    static async createImageTexture(device: GPUDevice, texture: IWgslTexture): Promise<GPUTexture> {
         const image = new Image();
         image.src = texture.source as string;
         await image.decode();
@@ -59,7 +59,7 @@ export class TextureLoader {
      * @param texture - The ITexture object containing the video source.
      * @returns A Promise that resolves to the HTMLVideoElement.
      */
-    static async createVideoTexture(device: GPUDevice, texture: ITexture): Promise<HTMLVideoElement> {
+    static async createVideoTexture(device: GPUDevice, texture: IWgslTexture): Promise<HTMLVideoElement> {
         const video = document.createElement("video") as HTMLVideoElement;
         video.loop = true;
         video.autoplay = true;

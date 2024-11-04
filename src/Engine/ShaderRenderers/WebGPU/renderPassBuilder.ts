@@ -1,19 +1,34 @@
 import { IPass } from "../../Interfaces/IPass";
 import { IPassBuilder } from "../../Interfaces/IPassBuilder";
-import { ITextureData } from "../../Interfaces/ITextureData";
+import { IWgslTextureData } from "../../Interfaces/IWgslTextureData";
 import { Geometry } from "./geometry";
+
 import { Material } from "./material";
 
-
+/**
+ * A builder class for creating render passes in WebGPU.
+ */
 export class RenderPassBuilder implements IPassBuilder {
 
     pipelineLayout!: GPUPipelineLayout;
     bindGroup!: GPUBindGroup;
     device: GPUDevice;
+    /**
+  * Creates a new RenderPassBuilder.
+  * @param device - The GPUDevice to use for creating resources.
+  * @param canvas - The HTMLCanvasElement to render to.
+  */
+
     constructor(device: GPUDevice, public canvas: HTMLCanvasElement) {
         this.device = device;
     }
 
+    /**
+   * Creates a bind group layout and entries for a render pipeline.
+   * @param uniformBuffer - The uniform buffer for the pipeline.
+   * @param sampler - An optional GPUSampler to use. If not provided, a default sampler is created.
+   * @returns An array of GPUBindGroupEntry objects.
+   */
     getRenderPiplelineBindingGroupLayout(
         uniformBuffer: GPUBuffer, sampler?: GPUSampler
     ): Array<GPUBindGroupEntry> {
@@ -40,7 +55,15 @@ export class RenderPassBuilder implements IPassBuilder {
         return bindingGroupEntrys;
     }
 
-    createRenderPipeline(material: Material, geometry: Geometry, textures: Array<ITextureData>,
+    /**
+  * Creates a render pipeline.
+  * @param material - The material to use for the pipeline.
+  * @param geometry - The geometry to use for the pipeline.
+  * @param textures - An array of textures to use in the pipeline.
+  * @param priorRenderPasses - An array of prior render passes to include as textures.
+  * @returns The created GPURenderPipeline.
+  */
+    createRenderPipeline(material: Material, geometry: Geometry, textures: Array<IWgslTextureData>,
         priorRenderPasses: IPass[]
 
     ): GPURenderPipeline {
@@ -137,8 +160,13 @@ export class RenderPassBuilder implements IPassBuilder {
 
 
     }
-
-    createComputePipeline(computeShader: GPUShaderModule, textures: Array<ITextureData>): GPUComputePipeline {
+    /**
+     * Creates a compute pipeline.
+     * @param computeShader - The compute shader module.
+     * @param textures - An array of textures to use in the pipeline.
+     * @returns The created GPUComputePipeline.
+     */
+    createComputePipeline(computeShader: GPUShaderModule, textures: Array<IWgslTextureData>): GPUComputePipeline {
         const bindGroupLayoutEntries = new Array<GPUBindGroupLayoutEntry>();
         bindGroupLayoutEntries.push({
             binding: 0,

@@ -24,13 +24,13 @@ import { createLensPostProcessor } from "./postprocessors/createLensPostProcesso
 import { SetupDemo } from "./SetupDemo";
 import { DefaultAudioLoader } from "../../src/Engine/Audio/audioLoader";
 import { IWGLSLShaderProperties, WGLSLShaderEntity } from "../../src/Engine/WGLShaderEntity";
-import { initWebGPU, rectGeometry, WGLSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer";
+import { initWebGPU, WGLSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer";
 import { defaultMainShader } from "../../src/Engine/ShaderRenderers/WebGPU/defaultMainShader";
 import { Material } from "../../src/Engine/ShaderRenderers/WebGPU/material";
-import { Geometry } from "../../src/Engine/ShaderRenderers/WebGPU/geometry";
+import { Geometry, rectGeometry } from "../../src/Engine/ShaderRenderers/WebGPU/geometry";
 import { blueColorShader } from "../assets/shaders/wglsl/wgslShaderExample";
 import { TextureLoader } from "../../src/Engine/ShaderRenderers/WebGPU/textureLoader";
-import { TextureType } from "../../src/Engine/Interfaces/ITexture";
+import { WgslTextureType } from "../../src/Engine/Interfaces/IWgslTexture";
 import { wgslFlamesShader } from "../assets/shaders/wglsl/wgslFlamesShader";
 
 
@@ -58,22 +58,21 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     // Set up a wgsl shader entity & renderer
     const wgslCanvas = document.createElement("canvas");
-    wgslCanvas.width = 800; wgslCanvas.height = 450;
+    wgslCanvas.width = demo.settings.width; wgslCanvas.height = demo.settings.height;
     const webgpu = await initWebGPU(wgslCanvas);
-
 
     const wsglTextures = await TextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
         source: "assets/images/noise.png", 
-        type: TextureType.IMAGE,
+        type: WgslTextureType.IMAGE,
     }); 
 
-    const wgslMainShader = defaultMainShader;
+  
     const wgslShaderProps: IWGLSLShaderProperties = {
         canvas: wgslCanvas,
         device: webgpu.device,
         context: webgpu.context!,
-        shader: wgslMainShader,
+        shader: defaultMainShader,
         renderBuffers: [
             {
                 name: "iChannel0",
@@ -89,7 +88,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const wgslShaderEntity = new WGLSLShaderEntity("wgsl-shader",
         wgslShaderProps, (ts: number, shaderRender: WGLSLShaderRenderer) => {
             // this is an action called for each, frame
-        });
+     });
 
 
     const strobeEntity = new Entity<IStrobeEffectProps>(

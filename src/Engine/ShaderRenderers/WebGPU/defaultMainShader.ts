@@ -44,7 +44,7 @@ export const defaultMainShader: IMaterialShader = {
     };  
     @group(0) @binding(0) var screen_sampler : sampler;    
     @group(0) @binding(1) var<uniform> uniforms: Uniforms;  
-    @group(0) @binding(2) var iChannel0: texture_2d<f32>;   
+    @group(0) @binding(2) var buffer1: texture_2d<f32>;   
 
     struct VertexOutput {
       @builtin(position) Position: vec4<f32>,
@@ -53,7 +53,7 @@ export const defaultMainShader: IMaterialShader = {
   
     @fragment
     fn main_fragment(@location(0) TexCoord : vec2<f32>,@builtin(position) Position: vec4<f32> ) -> @location(0) vec4<f32> {
-      return  textureSample(iChannel0, screen_sampler, TexCoord);  
+      return  textureSample(buffer1, screen_sampler, -TexCoord);  
   
     }`,
     // vertexEntryPoint:"main_vertex",

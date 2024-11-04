@@ -1,17 +1,18 @@
 import { IEntity } from "./Entity";
 import { IMaterialShader } from "./Interfaces/IMaterialShader";
-import { ITextureData } from "./Interfaces/ITextureData";
+import { IWgslTextureData } from "./Interfaces/IWgslTextureData";
 import { Scene } from "./scene";
 import { Sequence } from "./sequence";
 import { Geometry } from "./ShaderRenderers/WebGPU/geometry";
 import { Material } from "./ShaderRenderers/WebGPU/material";
-import { rectGeometry, WGLSLShaderRenderer } from "./ShaderRenderers/WebGPU/wgslShaderRenderer";
+import { WGLSLShaderRenderer } from "./ShaderRenderers/WebGPU/wgslShaderRenderer";
+
 
 export interface IWGLSLShaderRenderBuffer {
     name: string;
     shader: Material;
     geometry: Geometry;
-    textures?: Array<ITextureData>
+    textures?: Array<IWgslTextureData>
 }
 
 export interface IWGLSLShaderProperties {

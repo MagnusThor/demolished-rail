@@ -31,7 +31,7 @@ const defaultMainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/def
 const material_1 = require("../../src/Engine/ShaderRenderers/WebGPU/material");
 const geometry_1 = require("../../src/Engine/ShaderRenderers/WebGPU/geometry");
 const textureLoader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/textureLoader");
-const ITexture_1 = require("../../src/Engine/Interfaces/ITexture");
+const IWgslTexture_1 = require("../../src/Engine/Interfaces/IWgslTexture");
 const wgslFlamesShader_1 = require("../assets/shaders/wglsl/wgslFlamesShader");
 // get the music as baase
 const demo = new SetupDemo_1.SetupDemo(new audioLoader_1.DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
@@ -51,25 +51,24 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const scenes = sceneBuilder.getScenes();
     // Set up a wgsl shader entity & renderer
     const wgslCanvas = document.createElement("canvas");
-    wgslCanvas.width = 800;
-    wgslCanvas.height = 450;
+    wgslCanvas.width = demo.settings.width;
+    wgslCanvas.height = demo.settings.height;
     const webgpu = await (0, wgslShaderRenderer_1.initWebGPU)(wgslCanvas);
     const wsglTextures = await textureLoader_1.TextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
         source: "assets/images/noise.png",
-        type: ITexture_1.TextureType.IMAGE,
+        type: IWgslTexture_1.WgslTextureType.IMAGE,
     });
-    const wgslMainShader = defaultMainShader_1.defaultMainShader;
     const wgslShaderProps = {
         canvas: wgslCanvas,
         device: webgpu.device,
         context: webgpu.context,
-        shader: wgslMainShader,
+        shader: defaultMainShader_1.defaultMainShader,
         renderBuffers: [
             {
                 name: "iChannel0",
                 shader: new material_1.Material(webgpu.device, wgslFlamesShader_1.wgslFlamesShader),
-                geometry: new geometry_1.Geometry(webgpu.device, wgslShaderRenderer_1.rectGeometry),
+                geometry: new geometry_1.Geometry(webgpu.device, geometry_1.rectGeometry),
                 textures: wsglTextures
             }
         ]

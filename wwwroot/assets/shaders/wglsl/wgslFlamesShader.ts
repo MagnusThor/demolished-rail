@@ -1,6 +1,34 @@
 import { IMaterialShader } from "../../../../src/Engine/Interfaces/IMaterialShader";
 import { defaultWglslVertex } from "../../../../src/Engine/ShaderRenderers/WebGPU/material";
 
+
+// This is a shader originally written by Inigo Quilez and published on:
+// https://www.shadertoy.com/view/MsXGRf
+//
+// It has been converted to WGSL by Magnus Thor.
+//
+// The original GLSL code is copyrighted by Inigo Quilez:
+// Copyright Inigo Quilez, 2013 - https://iquilezles.org/
+//
+// The converted WGSL code is shared here under the following conditions:
+//
+// This WGSL shader code is shared for educational purposes only. 
+// You are free to use it for learning and experimentation.
+//
+// You are NOT allowed to:
+// - Host, display, distribute, or share this WGSL code as it is or altered.
+// - Use this WGSL code in any commercial or non-commercial product, website, or project.
+// - Sell this WGSL code.
+// - Mint NFTs of this WGSL code.
+// - Train a neural network with this WGSL code.
+//
+// If you wish to use this code outside of educational purposes, 
+// please contact Inigo Quilez for permission.
+//
+// You can find the original GLSL shader and contact Inigo Quilez here:
+// https://www.shadertoy.com/view/MsXGRf
+// https://iquilezles.org/
+
 export const wgslFlamesShader: IMaterialShader = {
 	vertex: defaultWglslVertex,
 	fragment: /* glsl */ `
@@ -18,24 +46,20 @@ export const wgslFlamesShader: IMaterialShader = {
 	  };
 	
     @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-
     @group(0) @binding(1) var linearSampler: sampler;
-    @group(0) @binding(2) var iChannel0: texture_2d<f32>; 
-
-		
+    @group(0) @binding(2) var NOISE: texture_2d<f32>; 		
 	
 	fn sample_texture(tex:texture_2d<f32>,uv:vec2<f32>) -> vec4<f32>{
 		let result:vec4<f32> = textureSample(tex, linearSampler, -uv);
 		return result;
 	}   
 	
-
 	fn noise(x: vec3<f32>) -> f32 {
 		let p: vec3<f32> = floor(x);
 		var f: vec3<f32> = fract(x);
 		f = f * f * (3. - 2. * f);
 		let uv: vec2<f32> = p.xy + vec2<f32>(37., 17.) * p.z + f.xy;
-		let rg: vec2<f32> = textureSampleLevel(iChannel0, linearSampler, (uv + 0.5) / 256., f32(0.)).yx;
+		let rg: vec2<f32> = textureSampleLevel(NOISE, linearSampler, (uv + 0.5) / 256., f32(0.)).yx;
 		return mix(rg.x, rg.y, f.z);
 	} 
 
@@ -54,7 +78,7 @@ export const wgslFlamesShader: IMaterialShader = {
 		pxz = mat2x2<f32>(co, -si, si, co) * p_var.xz;
 		p_var.x = pxz.x;
 		p_var.z = pxz.y;
-	//	var pxz = p_var.xz;
+
 		pxz = p_var.xz + (-1. + 2. * noise(p_var * 1.1));
 		p_var.x = pxz.x;
 		p_var.z = pxz.y;
@@ -77,8 +101,6 @@ export const wgslFlamesShader: IMaterialShader = {
 		col = col * (1. - 0.8 * smoothstep(0.6, 1., sin(0.7 * q.x) * sin(0.7 * q.y) * sin(0.7 * q.z)) * vec3<f32>(0.6, 1., 0.8));
 		col = col * (1. + 1. * smoothstep(0.5, 1., 1. - length((fract(q.xz * 0.12) - 0.5) / 0.5)) * vec3<f32>(1., 0.9, 0.8));
 		
-		//col = mix(vec3<f32>(0.8, 0.32, 0.2), col, clamp((r.y + 0.1) / 1.5, 0., 1.));
-		
 		return vec4<f32>(col, den);
 	} 
 	
@@ -87,11 +109,6 @@ export const wgslFlamesShader: IMaterialShader = {
 	}
 
 	fn mainImage(invocation_id: vec2<f32>) -> vec4<f32> {
-
-		// if(uniforms.frame <
-		// 	 1000) {
-		// 	return vec4<f32>(1.0,0.0,0.0,0.5);
-		// }
 
 		let mouse: vec4<f32> = uniforms.mouse;
 	
@@ -106,8 +123,6 @@ export const wgslFlamesShader: IMaterialShader = {
 		let p: vec2<f32> = (-1. + 2. * q) * vec2<f32>(uniforms.resolution.x / uniforms.resolution.y, 1.);
 		var mo: vec2<f32> = mouse.xy / uniforms.resolution.xy;
 		
-		//if (mouse.w <= 0.00001) { mo = vec2<f32>(0.); }
-
 		let an: f32 = -0.07 * uniforms.time + 3. * mo.x;
 		var ro: vec3<f32> = 4.5 * normalize(vec3<f32>(cos(an), 0.5, sin(an)));
 		ro.y = ro.y + (1.);
@@ -138,24 +153,15 @@ export const wgslFlamesShader: IMaterialShader = {
 			t = t + (0.05);
 		}
 	
-		// Ensure bg, sum.xyz, and sum.w are all vec3<f32> values
-		// var bg: vec3<f32>; // assuming bg is a vec3<f32>
-		// var sum: vec4<f32>; // assuming sum is a vec4<f32>
-
-		// Calculate the mixed value
 		var mixedValue: vec3<f32> = mix(bg, sum.xyz / (0.001 + sum.w), sum.w);
 
-// 		Clamp each component individually between 0 and 1
 		var col: vec3<f32> = clamp(mixedValue, vec3<f32>(0.0), vec3<f32>(1.0));
 
-		// var col: vec3<f32> = clamp(mix(bg, sum.xyz / (0.001 + sum.w), sum.w), 0., 1.);
 		col = col * col * (3. - 2. * col) * 1.4 - 0.4;
 		col = col * (0.25 + 0.75 * pow(16. * q.x * q.y * (1. - q.x) * (1. - q.y), 0.1));
 		return vec4<f32>(col, 1.);
 	} 
 		
-
-
 	@fragment
 	fn main_fragment(vert: VertexOutput) -> @location(0) vec4<f32> {    
 		
