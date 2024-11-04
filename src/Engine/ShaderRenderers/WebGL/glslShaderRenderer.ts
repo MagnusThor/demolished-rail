@@ -22,7 +22,7 @@ export class RenderTarget {
         }
 }
 
-export class ShaderRenderer {
+export class GLSLShaderRenderer {
         gl: WebGLRenderingContext;
         mainProgram: WebGLProgram;
         programs: Map<string, { program: WebGLProgram | null, state: boolean }>;
@@ -211,7 +211,7 @@ precision mediump sampler3D;
          * @returns {this}
          * @memberof DR
          */
-        addBuffer(name: string, vertex: string, fragment: string, textures?: Array<string>, customUniforms?: any): ShaderRenderer {
+        addBuffer(name: string, vertex: string, fragment: string, textures?: Array<string>, customUniforms?: any): GLSLShaderRenderer {
                 let gl = this.gl;
 
                 let tA = this.createTarget(this.canvas.width, this.canvas.height, textures ? textures : [], customUniforms ? customUniforms : {});
@@ -471,7 +471,7 @@ precision mediump sampler3D;
                 textureFrag: string, w: number, h: number): HTMLCanvasElement {
                 let canvas = document.createElement("canvas") as HTMLCanvasElement;
                 canvas.width = w; canvas.height = h;
-                let dr = new ShaderRenderer(canvas, mainVertex, mainFrag);
+                let dr = new GLSLShaderRenderer(canvas, mainVertex, mainFrag);
                 dr.addBuffer("A", textureVertex, textureFrag);
                 // do a few frames due to back buffer.
                 for (var i = 0; i < 2; i++) {

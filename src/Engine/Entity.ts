@@ -48,7 +48,7 @@ export class Entity<T> implements IEntity {
   constructor(
     public name: string,
     public props?: T,
-    public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence) => void,
+    public action?: (time: number, ctx: CanvasRenderingContext2D , properties: T, sequence?: Sequence) => void,
     public startTimeinMs?: number,
     public durationInMs?: number,
     public w?: number,

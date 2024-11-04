@@ -1,5 +1,5 @@
 import { Entity } from "../../src/Engine/entity";
-import { ShaderEntity } from "../../src/Engine/shaderEntity";
+import { GLSLShaderEntity } from "../../src/Engine/GLSLShaderEntity";
 import { mainFragment } from "../assets/shaders/mainFragment";
 import { mainVertex } from "../assets/shaders/mainVertex";
 import { someKindOfFractal } from "../assets/shaders/someKindOfFractal";
@@ -23,13 +23,15 @@ import { creditsScrollerEffect, ICreditsScrollerProps } from "./effects/creditsS
 import { createLensPostProcessor } from "./postprocessors/createLensPostProcessor";
 import { SetupDemo } from "./SetupDemo";
 import { DefaultAudioLoader } from "../../src/Engine/Audio/audioLoader";
+import { IWGLSLShaderProperties, WGLSLShaderEntity } from "../../src/Engine/WGLShaderEntity";
+import { initWebGPU, WGLSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderar";
 
 
 // get the music as baase
 const demo = new SetupDemo(    
     new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 
-demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((demo: SetupDemo) => {
+demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo: SetupDemo) => {
     // Create the Scenes
     // Music length = 139200 ms;
     const sceneBuilder = new SceneBuilder(139200);
@@ -44,6 +46,44 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
         durationUntilEndInMs("Scene 6");
 
     const scenes = sceneBuilder.getScenes();
+
+
+    // set up a wgsl shader entity
+
+    const wgslCanvas = document.createElement("canvas");
+   
+    wgslCanvas.width = 800; wgslCanvas.height = 450;
+
+    const webgpu = await initWebGPU(wgslCanvas);
+ 
+    console.log(webgpu);
+    
+
+    const wgslShaderProps:IWGLSLShaderProperties = {
+            canvas: wgslCanvas,
+            device: webgpu.device,
+            context:webgpu.context!,
+            mainFragmentShader:"",
+            mainVertexShader: "",
+            renderBuffers:[]
+    }   
+    
+    const wgslShaderEntity = new WGLSLShaderEntity("wgsl-shader",
+        wgslShaderProps, () => {
+
+        });
+
+    // const wgslShaderEntity = new WGLSLShaderEntity("wgsl-shader",
+    //     {
+    
+    //     },() => {
+
+    //     }
+
+
+    // )
+
+
 
     // Set up all effects;
 
@@ -167,7 +207,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
         (ts, ctx, props, sequence) => audioVisualizerEffect(ts, ctx, props, demo.sequence)
     );
 
-    const pseudoKnightyanShaderEntity = new ShaderEntity("ShaderEnriry",
+    const pseudoKnightyanShaderEntity = new GLSLShaderEntity("ShaderEnriry",
         {
             mainFragmentShader: mainFragment,
             mainVertexShader: mainVertex,
@@ -182,7 +222,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
         }, (ts, render, propertybag) => {
         },demo.settings.width,demo.settings.height);
 
-    const someKindOfFractalShaderEntity = new ShaderEntity("ShaderEnriry",
+    const someKindOfFractalShaderEntity = new GLSLShaderEntity("ShaderEnriry",
      
         {
             mainFragmentShader: mainFragment,

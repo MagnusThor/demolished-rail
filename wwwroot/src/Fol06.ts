@@ -1,5 +1,5 @@
 import { Entity, IEntity } from "../../src/Engine/entity";
-import { ShaderEntity } from "../../src/Engine/shaderEntity";
+import { GLSLShaderEntity } from "../../src/Engine/GLSLShaderEntity";
 import { mainFragment } from "../assets/shaders/mainFragment";
 import { mainVertex } from "../assets/shaders/mainVertex";
 import { SceneBuilder } from "../../src/Engine/Helpers/sceneBuilder";
@@ -93,7 +93,7 @@ class Fol06 {
             [0.4, 1.0, 1.2]
         ]
         let cameraPos = cameraPositions[0];
-        const shader = new ShaderEntity("earthShader",
+        const shader = new GLSLShaderEntity("earthShader",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,
@@ -151,7 +151,7 @@ class Fol06 {
     blackhole(): Array<IEntity> {
         const mapEntities = new Array<IEntity>();
         let zoom = 0.1;
-        const shader = new ShaderEntity("earthShader",
+        const shader = new GLSLShaderEntity("earthShader",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,
@@ -190,7 +190,7 @@ class Fol06 {
      */
     eventHorizon(): Array<IEntity> {
         const mapEntities = new Array<IEntity>();
-        const shader = new ShaderEntity("eventHorizon",
+        const shader = new GLSLShaderEntity("eventHorizon",
             {
 
                 mainFragmentShader: mainFragment,
@@ -223,7 +223,7 @@ class Fol06 {
      */
     lonlyPlanet(): Array<IEntity> {
         const mapEntities = new Array<IEntity>();
-        const shader = new ShaderEntity("lonley-planet-shader",
+        const shader = new GLSLShaderEntity("lonley-planet-shader",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,
@@ -263,7 +263,7 @@ class Fol06 {
         let cameraPos = cameraPositions[0];
         let currentPosIndex = 0;
 
-        const shader = new ShaderEntity("galaxy",
+        const shader = new GLSLShaderEntity("galaxy",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,
@@ -310,7 +310,7 @@ class Fol06 {
      */
     expandingGalaxy(): Array<IEntity> {
         const mapEntities = new Array<IEntity>();
-        const shader = new ShaderEntity("lonley-planet-shader",
+        const shader = new GLSLShaderEntity("lonley-planet-shader",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,
@@ -338,7 +338,7 @@ class Fol06 {
 
     warpSpeed(): Array<IEntity> {
         const mapEntities = new Array<IEntity>();
-        const shader = new ShaderEntity("warp-speed-shader",
+        const shader = new GLSLShaderEntity("warp-speed-shader",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,
@@ -362,7 +362,7 @@ class Fol06 {
 
     singularity(): Array<IEntity> {
         const mapEntities = new Array<IEntity>();
-        const shader = new ShaderEntity("singularity-shader",
+        const shader = new GLSLShaderEntity("singularity-shader",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,
@@ -386,7 +386,7 @@ class Fol06 {
 
     exoPlanets(): Array<IEntity>{
         const mapEntities = new Array<IEntity>();
-        const shader = new ShaderEntity("singularity-shader",
+        const shader = new GLSLShaderEntity("singularity-shader",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,

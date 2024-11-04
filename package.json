@@ -14,7 +14,9 @@
     "webpack": "^5.95.0"
   },
   "dependencies": {
+    "@webgpu/types": "^0.1.50",
     "demolishedrenderer": "^3.1.0",
-    "sonantx": "^2.0.1"
+    "sonantx": "^2.0.1",
+    "webgpu": "^0.1.16"
   }
 }

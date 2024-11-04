@@ -2,9 +2,9 @@
 import { IEntity } from "./entity";
 import { Scene } from "./scene";
 import { Sequence } from "./sequence";
-import { ShaderRenderer } from "./ShaderRenderer/shaderRenderer";
+import { GLSLShaderRenderer } from "./ShaderRenderers/WebGL/glslShaderRenderer";
 
-export interface IShaderRenderBuffer {
+export interface IGLSLShaderRenderBuffer {
     name: string;
     vertex: string;
     fragment: string;
@@ -12,15 +12,15 @@ export interface IShaderRenderBuffer {
     textures: string[];
 }
 
-export interface IShaderProperties {
+export interface IGLSLShaderProperties {
     mainVertexShader: string;
     mainFragmentShader: string;
-    renderBuffers: IShaderRenderBuffer[];
+    renderBuffers: IGLSLShaderRenderBuffer[];
 }
 
-export class ShaderEntity implements IEntity {
+export class GLSLShaderEntity implements IEntity {
     canvas: HTMLCanvasElement;
-    shaderRenderer: ShaderRenderer;
+    shaderRenderer: GLSLShaderRenderer;
     transitionIn?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
     transitionOut?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
 
@@ -39,8 +39,8 @@ export class ShaderEntity implements IEntity {
      */
     constructor(
         public name: string,
-        public props?: IShaderProperties,
-        public action?: (time: number, shaderRender: ShaderRenderer, properties: IShaderProperties, sequence?: Sequence) => void,
+        public props?: IGLSLShaderProperties,
+        public action?: (time: number, shaderRender: GLSLShaderRenderer, properties: IGLSLShaderProperties, sequence?: Sequence) => void,
         public w?: number,
         public h?: number,
         public startTimeinMs?: number,
@@ -53,7 +53,7 @@ export class ShaderEntity implements IEntity {
             this.canvas.height = h;
         }
         if (props?.mainFragmentShader && props.mainVertexShader) {
-            this.shaderRenderer = new ShaderRenderer(this.canvas, props?.mainVertexShader, props?.mainFragmentShader);
+            this.shaderRenderer = new GLSLShaderRenderer(this.canvas, props?.mainVertexShader, props?.mainFragmentShader);
             props.renderBuffers.forEach(buffer => {
                 this.shaderRenderer.addBuffer(buffer.name, buffer.vertex, buffer.fragment, buffer.textures, buffer.customUniforms);
             });
