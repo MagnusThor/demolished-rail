@@ -16,6 +16,8 @@ class Scene {
         this.width = width;
         this.height = height;
         this.entities = [];
+        this.transitionOutListeners = [];
+        this.transitionInListeners = [];
     }
     /**
      * Adds an entity to the scene.
@@ -27,6 +29,7 @@ class Scene {
             entity.canvas.width = this.width || 800;
             entity.canvas.height = this.height || 450;
         }
+        entity.bindToScene(this);
         this.entities.push(entity);
     }
     /**
@@ -51,34 +54,59 @@ class Scene {
      * @param elapsedTime - The elapsed time in the animation sequence.
      * @returns A promise that resolves when the scene has finished playing.
      */
-    play(elapsedTime) {
-        return new Promise((resolve) => {
-            const startTime = performance.now();
-            const animate = () => {
-                const currentTime = performance.now();
-                const sceneElapsedTime = currentTime - startTime + elapsedTime;
-                const adjustedSceneElapsedTime = sceneElapsedTime - this.startTimeinMs;
-                if (adjustedSceneElapsedTime >= 0) {
-                    this.entities.forEach((entity) => {
-                        entity.update(sceneElapsedTime);
-                    });
-                }
-                if (sceneElapsedTime < this.durationInMs + this.startTimeinMs) {
-                    // The requestAnimationFrame call was removed here. 
-                    // The animation loop is now handled in the Sequence class.
-                }
-                else {
-                    resolve(true);
-                }
-            };
-            animate(); // Call animate once to start the initial rendering
-        });
-    }
+    // play(elapsedTime: number): Promise<boolean> {
+    //   return new Promise((resolve) => {
+    //     const startTime = performance.now();
+    //     const animate = () => {
+    //       const currentTime = performance.now();
+    //       const sceneElapsedTime = currentTime - startTime + elapsedTime;
+    //       const adjustedSceneElapsedTime = sceneElapsedTime - this.startTimeinMs;
+    //       if (adjustedSceneElapsedTime >= 0) {
+    //         this.entities.forEach((entity) => {
+    //           entity.update(sceneElapsedTime);
+    //         });
+    //       }
+    //       if (sceneElapsedTime < this.durationInMs + this.startTimeinMs) {
+    //         // The requestAnimationFrame call was removed here. 
+    //         // The animation loop is now handled in the Sequence class.
+    //       } else {
+    //         resolve(true);
+    //       }
+    //     };
+    //     animate(); // Call animate once to start the initial rendering
+    //   });
+    // }
     addPostProcessorToEntities(processor) {
         this.entities.forEach(entity => {
             if (entity instanceof entity_1.Entity) { // Check if the entity is an instance of the Entity class
                 entity.addPostProcessor(processor);
             }
+        });
+    }
+    /**
+      * Adds a transition-in effect to the scene.
+      * @param sequence - The Sequence instance associated with the scene.
+      * @param startTime - The time (in milliseconds) within the scene when the transition should start.
+      * @param duration - The duration of the transition in milliseconds.
+      * @param listener - The transition function to apply.
+      */
+    transitionIn(sequence, startTime, duration, listener) {
+        this.transitionInListeners.push(listener);
+        sequence.addSceneTransitionIn(this, startTime, duration, (ctx, scene, progress) => {
+            this.transitionInListeners.forEach(listener => listener(ctx, scene, progress));
+        });
+    }
+    /**
+    * Adds a transition-out effect to the scene.
+    * @param sequence - The Sequence instance associated with the scene.
+    * @param startTime - The time (in milliseconds) within the scene when the transition should start.
+    * @param duration - The duration of the transition in milliseconds.
+    * @param listener - The transition function to apply.
+    */
+    transitionOut(sequence, startTime, duration, listener) {
+        this.transitionOutListeners.push(listener);
+        sequence.addSceneTransitionOut(this, startTime, duration, (ctx, scene, progress) => {
+            this.transitionOutListeners.forEach(listener => listener(ctx, scene, progress));
         });
     }
 }

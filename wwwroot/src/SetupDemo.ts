@@ -14,8 +14,8 @@ export class SetupDemo {
         width: 800,
         height: 450,
         audioProperties: {
-            bpm: 123,
-            ticks: 8,
+            bpm: 122,
+            ticks: 4,
             beat: 0,
             tick: 0,
             bar: 0,
@@ -26,7 +26,7 @@ export class SetupDemo {
     constructor(audioLoader:IAudioLoader) {
         this.sequence = new Sequence(
             document.querySelector("canvas") as HTMLCanvasElement,
-            60, 4, 4, [], audioLoader);
+            122, 4, 4, [], audioLoader);
 
     }
     async addAssets(...urls: string[]) {

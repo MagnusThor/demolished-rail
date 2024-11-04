@@ -1,5 +1,5 @@
 export const galaxyShader = /*glsl*/ `uniform float time;
-uniform vec2 mouse;
+uniform vec2 cameraPos;
 uniform vec2 resolution;
 uniform sampler2D iChannel0;
 uniform float zoom;
@@ -29,9 +29,9 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 	vec3 dir=vec3(uv*zoom,1.);
 	float time=time*speed+.25;
 
-	//mouse rotation
-	float a1=.5+mouse.x/resolution.x*2.;
-	float a2=.8+mouse.y/resolution.y*2.;
+
+	float a1=.5+cameraPos.x/resolution.x*2.;
+	float a2=.8+cameraPos.y/resolution.y*2.;
 	mat2 rot1=mat2(cos(a1),sin(a1),-sin(a1),cos(a1));
 	mat2 rot2=mat2(cos(a2),sin(a2),-sin(a2),cos(a2));
 	dir.xz*=rot1;

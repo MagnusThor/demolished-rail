@@ -6,7 +6,7 @@ import { SceneBuilder } from "../../src/Engine/Helpers/sceneBuilder";
 import { SetupDemo } from "./SetupDemo";
 import { earthShader } from "../assets/shaders/earthShader";
 import { Sequence } from "../../src/Engine/sequence";
-import { ITextFadeInOut, textFadeInOut } from "./effects/FoL/fadeInOutTextEffect";
+import { ITextFadeInOut, TextAlignment, textFadeInOut } from "./effects/FoL/fadeInOutTextEffect";
 import { blackholeShader } from "../assets/shaders/blackholeShader";
 import { eventHorizonShader } from "../assets/shaders/eventHorizon";
 import { lonlyPlanetShader } from "../assets/shaders/lonlyPlanetShader";
@@ -17,13 +17,17 @@ import { SequenceHelper } from "../../src/Engine/Helpers/sequenceHelper";
 import { Conductor, ITimelineEvent } from "../../src/Engine/conductor";
 import { atomsmp3 } from "../assets/base64/atomsmp3";
 import { warpSpeedShader } from "../assets/shaders/warpSpeedShader";
-import { SonantAudioLoader } from "../../src/Engine/Audio/audioLoader";
+import { DefaultAudioLoader, SonantAudioLoader } from "../../src/Engine/Audio/audioLoader";
 import { sonantMusic } from "../assets/music/sonant";
+import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
+import { EngineLogger } from "../../src/Engine/EngineLogger";
+import { Scene } from "../../src/Engine/scene";
+import { singularityShader } from "../assets/shaders/singularityShader";
+import { exoplanetShader } from "../assets/shaders/exoPlanetShader";
 
 
-
-
-const demo = new SetupDemo(new SonantAudioLoader(sonantMusic));
+// new SonantAudioLoader(sonantMusic) 
+const demo = new SetupDemo(new DefaultAudioLoader("/wwwroot/assets/music/we float here.mp3"));
 /**
  * The darkness at the end of time
  * a Fruit of the Loom demo
@@ -31,8 +35,11 @@ const demo = new SetupDemo(new SonantAudioLoader(sonantMusic));
  * @class Fol06
  */
 class Fol06 {
-    conductor: any;
-    constructor(public sequence: Sequence, public width: number, public height: number) {
+    conductor: Conductor;
+    constructor(public sequence: Sequence, public width: number, public height: number,
+        public bmp: number
+
+    ) {
 
         this.conductor = new Conductor();
         sequence.conductor = this.conductor;
@@ -45,49 +52,24 @@ class Fol06 {
      */
     introScene(): Array<IEntity> {
         const mapEntities = new Array<IEntity>();
-
-
-        // Define the timeline event
-        const textEvent: ITimelineEvent<ITextFadeInOut, any> = {
-            barCount: 10, // Trigger on 10 bar
-            action: (entity: Entity<ITextFadeInOut>) => {
-                // Get the "intro-text" entity and modify its properties
-                const introText = entity;
-                introText.props!.size *= 1.15;
-
-            },
-            targetEntity: "intro-text", // Target the "intro-text" entity,
-            // Add a criteria to check if the event has already been triggered
-            criteria: () => {
-                if (textEvent.props === undefined) { // Check if props is undefined
-                    textEvent.props = { triggered: false }; // If undefined, initialize it
-                }
-                if (!textEvent.props.triggered) {
-                    textEvent.props.triggered = true; // Mark the event as triggered
-                    return true; // Allow the event to trigger
-                } else {
-                    return false; // Prevent the event from triggering again
-                }
-            }
-        };
-
-        this.conductor.addEvent(textEvent);
-
         const textEffectEntity = new Entity<ITextFadeInOut>("intro-text",
             {
                 y: this.height / 2,
-                texts: ["The darkness at the end of time".toLowerCase(),
+                margin: 0,
+                alignment: TextAlignment.CENTER,
+                texts: ["The darkness at the end of time",
                     "a fruit of the loom production",
                     "inspired by a series of books",
                     "written by professor Ulf Danielsson"],
                 font: "Montserrat",
                 size: 40,
-                fadeInDuration: 4,
-                fadeOutDuration: 4,
-                textDuration: 10,
+                fadeInDuration: SequenceHelper.getDurationForBeats(this.bmp, 4) / 1000,
+                fadeOutDuration: SequenceHelper.getDurationForBeats(this.bmp, 4) / 1000,
+                textDuration: SequenceHelper.getDurationForBeats(this.bmp, 8) / 1000,
                 loop: false
             },
-            (ts, ctx, props) => textFadeInOut(ts, ctx, props, this.sequence)
+            (ts, ctx, props) => textFadeInOut(ts, ctx, props, this.sequence),
+            SequenceHelper.getDurationForBeats(this.bmp, 8)
         );
         mapEntities.push(textEffectEntity);
         return mapEntities;
@@ -104,7 +86,12 @@ class Fol06 {
             [0.0, 1.2, 0.7],
             [0.5, 1.0, 0.9],
             [1.0, 0.8, 1.1],
-        ];
+            [0.7, 1.3, 0.6],
+            [0.2, 1.1, 1.0],
+            [1.2, 0.9, 0.8],
+            [0.9, 1.4, 0.5],
+            [0.4, 1.0, 1.2]
+        ]
         let cameraPos = cameraPositions[0];
         const shader = new ShaderEntity("earthShader",
             {
@@ -128,26 +115,27 @@ class Fol06 {
                 ]
             }, () => {
             }, this.width, this.height);
+
         shader.onBar((ts: number, count: number) => {
             const positionIndex = (count) % cameraPositions.length;
             cameraPos = cameraPositions[positionIndex];
         });
 
-
-        const textEffectEntity = new Entity<ITextFadeInOut>("intro-text",
+        const textEffectEntity = new Entity<ITextFadeInOut>("earth-text",
             {
-                x: this.width - this.width / 3,
                 y: 40,
-                texts: ["We are a cosmic accident", "but a fortunate one.", "Swallowed by darkness, crushed by gravity."],
+                texts: ["We are a cosmic accident,but a fortunate one.", "Swallowed by darkness, crushed by gravity."],
                 font: "Montserrat",
+                alignment: TextAlignment.RIGHT,
+                margin: 20,
                 size: 20,
                 fadeInDuration: 2,
                 fadeOutDuration: 2,
-                textDuration: 5,
+                textDuration: (SequenceHelper.getDurationForBeats(this.bmp, 4) / 1000) + 5,
                 loop: false
             },
             (ts, ctx, props) => textFadeInOut(ts, ctx, props, this.sequence),
-            5000
+            SequenceHelper.getDurationForBeats(this.bmp, 4)
         );
 
         mapEntities.push(shader, textEffectEntity);
@@ -264,8 +252,18 @@ class Fol06 {
      * @memberof Fol06
      */
     galaxy(): Array<IEntity> {
+
         const mapEntities = new Array<IEntity>();
-        const shader = new ShaderEntity("lonley-planet-shader",
+
+        const cameraPositions = [
+            [0.0, 1.2],
+            [0.5, 1.0],
+            [1.0, 0.8],
+        ];
+        let cameraPos = cameraPositions[0];
+        let currentPosIndex = 0;
+
+        const shader = new ShaderEntity("galaxy",
             {
                 mainFragmentShader: mainFragment,
                 mainVertexShader: mainVertex,
@@ -276,12 +274,30 @@ class Fol06 {
                         vertex: mainVertex,
                         textures: [],
                         customUniforms: {
+                            "cameraPos": (uniformLoction: WebGLUniformLocation, gl: WebGLRenderingContext,
+                                program: WebGLProgram, time: number) => {
+                                gl.uniform2fv(uniformLoction, cameraPos);
+                            }
                         }
-
                     }
                 ]
             }, () => {
             }, this.width, this.height);
+        this.conductor.addEvent({
+            action: (entity: IEntity) => {
+                currentPosIndex++;
+                const positionIndex = (currentPosIndex) % cameraPositions.length;
+                cameraPos = cameraPositions[positionIndex];
+            },
+            targetEntity: "galaxy",
+            criteria: () => { // Add the FFT criteria directly to the event
+                const avgFrequency = this.sequence.fftData.reduce((sum, val) => sum + val, 0) /
+                    this.sequence.fftData.length;
+                return avgFrequency > 100; // Trigger if average frequency is greater than 100
+            }
+        })
+
+
         mapEntities.push(shader);
         return mapEntities;
     }
@@ -344,6 +360,56 @@ class Fol06 {
         return mapEntities;
     }
 
+    singularity(): Array<IEntity> {
+        const mapEntities = new Array<IEntity>();
+        const shader = new ShaderEntity("singularity-shader",
+            {
+                mainFragmentShader: mainFragment,
+                mainVertexShader: mainVertex,
+                renderBuffers: [
+                    {
+                        name: "a_buffer",
+                        fragment: singularityShader,
+                        vertex: mainVertex,
+                        textures: [],
+                        customUniforms: {
+                        }
+
+                    }
+                ]
+            }, () => {
+            }, this.width, this.height);
+
+        mapEntities.push(shader);
+        return mapEntities;
+    }
+
+    exoPlanets(): Array<IEntity>{
+        const mapEntities = new Array<IEntity>();
+        const shader = new ShaderEntity("singularity-shader",
+            {
+                mainFragmentShader: mainFragment,
+                mainVertexShader: mainVertex,
+                renderBuffers: [
+                    {
+                        name: "a_buffer",
+                        fragment: exoplanetShader,
+                        vertex: mainVertex,
+                        textures: [],
+                        customUniforms: {
+                        }
+
+                    }
+                ]
+            }, () => {
+            }, this.width, this.height);
+
+        mapEntities.push(shader);
+        return mapEntities;
+
+    } 
+
+
 }
 
 enum SCENE {
@@ -352,27 +418,34 @@ enum SCENE {
     LONLYPLANET = 2,
     GALAXY = 3,
     GALAXYEXPAND = 4,
-    WARPSPEED = 5,
-    BLACKHOLE = 6,
-    EVENTHORIZON = 7
+    EXOPLANETS = 5,
+
+    WARPSPEED = 6,
+    SINGULARITY = 7,
+    BLACKHOLE = 8,
+    EVENTHORIZON = 9
 }
 
 demo.addAssets().then((demo: SetupDemo) => {
-    // Create the Scenes
-    // Music length = 139200 ms;
-    const fol06 = new Fol06(demo.sequence, 800, 450);
 
-    const sceneBuilder = new SceneBuilder(139200);
+    const bpm = 123;
+    const fol06 = new Fol06(demo.sequence, 800, 450, bpm);
+    const sceneBuilder = new SceneBuilder(166000); // 2.46 mins
+
 
     sceneBuilder
-        .addScene("intro", SequenceHelper.getDurationForBars(60, 4, 10))
-        .addScene("earth", 20000)
-        .addScene("lonly-planet-and-the-sun", 20000)
+        .addScene("intro", SequenceHelper.getDurationForBeats(bpm, 32))
+        .addScene("earth", SequenceHelper.getDurationForBars(bpm, 4, 16))
+        .addScene("lonly-planet-and-the-sun", 15000)
         .addScene("galaxy", 15000)
-        .addScene("galaxy-expand", 15000)
-        .addScene("warp-speed", 15000)
-        .addScene("blackhole", 4000).
+        .addScene("galaxy-expand", 20000)
+        .addScene("warp-speed", 5000)
+        .addScene("explanets", 30000)
+        .addScene("singularity", 25000)
+        .addScene("blackhole", 5000).
         durationUntilEndInMs("eventhorizon");
+
+    EngineLogger.log(`Total Scene duration ${sceneBuilder.totalScenesDuration}`)
 
 
     const scenes = sceneBuilder.getScenes();
@@ -382,12 +455,31 @@ demo.addAssets().then((demo: SetupDemo) => {
     scenes[SCENE.LONLYPLANET].addEntities(...fol06.lonlyPlanet())
     scenes[SCENE.GALAXY].addEntities(...fol06.galaxy())
     scenes[SCENE.GALAXYEXPAND].addEntities(...fol06.expandingGalaxy())
+    scenes[SCENE.EXOPLANETS].addEntities(...fol06.exoPlanets())
     scenes[SCENE.WARPSPEED].addEntities(...fol06.warpSpeed())
+    scenes[SCENE.SINGULARITY].addEntities(...fol06.singularity())
     scenes[SCENE.BLACKHOLE].addEntities(...fol06.blackhole())
     scenes[SCENE.EVENTHORIZON].addEntities(...fol06.eventHorizon())
 
-    demo.sequence.addSceneArray(scenes)
+    // create and add transitions to scenes
 
+    const transitionIn = (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => {
+        ctx.globalAlpha = progress;
+    };
+
+    const transitionOut = (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => {
+        ctx.globalAlpha = 1 - progress;
+    };
+
+    scenes[SCENE.EARTH].transitionIn(
+        demo.sequence,
+        0, 2000, transitionIn);
+
+    scenes[SCENE.EARTH].transitionOut(
+        demo.sequence,
+        scenes[SCENE.EARTH].durationInMs - 2000, 2000, transitionOut);
+
+    demo.sequence.addSceneArray(scenes);
 
     const jumpToScene = new URLSearchParams(location.search).get("scene") || "0"
     const debugHelper = new DebugHelper(demo.sequence, parseInt(jumpToScene!));
@@ -395,6 +487,8 @@ demo.addAssets().then((demo: SetupDemo) => {
     demo.sequence.onFrame(() => debugHelper.update());
 
 
+}).catch(err => {
+    EngineLogger.log(err);
 });
 
 demo.sequence.onReady = () => {
@@ -417,9 +511,7 @@ demo.sequence.onReady = () => {
     btn!.addEventListener("click", () => {
         document.querySelector("#launch")?.remove();
         demo.sequence.play();
-        toggleFullscreen(document.querySelector("canvas")!);
+        // toggleFullscreen(document.querySelector("canvas")!);
     });
 }
-
-
 

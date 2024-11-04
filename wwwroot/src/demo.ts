@@ -8,7 +8,7 @@ import { IRandomSquareEffectProps, randomSquareEffect } from "./effects/ranndomS
 import { expandingCircleEffect, IExpandingCircleEffectProps } from "./effects/expandingCircleEffect";
 import { IStarburstProps, starburstEffect } from "./effects/starBurstEffct";
 import { ITextEffectProps, textEffect } from "./effects/textEffect";
-import { IImageOverlayEffectProps, imageOverlayEffect } from "./effects/imageOverlayEffect";
+import { IImageOverlayEffectProps, imageOverlayEffect, ImagePosition } from "./effects/imageOverlayEffect";
 import { textArrayDisplayEffect, ITextArrayDisplayProps } from './effects/textArrayDisplayEffect'
 import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
 import { audioVisualizerEffect, IAudioVisualizerProps } from "./effects/fftAnalyzerEffect";
@@ -63,8 +63,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
         "ImageOverlay",
       
         {
-            x: 0,
-            y: 0,
+          position: ImagePosition.FILL,
             width: demo.settings.width,
             height: demo.settings.height,
             image: AssetsHelper.textureCache!.get("silhouette.png")?.src,
@@ -74,7 +73,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then((d
             duration: 5,
         }
         ,
-        (ts, ctx, props) => imageOverlayEffect(ts, ctx, props)
+        (ts, ctx, props) => imageOverlayEffect(ts, ctx, props,demo.sequence)
     );
 
     const expandingCircleEntity = new Entity<IExpandingCircleEffectProps>(

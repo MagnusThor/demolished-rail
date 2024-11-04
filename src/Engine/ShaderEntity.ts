@@ -1,5 +1,6 @@
 
 import { IEntity } from "./entity";
+import { Scene } from "./scene";
 import { Sequence } from "./sequence";
 import { ShaderRenderer } from "./ShaderRenderer/shaderRenderer";
 
@@ -60,9 +61,11 @@ export class ShaderEntity implements IEntity {
             throw new Error("Cannot create ShaderEntity: Missing main shader code.");
         }
     }
-   
-
-
+    scene?: Scene | undefined;
+    bindToScene(scene: Scene): void {
+      this.scene = scene;
+    }
+  
 
     /**
  * Adds an event listener for when a beat occurs.
@@ -112,17 +115,19 @@ export class ShaderEntity implements IEntity {
      */
     update(timeStamp: number): void {
         if (this.action && this.shaderRenderer && this.props) {
-            // Calculate the elapsed time for the entity
-            const elapsed = timeStamp - (this.startTimeinMs || 0);
-
+          // Calculate elapsed time relative to the scene's start time
+          const sceneStartTime = this.scene ? this.scene.startTimeinMs : 0;
+          const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
+      
+          if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
             this.action(timeStamp, this.shaderRenderer, this.props);
-            if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
-                this.action(timeStamp, this.shaderRenderer, this.props);
-                this.shaderRenderer.update(timeStamp / 1000);
-            }
+      
+            // Calculate shader time relative to the entity's start time (within the scene)
+            const shaderTime = Math.max(0, elapsed); 
+            this.shaderRenderer.update(shaderTime / 1000);
+          }
         }
-
-    }
+      }
 
     /**
      * Copies the entity's canvas to the target canvas.

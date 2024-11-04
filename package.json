@@ -4,10 +4,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "createBase64": "node build/wwwroot/compressdemo.js"
+    "pack": "node build/wwwroot/compressdemo.js"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": "",
   "devDependencies": {
     "crc": "^4.3.2",

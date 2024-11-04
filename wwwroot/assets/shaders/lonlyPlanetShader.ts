@@ -208,7 +208,7 @@ vec3 sun_glare(vec3 rd) {
 void mainImage(out vec4 frag_col, in vec2 frag_coord) {
   vec2 res = vec2(resolution.x, resolution.y);
 
-  vec2 mouse =vec2(0.5,0.5);
+  vec2 mouse =vec2(1.0);
 
   vec2 coord = ((2.0 * (frag_coord - (res * 0.5))) / resolution.y);
   float theta = ((1.88495559 + (time * 0.2)) + (6.28318531 * mouse.x));

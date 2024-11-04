@@ -1,8 +1,16 @@
 import { Sequence } from "../../../../src/Engine/sequence";
 
+export enum TextAlignment {
+  LEFT,
+  CENTER,
+  RIGHT
+}
+
 export interface ITextFadeInOut {
-  x?:number;
-  y: number; // Center y-coordinate
+  x?: number;
+  y: number;
+  alignment?: TextAlignment; // Add alignment property
+  margin?: number; // Add margin property
   texts: string[];
   font: string;
   size: number;
@@ -18,7 +26,7 @@ export const textFadeInOut = (
   propertybag: ITextFadeInOut,
   sequence: Sequence
 ) => {
-  const { x,y, texts, font, size, fadeInDuration, fadeOutDuration, textDuration, loop } = propertybag;
+  const { x, y, texts, font, size, fadeInDuration, fadeOutDuration, textDuration, loop } = propertybag;
 
   ctx.font = `${size}px ${font}`;
   ctx.fillStyle = "white";
@@ -35,17 +43,17 @@ export const textFadeInOut = (
 
 
   // Calculate the index of the current text element
-  const textIndex = Math.floor(elapsed / textDuration) % texts.length;
+  let textIndex = Math.floor(elapsed / textDuration);
 
-
-  // Stop if not looping and we've reached the end
-  if (!loop && textIndex >= texts.length) {
+  // If looping, take the modulus to keep the index within bounds
+  if (loop) {
+    textIndex = textIndex % texts.length;
+  } else if (textIndex >= texts.length) { // Stop if not looping and reached the end
     return;
   }
 
-  const text = texts[textIndex % texts.length]; // Use modulus for safety even when not looping
+  const text = texts[textIndex];
   const textElapsed = elapsed % textDuration;
-
 
   let alpha = 1;
   if (textElapsed < fadeInDuration) {
@@ -54,7 +62,26 @@ export const textFadeInOut = (
     alpha = (textDuration - textElapsed) / fadeOutDuration; // Fade out
   }
 
+  // Calculate x-coordinate based on alignment and margin
+  let drawX: number;
+  switch (propertybag.alignment) {
+    case TextAlignment.LEFT:
+      drawX = propertybag.margin || 0;
+      ctx.textAlign = "left";
+      break;
+    case TextAlignment.RIGHT:
+      drawX = ctx.canvas.width - (propertybag.margin || 0);
+      ctx.textAlign = "right";
+      break;
+    case TextAlignment.CENTER:
+    default:
+      drawX = ctx.canvas.width / 2;
+      ctx.textAlign = "center";
+      break;
+  }
+
   ctx.globalAlpha = alpha;
-  ctx.fillText(text, x || ctx.canvas.width / 2, y); // Draw centered text
+  ctx.fillText(text, propertybag.x || drawX, y); // Use provided x or calculated drawX
   ctx.globalAlpha = 1;
+
 };
