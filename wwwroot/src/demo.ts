@@ -25,15 +25,18 @@ import { SetupDemo } from "./SetupDemo";
 import { DefaultAudioLoader } from "../../src/Engine/Audio/audioLoader";
 import { IWGLSLShaderProperties, WGLSLShaderEntity } from "../../src/Engine/WGLShaderEntity";
 import { initWebGPU, rectGeometry, WGLSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer";
-import { mainShader } from "../../src/Engine/ShaderRenderers/WebGPU/mainShader";
+import { defaultMainShader } from "../../src/Engine/ShaderRenderers/WebGPU/defaultMainShader";
 import { Material } from "../../src/Engine/ShaderRenderers/WebGPU/material";
 import { Geometry } from "../../src/Engine/ShaderRenderers/WebGPU/geometry";
 import { blueColorShader } from "../assets/shaders/wglsl/wgslShaderExample";
+import { TextureLoader } from "../../src/Engine/ShaderRenderers/WebGPU/textureLoader";
+import { TextureType } from "../../src/Engine/Interfaces/ITexture";
+import { wgslFlamesShader } from "../assets/shaders/wglsl/wgslFlamesShader";
 
 
 
 // get the music as baase
-const demo = new SetupDemo(    
+const demo = new SetupDemo(
     new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo: SetupDemo) => {
@@ -42,8 +45,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const sceneBuilder = new SceneBuilder(139200);
 
     sceneBuilder
-       .addScene("Scene 0",10000). 
-       addScene("Scene 1", 20000).
+        .addScene("Scene 0", 10000).
+        addScene("Scene 1", 20000).
         addScene("Scene 2", 8000).
         addScene("Scene 3", 15000).
         addScene("Scene 4", 15000).
@@ -53,42 +56,45 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const scenes = sceneBuilder.getScenes();
 
 
-    // set up a wgsl shader entity
-
-    const wgslCanvas = document.createElement("canvas");   
+    // Set up a wgsl shader entity & renderer
+    const wgslCanvas = document.createElement("canvas");
     wgslCanvas.width = 800; wgslCanvas.height = 450;
     const webgpu = await initWebGPU(wgslCanvas);
-    const wgslMainShader = mainShader;
 
 
+    const wsglTextures = await TextureLoader.loadAll(webgpu.device, {
+        key: "NOISE-TEXTURE",
+        source: "assets/images/noise.png", 
+        type: TextureType.IMAGE,
+    }); 
 
-    const wgslShaderProps:IWGLSLShaderProperties = {
-            canvas: wgslCanvas,
-            device: webgpu.device,
-            context:webgpu.context!,
-            shader: wgslMainShader,
-            renderBuffers:[
-                {
-                    name:"iChannel0",
-                    shader: new Material(webgpu.device,
-                        blueColorShader
-                    ),
-                    geometry: new Geometry(webgpu.device, rectGeometry)
-                }  
+    const wgslMainShader = defaultMainShader;
+    const wgslShaderProps: IWGLSLShaderProperties = {
+        canvas: wgslCanvas,
+        device: webgpu.device,
+        context: webgpu.context!,
+        shader: wgslMainShader,
+        renderBuffers: [
+            {
+                name: "iChannel0",
+                shader: new Material(webgpu.device,
+                    wgslFlamesShader 
+                ),
+                geometry: new Geometry(webgpu.device, rectGeometry),
+                textures: wsglTextures 
+            }
+        ]
+    };
 
-            ]
-    }   
-    
     const wgslShaderEntity = new WGLSLShaderEntity("wgsl-shader",
-        wgslShaderProps, (ts:number,shaderRender:WGLSLShaderRenderer) => {
-
+        wgslShaderProps, (ts: number, shaderRender: WGLSLShaderRenderer) => {
+            // this is an action called for each, frame
         });
 
-    
 
     const strobeEntity = new Entity<IStrobeEffectProps>(
         "Strobe",
-       
+
         {
             color: "white", // You can change the color
             isOn: false,
@@ -100,9 +106,9 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const imageOverlayEntity = new Entity<IImageOverlayEffectProps>(
         "ImageOverlay",
-      
+
         {
-          position: ImagePosition.FILL,
+            position: ImagePosition.FILL,
             width: demo.settings.width,
             height: demo.settings.height,
             image: AssetsHelper.textureCache!.get("silhouette.png")?.src,
@@ -112,12 +118,12 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
             duration: 5,
         }
         ,
-        (ts, ctx, props) => imageOverlayEffect(ts, ctx, props,demo.sequence)
+        (ts, ctx, props) => imageOverlayEffect(ts, ctx, props, demo.sequence)
     );
 
     const expandingCircleEntity = new Entity<IExpandingCircleEffectProps>(
         "ExpandingCircle",
-      
+
         {
             x: demo.settings.width / 2,
             y: demo.settings.height / 2,
@@ -131,7 +137,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const starburstEntity = new Entity<IStarburstProps>(
         "Starburst",
-      
+
         {
             x: demo.settings.width / 2, // Example x-coordinate
             y: demo.settings.height / 2, // Example y-coordinate
@@ -149,7 +155,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const typeWriterEntity = new Entity<ITypeWriterEffectProps>(
         "Typewriter",
-    
+
         {
             x: 100,
             y: 300,
@@ -166,7 +172,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const randomSquareEntity = new Entity<IRandomSquareEffectProps>(
         "RandomSquare",
-     
+
         {
             x: 0,
             y: 0,
@@ -180,7 +186,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const gridOverlayEntity = new Entity<IGridOverlayEffectProps>(
         "GridOverlay",
-     
+
         {
             rows: 5,
             cols: 8,
@@ -192,7 +198,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const audioVisualizerEntity = new Entity<IAudioVisualizerProps>(
         "AudioVisualizer",
-      
+
         {
             x: 0,
             y: 150,
@@ -219,10 +225,10 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
                 }
             ]
         }, (ts, render, propertybag) => {
-        },demo.settings.width,demo.settings.height);
+        }, demo.settings.width, demo.settings.height);
 
     const someKindOfFractalShaderEntity = new GLSLShaderEntity("ShaderEnriry",
-     
+
         {
             mainFragmentShader: mainFragment,
             mainVertexShader: mainVertex,
@@ -235,12 +241,12 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
                 }
             ]
         }, (ts, render, propertybag) => {
-        },demo.settings.width,demo.settings.height);
+        }, demo.settings.width, demo.settings.height);
 
 
     const textOverlay = new Entity<ITextEffectProps>(
         "TextEffect",
-      
+
         {
             x: 100,
             y: 100,
@@ -255,7 +261,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const textArrayDisplayEntity = new Entity<ITextArrayDisplayProps>(
         "TextArrayDisplay",
-       
+
         {
             x: 100,
             y: 200,
@@ -282,7 +288,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const typeWriter1EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
         "Typewriter",
-      
+
         {
             x: 100,
             y: 200,
@@ -299,7 +305,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const typeWriter2EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
         "Typewriter",
-   
+
         {
             x: 0,
             y: 350,
@@ -315,13 +321,13 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     );
 
     const gridOverlayEffectEntity = new Entity<IGridOverlayEffectProps>("gridOverlayEffets",
-      {
-        activeCells: new Set<number>(),
-        cellColor: "rgba(255,255,0,0.2)",
-        cols: 4,
-        rows: 4,
+        {
+            activeCells: new Set<number>(),
+            cellColor: "rgba(255,255,0,0.2)",
+            cols: 4,
+            rows: 4,
 
-    }, (ts, ctx, props) => gridOverlayEffect(ts, ctx, props, demo.sequence));
+        }, (ts, ctx, props) => gridOverlayEffect(ts, ctx, props, demo.sequence));
 
 
     const ballEntityProps: IBallEntityProps = {
@@ -332,7 +338,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const ballEntity = new Entity<IBallEntityProps>(
 
         "BallEntity",
-       
+
         ballEntityProps,
         (ts, ctx, props, sequence) => ballEffect(ts, ctx, props, sequence!)
     );
@@ -349,7 +355,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const stretchingTextEntity = new Entity<IStretchingTextProps>(
         "StretchingText",
-       
+
         stretchingTextProps,
         (ts, ctx, props, sequence) => stretchingTextEffect(ts, ctx, props, demo.sequence)
     );
@@ -388,7 +394,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const creditsEntity = new Entity<ICreditsScrollerProps>(
         "CreditsScroller",
-   
+
         creditsScrollerProps,
         (ts, ctx, props, sequence) => creditsScrollerEffect(ts, ctx, props, demo.sequence)
     );
@@ -398,8 +404,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     // Okey, done setup , add the stuff to scens 
 
 
-    typeWriter1EntityForFirstScene.onBar<ITypeWriterEffectProps>((ts,count,props) => {
-        console.log(`${ts} bar #${count}.`); 
+    typeWriter1EntityForFirstScene.onBar<ITypeWriterEffectProps>((ts, count, props) => {
+        console.log(`${ts} bar #${count}.`);
         // modify props on bar in this case;
     });
 
@@ -407,7 +413,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     scenes[0].addEntities(wgslShaderEntity);
 
     scenes[1].addEntities(
-     
+
         typeWriter1EntityForFirstScene,
         typeWriter2EntityForFirstScene,
         gridOverlayEffectEntity, ballEntity, stretchingTextEntity)

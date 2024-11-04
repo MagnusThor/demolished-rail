@@ -27,10 +27,12 @@ const SetupDemo_1 = require("./SetupDemo");
 const audioLoader_1 = require("../../src/Engine/Audio/audioLoader");
 const WGLShaderEntity_1 = require("../../src/Engine/WGLShaderEntity");
 const wgslShaderRenderer_1 = require("../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer");
-const mainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/mainShader");
+const defaultMainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/defaultMainShader");
 const material_1 = require("../../src/Engine/ShaderRenderers/WebGPU/material");
 const geometry_1 = require("../../src/Engine/ShaderRenderers/WebGPU/geometry");
-const wgslShaderExample_1 = require("../assets/shaders/wglsl/wgslShaderExample");
+const textureLoader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/textureLoader");
+const ITexture_1 = require("../../src/Engine/Interfaces/ITexture");
+const wgslFlamesShader_1 = require("../assets/shaders/wglsl/wgslFlamesShader");
 // get the music as baase
 const demo = new SetupDemo_1.SetupDemo(new audioLoader_1.DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo) => {
@@ -47,13 +49,17 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         addScene("Scene 5", 25000).
         durationUntilEndInMs("Scene 6");
     const scenes = sceneBuilder.getScenes();
-    // set up a wgsl shader entity
+    // Set up a wgsl shader entity & renderer
     const wgslCanvas = document.createElement("canvas");
     wgslCanvas.width = 800;
     wgslCanvas.height = 450;
     const webgpu = await (0, wgslShaderRenderer_1.initWebGPU)(wgslCanvas);
-    const wgslMainShader = mainShader_1.mainShader;
-    const geometry = new geometry_1.Geometry(webgpu.device, wgslShaderRenderer_1.rectGeometry);
+    const wsglTextures = await textureLoader_1.TextureLoader.loadAll(webgpu.device, {
+        key: "NOISE-TEXTURE",
+        source: "assets/images/noise.png",
+        type: ITexture_1.TextureType.IMAGE,
+    });
+    const wgslMainShader = defaultMainShader_1.defaultMainShader;
     const wgslShaderProps = {
         canvas: wgslCanvas,
         device: webgpu.device,
@@ -62,12 +68,14 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         renderBuffers: [
             {
                 name: "iChannel0",
-                shader: new material_1.Material(webgpu.device, wgslShaderExample_1.blueColorShader),
-                geometry: geometry
+                shader: new material_1.Material(webgpu.device, wgslFlamesShader_1.wgslFlamesShader),
+                geometry: new geometry_1.Geometry(webgpu.device, wgslShaderRenderer_1.rectGeometry),
+                textures: wsglTextures
             }
         ]
     };
     const wgslShaderEntity = new WGLShaderEntity_1.WGLSLShaderEntity("wgsl-shader", wgslShaderProps, (ts, shaderRender) => {
+        // this is an action called for each, frame
     });
     const strobeEntity = new entity_1.Entity("Strobe", {
         color: "white", // You can change the color

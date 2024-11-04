@@ -320,9 +320,13 @@ export class WGLSLShaderRenderer {
    * @param geometry - The geometry to use for the render pass.
    * @param textures - An optional array of textures to use in the render pass.
    */
-    addRenderPass(label: string, material: Material, geometry: Geometry) {
+    addRenderPass(label: string, material: Material, geometry: Geometry,textures?:ITextureData[]) {
 
        
+        textures?.forEach( texture => {
+            this.textures.push(texture);
+        });
+
         const priorRenderPasses = Array.from(this.renderPassBacklog.values());
         const uniforms = this.uniforms;
     
@@ -414,7 +418,7 @@ export class WGLSLShaderRenderer {
                 if (texture.type == 0) {
                     this.textures.push({ type: 0, data: await TextureLoader.createImageTexture(this.getDevice(), texture) });
                 } else
-                    this.textures.push({ type: 1, data: await TextureLoader.createVideoTextue(this.getDevice(), texture) });
+                    this.textures.push({ type: 1, data: await TextureLoader.createVideoTexture(this.getDevice(), texture) });
             }
         }
         const computePipeline = this.renderPassBuilder.createComputePipeline(shaderModule,

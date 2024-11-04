@@ -1,17 +1,17 @@
 import { IEntity } from "./Entity";
 import { IMaterialShader } from "./Interfaces/IMaterialShader";
+import { ITextureData } from "./Interfaces/ITextureData";
 import { Scene } from "./scene";
 import { Sequence } from "./sequence";
 import { Geometry } from "./ShaderRenderers/WebGPU/geometry";
 import { Material } from "./ShaderRenderers/WebGPU/material";
 import { rectGeometry, WGLSLShaderRenderer } from "./ShaderRenderers/WebGPU/wgslShaderRenderer";
 
-
-
 export interface IWGLSLShaderRenderBuffer {
     name: string;
-    shader: Material
-    geometry: Geometry
+    shader: Material;
+    geometry: Geometry;
+    textures?: Array<ITextureData>
 }
 
 export interface IWGLSLShaderProperties {
@@ -21,7 +21,6 @@ export interface IWGLSLShaderProperties {
     context: GPUCanvasContext;
     renderBuffers?: IWGLSLShaderRenderBuffer[];
 }
-
 export class WGLSLShaderEntity implements IEntity {
 
     canvas: HTMLCanvasElement;
@@ -44,17 +43,16 @@ export class WGLSLShaderEntity implements IEntity {
         public h?: number,
         public startTimeinMs?: number,
         public durationInMs?: number
-
     ) {
 
-        const geometry = rectGeometry;
+       
         this.canvas = props?.canvas!;
 
         if (props?.shader) {
             this.shaderRenderer = new WGLSLShaderRenderer(this.canvas, this.props?.device!, this.props?.context!);
             props.renderBuffers!.forEach((buffer, index) => {
-                this.shaderRenderer.addRenderPass(`iChannel${index - 1}`,
-                    buffer.shader, buffer.geometry)
+                this.shaderRenderer.addRenderPass(buffer.name,
+                    buffer.shader, buffer.geometry,buffer.textures)
             });
             this.shaderRenderer.addMainRenderPass(props.shader);
         } else {

@@ -18,7 +18,7 @@ export class Uniforms {
     }
 
     setUniforms(values: ArrayLike<number>, offset: number) {
-        this.uniformBufferArray.set(values, offset); // time 
+        this.uniformBufferArray.set(values, offset); 
     }
 
     updateUniformBuffer() {

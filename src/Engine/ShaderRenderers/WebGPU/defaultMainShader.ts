@@ -1,6 +1,6 @@
 import { IMaterialShader } from "../../Interfaces/IMaterialShader";
 
-export const mainShader: IMaterialShader = {
+export const defaultMainShader: IMaterialShader = {
     vertex: /* wgsl */ `
     
     struct VertexOutput {
