@@ -418,20 +418,18 @@ enum SCENE {
     LONLYPLANET = 2,
     GALAXY = 3,
     GALAXYEXPAND = 4,
-    EXOPLANETS = 5,
-
-    WARPSPEED = 6,
+    WARPSPEED = 5,
+    EXOPLANETS = 6,
     SINGULARITY = 7,
     BLACKHOLE = 8,
     EVENTHORIZON = 9
-}
+};
 
 demo.addAssets().then((demo: SetupDemo) => {
 
     const bpm = 123;
     const fol06 = new Fol06(demo.sequence, 800, 450, bpm);
     const sceneBuilder = new SceneBuilder(166000); // 2.46 mins
-
 
     sceneBuilder
         .addScene("intro", SequenceHelper.getDurationForBeats(bpm, 32))
@@ -445,8 +443,7 @@ demo.addAssets().then((demo: SetupDemo) => {
         .addScene("blackhole", 5000).
         durationUntilEndInMs("eventhorizon");
 
-    EngineLogger.log(`Total Scene duration ${sceneBuilder.totalScenesDuration}`)
-
+    EngineLogger.log(`Total Scene duration ${sceneBuilder.totalScenesDuration}`);
 
     const scenes = sceneBuilder.getScenes();
 

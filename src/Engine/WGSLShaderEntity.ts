@@ -5,24 +5,24 @@ import { Scene } from "./scene";
 import { Sequence } from "./sequence";
 import { Geometry } from "./ShaderRenderers/WebGPU/geometry";
 import { Material } from "./ShaderRenderers/WebGPU/material";
-import { WGLSLShaderRenderer } from "./ShaderRenderers/WebGPU/wgslShaderRenderer";
+import { WGSLShaderRenderer } from "./ShaderRenderers/WebGPU/wgslShaderRenderer";
 
 
-export interface IWGLSLShaderRenderBuffer {
+export interface IWGSLShaderRenderBuffer {
     name: string;
     shader: Material;
     geometry: Geometry;
     textures?: Array<IWgslTextureData>
 }
 
-export interface IWGLSLShaderProperties {
+export interface IWGSLShaderProperties {
     shader: IMaterialShader
     canvas: HTMLCanvasElement;
     device: GPUDevice;
     context: GPUCanvasContext;
-    renderBuffers?: IWGLSLShaderRenderBuffer[];
+    renderBuffers?: IWGSLShaderRenderBuffer[];
 }
-export class WGLSLShaderEntity implements IEntity {
+export class IWGSLShaderEntity implements IEntity {
 
     canvas: HTMLCanvasElement;
     scene?: Scene | undefined;
@@ -33,13 +33,13 @@ export class WGLSLShaderEntity implements IEntity {
     beatListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
     tickListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
     barListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
-    shaderRenderer: WGLSLShaderRenderer;
+    shaderRenderer: WGSLShaderRenderer;
 
     constructor(
         public name: string,
-        public props?: IWGLSLShaderProperties,
-        public action?: (time: number, shaderRender: WGLSLShaderRenderer,
-            properties: IWGLSLShaderProperties, sequence?: Sequence) => void,
+        public props?: IWGSLShaderProperties,
+        public action?: (time: number, shaderRender: WGSLShaderRenderer,
+            properties: IWGSLShaderProperties, sequence?: Sequence) => void,
         public w?: number,
         public h?: number,
         public startTimeinMs?: number,
@@ -50,7 +50,7 @@ export class WGLSLShaderEntity implements IEntity {
         this.canvas = props?.canvas!;
 
         if (props?.shader) {
-            this.shaderRenderer = new WGLSLShaderRenderer(this.canvas, this.props?.device!, this.props?.context!);
+            this.shaderRenderer = new WGSLShaderRenderer(this.canvas, this.props?.device!, this.props?.context!);
             props.renderBuffers!.forEach((buffer, index) => {
                 this.shaderRenderer.addRenderPass(buffer.name,
                     buffer.shader, buffer.geometry,buffer.textures)

@@ -25,7 +25,7 @@ const creditsScroller_1 = require("./effects/creditsScroller");
 const createLensPostProcessor_1 = require("./postprocessors/createLensPostProcessor");
 const SetupDemo_1 = require("./SetupDemo");
 const audioLoader_1 = require("../../src/Engine/Audio/audioLoader");
-const WGLShaderEntity_1 = require("../../src/Engine/WGLShaderEntity");
+const WGSLShaderEntity_1 = require("../../src/Engine/WGSLShaderEntity");
 const wgslShaderRenderer_1 = require("../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer");
 const defaultMainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/defaultMainShader");
 const material_1 = require("../../src/Engine/ShaderRenderers/WebGPU/material");
@@ -53,7 +53,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const wgslCanvas = document.createElement("canvas");
     wgslCanvas.width = demo.settings.width;
     wgslCanvas.height = demo.settings.height;
-    const webgpu = await (0, wgslShaderRenderer_1.initWebGPU)(wgslCanvas);
+    const webgpu = await (0, wgslShaderRenderer_1.initWebGPU)(wgslCanvas, { powerPreference: 'high-performance' });
     const wsglTextures = await textureLoader_1.TextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
         source: "assets/images/noise.png",
@@ -73,9 +73,10 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
             }
         ]
     };
-    const wgslShaderEntity = new WGLShaderEntity_1.WGLSLShaderEntity("wgsl-shader", wgslShaderProps, (ts, shaderRender) => {
+    const wgslShaderEntity = new WGSLShaderEntity_1.IWGSLShaderEntity("wgsl-shader", wgslShaderProps, (ts, shaderRender) => {
         // this is an action called for each, frame
     });
+    // done with wgsl stuf...
     const strobeEntity = new entity_1.Entity("Strobe", {
         color: "white", // You can change the color
         isOn: false,
@@ -198,8 +199,6 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         (0, textArrayDisplayEffect_1.textArrayDisplayEffect)(ts, ctx, props, demo.sequence);
     });
     textArrayDisplayEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
-    // Add Entities to the Scens
-    // setup a some more test Entities for § 0
     const typeWriter1EntityForFirstScene = new entity_1.Entity("Typewriter", {
         x: 100,
         y: 200,
@@ -273,7 +272,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         // modify props on bar in this case;
     });
     scenes[0].addEntities(wgslShaderEntity);
-    scenes[1].addEntities(typeWriter1EntityForFirstScene, typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
+    scenes[1].addEntities(typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
         .addPostProcessorToEntities((0, createLensPostProcessor_1.createLensPostProcessor)((_b = assetsHelper_1.AssetsHelper.textureCache.get("lens.png")) === null || _b === void 0 ? void 0 : _b.src));
     scenes[2].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
     scenes[3].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
