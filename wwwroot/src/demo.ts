@@ -23,8 +23,8 @@ import { creditsScrollerEffect, ICreditsScrollerProps } from "./effects/creditsS
 import { createLensPostProcessor } from "./postprocessors/createLensPostProcessor";
 import { SetupDemo } from "./SetupDemo";
 import { DefaultAudioLoader } from "../../src/Engine/Audio/audioLoader";
-import { IWGLSLShaderProperties, WGLSLShaderEntity } from "../../src/Engine/WGLShaderEntity";
-import { initWebGPU, WGLSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer";
+import { IWGSLShaderProperties, IWGSLShaderEntity } from "../../src/Engine/WGSLShaderEntity";
+import { initWebGPU, WGSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer";
 import { defaultMainShader } from "../../src/Engine/ShaderRenderers/WebGPU/defaultMainShader";
 import { Material } from "../../src/Engine/ShaderRenderers/WebGPU/material";
 import { Geometry, rectGeometry } from "../../src/Engine/ShaderRenderers/WebGPU/geometry";
@@ -40,6 +40,8 @@ const demo = new SetupDemo(
     new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo: SetupDemo) => {
+   
+   
     // Create the Scenes
     // Music length = 139200 ms;
     const sceneBuilder = new SceneBuilder(139200);
@@ -55,20 +57,19 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const scenes = sceneBuilder.getScenes();
 
-
     // Set up a wgsl shader entity & renderer
     const wgslCanvas = document.createElement("canvas");
     wgslCanvas.width = demo.settings.width; wgslCanvas.height = demo.settings.height;
-    const webgpu = await initWebGPU(wgslCanvas);
+
+    const webgpu = await initWebGPU(wgslCanvas,{ powerPreference: 'high-performance' });
 
     const wsglTextures = await TextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
         source: "assets/images/noise.png", 
         type: WgslTextureType.IMAGE,
     }); 
-
   
-    const wgslShaderProps: IWGLSLShaderProperties = {
+    const wgslShaderProps: IWGSLShaderProperties = {
         canvas: wgslCanvas,
         device: webgpu.device,
         context: webgpu.context!,
@@ -85,11 +86,12 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         ]
     };
 
-    const wgslShaderEntity = new WGLSLShaderEntity("wgsl-shader",
-        wgslShaderProps, (ts: number, shaderRender: WGLSLShaderRenderer) => {
+    const wgslShaderEntity = new IWGSLShaderEntity("wgsl-shader",
+        wgslShaderProps, (ts: number, shaderRender: WGSLShaderRenderer) => {
             // this is an action called for each, frame
      });
 
+     // done with wgsl stuf...
 
     const strobeEntity = new Entity<IStrobeEffectProps>(
         "Strobe",
@@ -281,10 +283,6 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     textArrayDisplayEntity.addPostProcessor(createBeatShakePostProcessor(3));
 
 
-    // Add Entities to the Scens
-
-    // setup a some more test Entities for § 0
-
     const typeWriter1EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
         "Typewriter",
 
@@ -342,8 +340,6 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         (ts, ctx, props, sequence) => ballEffect(ts, ctx, props, sequence!)
     );
 
-
-
     const stretchingTextProps: IStretchingTextProps = {
         texts: ["BRING", "THE", "BEAT", "BACK"],
         currentIndex: 0,
@@ -359,10 +355,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         (ts, ctx, props, sequence) => stretchingTextEffect(ts, ctx, props, demo.sequence)
     );
 
-
-
     // set up an endScene ( credits )
-
 
     const creditsText = [
         "FRAMWORK CODE",
@@ -412,9 +405,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     scenes[0].addEntities(wgslShaderEntity);
 
     scenes[1].addEntities(
-
-        typeWriter1EntityForFirstScene,
-        typeWriter2EntityForFirstScene,
+     typeWriter2EntityForFirstScene,
         gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
         .addPostProcessorToEntities(createLensPostProcessor(AssetsHelper.textureCache!.get("lens.png")?.src));
 

@@ -10,8 +10,8 @@ import { IMaterialShader } from "../../Interfaces/IMaterialShader";
 import { Geometry, IGeometry, rectGeometry } from "./geometry";
 
 
-export const initWebGPU = async (canvas: HTMLCanvasElement) => {
-    const adapter = await navigator.gpu?.requestAdapter();
+export const initWebGPU = async (canvas: HTMLCanvasElement,options?:GPURequestAdapterOptions) => {
+    const adapter = await navigator.gpu?.requestAdapter(options);
     const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
     const device = await adapter?.requestDevice({
         requiredFeatures: hasBGRA8unormStorage
@@ -36,7 +36,7 @@ export const initWebGPU = async (canvas: HTMLCanvasElement) => {
  * The Renderer class is responsible for managing the WebGPU rendering context, 
  * creating and executing render passes, and handling resources like buffers and textures.
  */
-export class WGLSLShaderRenderer {
+export class WGSLShaderRenderer {
     renderPassBacklog: Map<string, IPass>;
     renderTarget!: GPUTexture;
     renderPipleline!: GPURenderPipeline;
