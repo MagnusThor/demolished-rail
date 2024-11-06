@@ -1,45 +1,44 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const entity_1 = require("../../src/Engine/entity");
+const AudioLoader_1 = require("../../src/Engine/Audio/AudioLoader");
+const Entity_1 = require("../../src/Engine/Entity");
 const GLSLShaderEntity_1 = require("../../src/Engine/GLSLShaderEntity");
+const AssetsHelper_1 = require("../../src/Engine/Helpers/AssetsHelper");
+const SceneBuilder_1 = require("../../src/Engine/Helpers/SceneBuilder");
+const DefaultMainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/DefaultMainShader");
+const Geometry_1 = require("../../src/Engine/ShaderRenderers/WebGPU/Geometry");
+const Material_1 = require("../../src/Engine/ShaderRenderers/WebGPU/Material");
+const TextureLoader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/TextureLoader");
+const WGSLShaderRenderer_1 = require("../../src/Engine/ShaderRenderers/WebGPU/WGSLShaderRenderer");
+const WGSLShaderEntity_1 = require("../../src/Engine/WGSLShaderEntity");
 const mainFragment_1 = require("../assets/shaders/mainFragment");
 const mainVertex_1 = require("../assets/shaders/mainVertex");
-const someKindOfFractal_1 = require("../assets/shaders/someKindOfFractal");
-const typeWriterEffet_1 = require("./effects/typeWriterEffet");
-const ranndomSquareByTickEffect_1 = require("./effects/ranndomSquareByTickEffect");
-const expandingCircleEffect_1 = require("./effects/expandingCircleEffect");
-const starBurstEffct_1 = require("./effects/starBurstEffct");
-const textEffect_1 = require("./effects/textEffect");
-const imageOverlayEffect_1 = require("./effects/imageOverlayEffect");
-const textArrayDisplayEffect_1 = require("./effects/textArrayDisplayEffect");
-const assetsHelper_1 = require("../../src/Engine/Helpers/assetsHelper");
-const fftAnalyzerEffect_1 = require("./effects/fftAnalyzerEffect");
-const strobeEffect_1 = require("./effects/strobeEffect");
-const createBeatShakePostProcessor_1 = require("./postprocessors/createBeatShakePostProcessor");
 const pseudoKnightyanFractal_1 = require("../assets/shaders/pseudoKnightyanFractal");
-const sceneBuilder_1 = require("../../src/Engine/Helpers/sceneBuilder");
-const gridOverlayEffect_1 = require("./effects/gridOverlayEffect");
+const someKindOfFractal_1 = require("../assets/shaders/someKindOfFractal");
+const wgslFlamesShader_1 = require("../assets/shaders/wglsl/wgslFlamesShader");
 const bubbleParticles_1 = require("./effects/bubbleParticles");
-const streachingTextEffect_1 = require("./effects/streachingTextEffect");
 const creditsScroller_1 = require("./effects/creditsScroller");
+const expandingCircleEffect_1 = require("./effects/expandingCircleEffect");
+const fftAnalyzerEffect_1 = require("./effects/fftAnalyzerEffect");
+const gridOverlayEffect_1 = require("./effects/gridOverlayEffect");
+const imageOverlayEffect_1 = require("./effects/imageOverlayEffect");
+const ranndomSquareByTickEffect_1 = require("./effects/ranndomSquareByTickEffect");
+const starBurstEffct_1 = require("./effects/starBurstEffct");
+const streachingTextEffect_1 = require("./effects/streachingTextEffect");
+const strobeEffect_1 = require("./effects/strobeEffect");
+const textArrayDisplayEffect_1 = require("./effects/textArrayDisplayEffect");
+const textEffect_1 = require("./effects/textEffect");
+const typeWriterEffet_1 = require("./effects/typeWriterEffet");
+const createBeatShakePostProcessor_1 = require("./postprocessors/createBeatShakePostProcessor");
 const createLensPostProcessor_1 = require("./postprocessors/createLensPostProcessor");
 const SetupDemo_1 = require("./SetupDemo");
-const audioLoader_1 = require("../../src/Engine/Audio/audioLoader");
-const WGSLShaderEntity_1 = require("../../src/Engine/WGSLShaderEntity");
-const wgslShaderRenderer_1 = require("../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer");
-const defaultMainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/defaultMainShader");
-const material_1 = require("../../src/Engine/ShaderRenderers/WebGPU/material");
-const geometry_1 = require("../../src/Engine/ShaderRenderers/WebGPU/geometry");
-const textureLoader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/textureLoader");
-const IWgslTexture_1 = require("../../src/Engine/Interfaces/IWgslTexture");
-const wgslFlamesShader_1 = require("../assets/shaders/wglsl/wgslFlamesShader");
 // get the music as baase
-const demo = new SetupDemo_1.SetupDemo(new audioLoader_1.DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
+const demo = new SetupDemo_1.SetupDemo(new AudioLoader_1.DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo) => {
     var _a, _b;
     // Create the Scenes
     // Music length = 139200 ms;
-    const sceneBuilder = new sceneBuilder_1.SceneBuilder(139200);
+    const sceneBuilder = new SceneBuilder_1.SceneBuilder(139200);
     sceneBuilder
         .addScene("Scene 0", 10000).
         addScene("Scene 1", 20000).
@@ -53,46 +52,46 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const wgslCanvas = document.createElement("canvas");
     wgslCanvas.width = demo.settings.width;
     wgslCanvas.height = demo.settings.height;
-    const webgpu = await (0, wgslShaderRenderer_1.initWebGPU)(wgslCanvas, { powerPreference: 'high-performance' });
-    const wsglTextures = await textureLoader_1.TextureLoader.loadAll(webgpu.device, {
+    const webgpu = await (0, WGSLShaderRenderer_1.initWebGPU)(wgslCanvas, { powerPreference: 'high-performance' });
+    const wsglTextures = await TextureLoader_1.WGSLTextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
         source: "assets/images/noise.png",
-        type: IWgslTexture_1.WgslTextureType.IMAGE,
+        type: TextureLoader_1.WGSLTextureType.IMAGE,
     });
     const wgslShaderProps = {
         canvas: wgslCanvas,
         device: webgpu.device,
         context: webgpu.context,
-        shader: defaultMainShader_1.defaultMainShader,
+        shader: DefaultMainShader_1.defaultMainShader,
         renderBuffers: [
             {
                 name: "iChannel0",
-                shader: new material_1.Material(webgpu.device, wgslFlamesShader_1.wgslFlamesShader),
-                geometry: new geometry_1.Geometry(webgpu.device, geometry_1.rectGeometry),
+                shader: new Material_1.Material(webgpu.device, wgslFlamesShader_1.wgslFlamesShader),
+                geometry: new Geometry_1.Geometry(webgpu.device, Geometry_1.rectGeometry),
                 textures: wsglTextures
             }
         ]
     };
-    const wgslShaderEntity = new WGSLShaderEntity_1.IWGSLShaderEntity("wgsl-shader", wgslShaderProps, (ts, shaderRender) => {
+    const wgslShaderEntity = new WGSLShaderEntity_1.WGSLShaderEntity("wgsl-shader", wgslShaderProps, (ts, shaderRender) => {
         // this is an action called for each, frame
     });
     // done with wgsl stuf...
-    const strobeEntity = new entity_1.Entity("Strobe", {
+    const strobeEntity = new Entity_1.Entity("Strobe", {
         color: "white", // You can change the color
         isOn: false,
         lastBeat: -1, // Initialize to -1 to trigger on the first beat
     }, (ts, ctx, props, sequence) => (0, strobeEffect_1.strobeEffect)(ts, ctx, props, demo.sequence));
-    const imageOverlayEntity = new entity_1.Entity("ImageOverlay", {
+    const imageOverlayEntity = new Entity_1.Entity("ImageOverlay", {
         position: imageOverlayEffect_1.ImagePosition.FILL,
         width: demo.settings.width,
         height: demo.settings.height,
-        image: (_a = assetsHelper_1.AssetsHelper.textureCache.get("silhouette.png")) === null || _a === void 0 ? void 0 : _a.src,
+        image: (_a = AssetsHelper_1.AssetsHelper.textureCache.get("silhouette.png")) === null || _a === void 0 ? void 0 : _a.src,
         opacity: 0.7,
         fadeIn: true,
         fadeOut: true,
         duration: 5,
     }, (ts, ctx, props) => (0, imageOverlayEffect_1.imageOverlayEffect)(ts, ctx, props, demo.sequence));
-    const expandingCircleEntity = new entity_1.Entity("ExpandingCircle", {
+    const expandingCircleEntity = new Entity_1.Entity("ExpandingCircle", {
         x: demo.settings.width / 2,
         y: demo.settings.height / 2,
         radius: 0,
@@ -101,7 +100,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         duration: 5 // Scene duration in seconds
     }, (ts, ctx, props) => (0, expandingCircleEffect_1.expandingCircleEffect)(ts, ctx, props, demo.sequence) // Pass the sequence instance
     );
-    const starburstEntity = new entity_1.Entity("Starburst", {
+    const starburstEntity = new Entity_1.Entity("Starburst", {
         x: demo.settings.width / 2, // Example x-coordinate
         y: demo.settings.height / 2, // Example y-coordinate
         numPoints: 8, // Example number of points
@@ -113,7 +112,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         saturation: 100,
         lightness: 50
     }, starBurstEffct_1.starburstEffect);
-    const typeWriterEntity = new entity_1.Entity("Typewriter", {
+    const typeWriterEntity = new Entity_1.Entity("Typewriter", {
         x: 100,
         y: 300,
         text: "EASY AUDIO SYNCRONIZATON",
@@ -124,7 +123,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         bpm: demo.settings.audioProperties.bpm,
         ticksPerBeat: demo.settings.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect);
-    const randomSquareEntity = new entity_1.Entity("RandomSquare", {
+    const randomSquareEntity = new Entity_1.Entity("RandomSquare", {
         x: 0,
         y: 0,
         size: 0,
@@ -132,13 +131,13 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         lastTick: -1 // Initialize to -1 to add a square on the first bar
     }, (ts, ctx, props) => (0, ranndomSquareByTickEffect_1.randomSquareEffect)(ts, ctx, props, demo.sequence.tickCounter) // Pass currentBar from Sequence
     );
-    const gridOverlayEntity = new entity_1.Entity("GridOverlay", {
+    const gridOverlayEntity = new Entity_1.Entity("GridOverlay", {
         rows: 5,
         cols: 8,
         cellColor: "white",
         activeCells: new Set(),
     }, (ts, ctx, props, sequence) => (0, gridOverlayEffect_1.gridOverlayEffect)(ts, ctx, props, demo.sequence));
-    const audioVisualizerEntity = new entity_1.Entity("AudioVisualizer", {
+    const audioVisualizerEntity = new Entity_1.Entity("AudioVisualizer", {
         x: 0,
         y: 150,
         width: demo.settings.width,
@@ -174,7 +173,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         ]
     }, (ts, render, propertybag) => {
     }, demo.settings.width, demo.settings.height);
-    const textOverlay = new entity_1.Entity("TextEffect", {
+    const textOverlay = new Entity_1.Entity("TextEffect", {
         x: 100,
         y: 100,
         text: "FULL SHADER SUPPORT".toUpperCase(),
@@ -183,7 +182,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         duration: 15 // 5 seconds
     }, (ts, ctx, props) => (0, textEffect_1.textEffect)(ts, ctx, props, demo.sequence) // Pass the sequence instance
     );
-    const textArrayDisplayEntity = new entity_1.Entity("TextArrayDisplay", {
+    const textArrayDisplayEntity = new Entity_1.Entity("TextArrayDisplay", {
         x: 100,
         y: 200,
         texts: [
@@ -199,7 +198,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         (0, textArrayDisplayEffect_1.textArrayDisplayEffect)(ts, ctx, props, demo.sequence);
     });
     textArrayDisplayEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
-    const typeWriter1EntityForFirstScene = new entity_1.Entity("Typewriter", {
+    const typeWriter1EntityForFirstScene = new Entity_1.Entity("Typewriter", {
         x: 100,
         y: 200,
         text: "DEMOLISHED-RAILS",
@@ -210,7 +209,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         bpm: demo.settings.audioProperties.bpm,
         ticksPerBeat: demo.settings.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect, 1000, 10000);
-    const typeWriter2EntityForFirstScene = new entity_1.Entity("Typewriter", {
+    const typeWriter2EntityForFirstScene = new Entity_1.Entity("Typewriter", {
         x: 0,
         y: 350,
         text: "FRAMEWORK DEMO",
@@ -221,7 +220,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         bpm: demo.settings.audioProperties.bpm,
         ticksPerBeat: demo.settings.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect, 5000, 10000);
-    const gridOverlayEffectEntity = new entity_1.Entity("gridOverlayEffets", {
+    const gridOverlayEffectEntity = new Entity_1.Entity("gridOverlayEffets", {
         activeCells: new Set(),
         cellColor: "rgba(255,255,0,0.2)",
         cols: 4,
@@ -231,7 +230,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         numBalls: 20,
         balls: [],
     };
-    const ballEntity = new entity_1.Entity("BallEntity", ballEntityProps, (ts, ctx, props, sequence) => (0, bubbleParticles_1.ballEffect)(ts, ctx, props, sequence));
+    const ballEntity = new Entity_1.Entity("BallEntity", ballEntityProps, (ts, ctx, props, sequence) => (0, bubbleParticles_1.ballEffect)(ts, ctx, props, sequence));
     const stretchingTextProps = {
         texts: ["BRING", "THE", "BEAT", "BACK"],
         currentIndex: 0,
@@ -239,7 +238,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         color: "rgba(255,255,255,0.2)",
         lastBeat: -1,
     };
-    const stretchingTextEntity = new entity_1.Entity("StretchingText", stretchingTextProps, (ts, ctx, props, sequence) => (0, streachingTextEffect_1.stretchingTextEffect)(ts, ctx, props, demo.sequence));
+    const stretchingTextEntity = new Entity_1.Entity("StretchingText", stretchingTextProps, (ts, ctx, props, sequence) => (0, streachingTextEffect_1.stretchingTextEffect)(ts, ctx, props, demo.sequence));
     // set up an endScene ( credits )
     const creditsText = [
         "FRAMWORK CODE",
@@ -264,7 +263,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         fadeOutDuration: 0.5,
         font: "40px Poppins",
     };
-    const creditsEntity = new entity_1.Entity("CreditsScroller", creditsScrollerProps, (ts, ctx, props, sequence) => (0, creditsScroller_1.creditsScrollerEffect)(ts, ctx, props, demo.sequence));
+    const creditsEntity = new Entity_1.Entity("CreditsScroller", creditsScrollerProps, (ts, ctx, props, sequence) => (0, creditsScroller_1.creditsScrollerEffect)(ts, ctx, props, demo.sequence));
     creditsEntity.addPostProcessor((0, createBeatShakePostProcessor_1.createBeatShakePostProcessor)(3));
     // Okey, done setup , add the stuff to scens 
     typeWriter1EntityForFirstScene.onBar((ts, count, props) => {
@@ -273,7 +272,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     });
     scenes[0].addEntities(wgslShaderEntity);
     scenes[1].addEntities(typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
-        .addPostProcessorToEntities((0, createLensPostProcessor_1.createLensPostProcessor)((_b = assetsHelper_1.AssetsHelper.textureCache.get("lens.png")) === null || _b === void 0 ? void 0 : _b.src));
+        .addPostProcessorToEntities((0, createLensPostProcessor_1.createLensPostProcessor)((_b = AssetsHelper_1.AssetsHelper.textureCache.get("lens.png")) === null || _b === void 0 ? void 0 : _b.src));
     scenes[2].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);
     scenes[3].addEntities(audioVisualizerEntity, randomSquareEntity, imageOverlayEntity, imageOverlayEntity, typeWriterEntity);
     scenes[4].addEntities(strobeEntity, pseudoKnightyanShaderEntity, imageOverlayEntity);

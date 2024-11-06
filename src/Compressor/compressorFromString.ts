@@ -1,4 +1,4 @@
-import { CompressorBase } from "./compressorBase";
+import { CompressorBase } from './CompressorBase';
 
 export class CompressString extends CompressorBase {
   /**

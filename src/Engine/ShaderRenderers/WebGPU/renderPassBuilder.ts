@@ -1,9 +1,33 @@
-import { IPass } from "../../Interfaces/IPass";
-import { IPassBuilder } from "../../Interfaces/IPassBuilder";
-import { IWgslTextureData } from "../../Interfaces/IWgslTextureData";
-import { Geometry } from "./geometry";
+import { Geometry } from './Geometry';
+import { Material } from './Material';
+import { IWGSLTextureData } from './TextureLoader';
+import { Uniforms } from './Uniforms';
 
-import { Material } from "./material";
+export interface IPassBuilder {
+    pipelineLayout: GPUPipelineLayout;
+    bindGroup: GPUBindGroup;
+    device: GPUDevice;
+}
+
+export interface IPass {
+    label: string;
+    pipleline: GPUComputePipeline | GPURenderPipeline;
+    uniforms: Uniforms;
+    bindGroup: GPUBindGroup;
+    buffer: GPUTexture;
+    bufferView: GPUTextureView;
+    type: number
+}
+
+export class RenderPass implements IPass
+{
+    constructor(public type:number,public label:string,public pipleline:GPUComputePipeline | GPURenderPipeline,
+        public uniforms: Uniforms,public bindGroup:GPUBindGroup, public buffer:GPUTexture,
+        public bufferView: GPUTextureView){
+    }
+
+}
+
 
 /**
  * A builder class for creating render passes in WebGPU.
@@ -63,7 +87,7 @@ export class RenderPassBuilder implements IPassBuilder {
   * @param priorRenderPasses - An array of prior render passes to include as textures.
   * @returns The created GPURenderPipeline.
   */
-    createRenderPipeline(material: Material, geometry: Geometry, textures: Array<IWgslTextureData>,
+    createRenderPipeline(material: Material, geometry: Geometry, textures: Array<IWGSLTextureData>,
         priorRenderPasses: IPass[]
 
     ): GPURenderPipeline {
@@ -166,7 +190,7 @@ export class RenderPassBuilder implements IPassBuilder {
      * @param textures - An array of textures to use in the pipeline.
      * @returns The created GPUComputePipeline.
      */
-    createComputePipeline(computeShader: GPUShaderModule, textures: Array<IWgslTextureData>): GPUComputePipeline {
+    createComputePipeline(computeShader: GPUShaderModule, textures: Array<IWGSLTextureData>): GPUComputePipeline {
         const bindGroupLayoutEntries = new Array<GPUBindGroupLayoutEntry>();
         bindGroupLayoutEntries.push({
             binding: 0,

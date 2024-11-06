@@ -1,8 +1,8 @@
 
-import { IEntity } from "./entity";
-import { Scene } from "./scene";
-import { Sequence } from "./sequence";
-import { GLSLShaderRenderer } from "./ShaderRenderers/WebGL/glslShaderRenderer";
+import { IEntity } from "./Entity";
+import { Scene } from "./Scene";
+import { Sequence } from "./Sequence";
+import { GLSLShaderRenderer } from "./ShaderRenderers/WebGL/GLSLShaderRenderer";
 
 export interface IGLSLShaderRenderBuffer {
     name: string;

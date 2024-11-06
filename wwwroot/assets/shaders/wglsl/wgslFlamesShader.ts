@@ -1,5 +1,3 @@
-import { IMaterialShader } from "../../../../src/Engine/Interfaces/IMaterialShader";
-import { defaultWglslVertex } from "../../../../src/Engine/ShaderRenderers/WebGPU/material";
 
 
 // This is a shader originally written by Inigo Quilez and published on:
@@ -28,6 +26,11 @@ import { defaultWglslVertex } from "../../../../src/Engine/ShaderRenderers/WebGP
 // You can find the original GLSL shader and contact Inigo Quilez here:
 // https://www.shadertoy.com/view/MsXGRf
 // https://iquilezles.org/
+
+import {
+  defaultWglslVertex,
+  IMaterialShader,
+} from '../../../../src/Engine/ShaderRenderers/WebGPU/Material';
 
 export const wgslFlamesShader: IMaterialShader = {
 	vertex: defaultWglslVertex,

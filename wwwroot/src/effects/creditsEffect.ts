@@ -1,4 +1,4 @@
-import { Sequence } from "../../../src/Engine/sequence";
+import { Sequence } from "../../../src/Engine/Sequence";
 
 
 export interface ICredit {

@@ -1,22 +1,22 @@
 {
   "name": "demolished-rail",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "build/src/index.js",
+  "files": [
+    "build/src/**/*"
+  ],
+  "types": "build/src/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "pack": "node build/wwwroot/compressdemo.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Magnus Thor",
   "license": "MIT",
-  "description": "",
-  "devDependencies": {
-    "crc": "^4.3.2",
-    "webpack": "^5.95.0"
-  },
+  "description": "This repository contains a TypeScript animation framework called demolished-rail, designed for creating complex and dynamic animations with ease. ",
   "dependencies": {
     "@webgpu/types": "^0.1.50",
-    "demolishedrenderer": "^3.1.0",
-    "sonantx": "^2.0.1",
-    "webgpu": "^0.1.16"
+    "webgpu": "^0.1.16",
+    "crc": "^4.3.2",
+    "webpack": "^5.95.0",
+    "sonantx": "^2.0.1"
   }
 }

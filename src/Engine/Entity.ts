@@ -1,6 +1,6 @@
-import { EngineLogger } from "./EngineLogger";
-import { Scene } from "./scene";
-import { Sequence } from "./sequence";
+
+import { Scene } from "./Scene";
+import { Sequence } from "./Sequence";
 
 
 export interface IEntity {

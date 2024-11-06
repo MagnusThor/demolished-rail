@@ -1,4 +1,4 @@
-import { Sequence } from "../../../src/Engine/sequence";
+import { Sequence } from "../../../src/Engine/Sequence";
 
 /**
  * Creates a post-processing function that simulates CRT TV jump/roll-up distortion.

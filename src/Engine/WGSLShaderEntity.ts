@@ -1,18 +1,21 @@
-import { IEntity } from "./Entity";
-import { IMaterialShader } from "./Interfaces/IMaterialShader";
-import { IWgslTextureData } from "./Interfaces/IWgslTextureData";
-import { Scene } from "./scene";
-import { Sequence } from "./sequence";
-import { Geometry } from "./ShaderRenderers/WebGPU/geometry";
-import { Material } from "./ShaderRenderers/WebGPU/material";
-import { WGSLShaderRenderer } from "./ShaderRenderers/WebGPU/wgslShaderRenderer";
-
+import { IEntity } from './Entity';
+import { Scene } from './Scene';
+import { Sequence } from './Sequence';
+import { Geometry } from './ShaderRenderers/WebGPU/Geometry';
+import {
+  IMaterialShader,
+  Material,
+} from './ShaderRenderers/WebGPU/Material';
+import { IWGSLTextureData } from './ShaderRenderers/WebGPU/TextureLoader';
+import {
+  WGSLShaderRenderer,
+} from './ShaderRenderers/WebGPU/WGSLShaderRenderer';
 
 export interface IWGSLShaderRenderBuffer {
     name: string;
     shader: Material;
     geometry: Geometry;
-    textures?: Array<IWgslTextureData>
+    textures?: Array<IWGSLTextureData>
 }
 
 export interface IWGSLShaderProperties {
@@ -22,7 +25,8 @@ export interface IWGSLShaderProperties {
     context: GPUCanvasContext;
     renderBuffers?: IWGSLShaderRenderBuffer[];
 }
-export class IWGSLShaderEntity implements IEntity {
+export class WGSLShaderEntity
+ implements IEntity {
 
     canvas: HTMLCanvasElement;
     scene?: Scene | undefined;

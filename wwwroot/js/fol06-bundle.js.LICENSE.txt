@@ -1,5 +1,0 @@
-/*! exports provided: generateSound, generateSong */
-
-/*!********************!*\
-  !*** ./sonantx.js ***!
-  \********************/

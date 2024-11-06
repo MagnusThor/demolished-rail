@@ -1,5 +1,5 @@
-import { Entity, IEntity } from "../../../src/Engine/entity";
-import { Sequence } from "../../../src/Engine/sequence";
+import { Entity, IEntity } from "../../../src/Engine/Entity";
+import { Sequence } from "../../../src/Engine/Sequence";
 
 
 export enum ImagePosition {

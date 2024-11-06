@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SceneBuilder = void 0;
-const scene_1 = require("../scene");
+const Scene_1 = require("../Scene");
 class SceneBuilder {
     /**
      * Creates a new SceneBuilder to help construct scenes with automatic timing.
@@ -29,7 +29,7 @@ class SceneBuilder {
             }
             duration = this.totalDuration - startTime; // Adjust the current scene's duration as well
         }
-        const scene = new scene_1.Scene(name, startTime, duration);
+        const scene = new Scene_1.Scene(name, startTime, duration);
         this.scenes.push(scene);
         return this; // For chaining
     }
@@ -55,7 +55,7 @@ class SceneBuilder {
     durationUntilEndInMs(name) {
         const startTime = this.currentTime;
         const duration = this.totalDuration - startTime;
-        const scene = new scene_1.Scene(name, startTime, duration);
+        const scene = new Scene_1.Scene(name, startTime, duration);
         this.scenes.push(scene);
         return this;
     }

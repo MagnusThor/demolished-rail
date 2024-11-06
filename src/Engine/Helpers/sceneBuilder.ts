@@ -1,4 +1,4 @@
-import { Scene } from "../scene";
+import { Scene } from "../Scene";
 
 export class SceneBuilder {
   private scenes: Scene[] = [];

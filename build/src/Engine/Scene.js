@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Scene = void 0;
-const entity_1 = require("./entity");
+const Entity_1 = require("./Entity");
 class Scene {
     /**
      * Creates a new Scene.
@@ -49,36 +49,9 @@ class Scene {
     getEntity(key) {
         return this.entities.find(entity => entity.name === key);
     }
-    /**
-     * Plays the scene by animating its entities.
-     * @param elapsedTime - The elapsed time in the animation sequence.
-     * @returns A promise that resolves when the scene has finished playing.
-     */
-    // play(elapsedTime: number): Promise<boolean> {
-    //   return new Promise((resolve) => {
-    //     const startTime = performance.now();
-    //     const animate = () => {
-    //       const currentTime = performance.now();
-    //       const sceneElapsedTime = currentTime - startTime + elapsedTime;
-    //       const adjustedSceneElapsedTime = sceneElapsedTime - this.startTimeinMs;
-    //       if (adjustedSceneElapsedTime >= 0) {
-    //         this.entities.forEach((entity) => {
-    //           entity.update(sceneElapsedTime);
-    //         });
-    //       }
-    //       if (sceneElapsedTime < this.durationInMs + this.startTimeinMs) {
-    //         // The requestAnimationFrame call was removed here. 
-    //         // The animation loop is now handled in the Sequence class.
-    //       } else {
-    //         resolve(true);
-    //       }
-    //     };
-    //     animate(); // Call animate once to start the initial rendering
-    //   });
-    // }
     addPostProcessorToEntities(processor) {
         this.entities.forEach(entity => {
-            if (entity instanceof entity_1.Entity) { // Check if the entity is an instance of the Entity class
+            if (entity instanceof Entity_1.Entity) { // Check if the entity is an instance of the Entity class
                 entity.addPostProcessor(processor);
             }
         });

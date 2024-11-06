@@ -1,4 +1,4 @@
-import { Sequence } from "../sequence";
+import { Sequence } from "../Sequence";
 
 export const createBlurPostProcessor = (blurAmount: number = 5): (ctx: CanvasRenderingContext2D,sequence:Sequence) => void => {
     return (ctx: CanvasRenderingContext2D) => {

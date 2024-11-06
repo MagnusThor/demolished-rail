@@ -1,9 +1,6 @@
-
-import { IAudioLoader } from "./Audio/audioLoader";
-import { Conductor } from "./conductor";
-import { EngineLogger } from "./EngineLogger";
-import { Scene } from "./scene";
-
+import { IAudioLoader } from './Audio/AudioLoader';
+import { Conductor } from './Conductor';
+import { Scene } from './Scene';
 
 export class Sequence {
 
