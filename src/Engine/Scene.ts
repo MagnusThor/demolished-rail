@@ -1,8 +1,10 @@
-import { EngineLogger } from "./EngineLogger";
-import { Entity, IEntity } from "./Entity";
-import { Sequence } from "./Sequence";
-import { GLSLShaderEntity } from "./GLSLShaderEntity";
-
+import {
+  Entity,
+  IEntity,
+} from './Entity';
+import { GLSLShaderEntity } from './GLSLShaderEntity';
+import { Sequence } from './Sequence';
+import { WGSLShaderEntity } from './WGSLShaderEntity';
 
 export class Scene {
   public entities: IEntity[] = [];
@@ -25,7 +27,7 @@ export class Scene {
    * Adds an entity to the scene.
    * @param entity - The entity to add.
    */
-  addEntity(entity: IEntity | GLSLShaderEntity): void {
+  addEntity(entity: IEntity | GLSLShaderEntity | WGSLShaderEntity): void {
     // If the entity's canvas dimensions are not set, use the scene's dimensions
     if (!entity.w && !entity.h) {
       entity.canvas.width = this.width || 800;

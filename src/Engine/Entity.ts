@@ -1,7 +1,5 @@
-
-import { Scene } from "./Scene";
-import { Sequence } from "./Sequence";
-
+import { Scene } from './Scene';
+import { Sequence } from './Sequence';
 
 export interface IEntity {
   name: string;

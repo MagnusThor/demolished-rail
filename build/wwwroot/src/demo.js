@@ -36,9 +36,7 @@ const SetupDemo_1 = require("./SetupDemo");
 const demo = new SetupDemo_1.SetupDemo(new AudioLoader_1.DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo) => {
     var _a, _b;
-    // Create the Scenes
-    // Music length = 139200 ms;
-    const sceneBuilder = new SceneBuilder_1.SceneBuilder(139200);
+    const sceneBuilder = new SceneBuilder_1.SceneBuilder(demo.sequence.audioBuffer.duration / 1000);
     sceneBuilder
         .addScene("Scene 0", 10000).
         addScene("Scene 1", 20000).
@@ -49,15 +47,17 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         durationUntilEndInMs("Scene 6");
     const scenes = sceneBuilder.getScenes();
     // Set up a wgsl shader entity & renderer
-    const wgslCanvas = document.createElement("canvas");
+    const wgslCanvas = document.createElement("canvas"); // target canvas for WGSLShader
     wgslCanvas.width = demo.settings.width;
     wgslCanvas.height = demo.settings.height;
     const webgpu = await (0, WGSLShaderRenderer_1.initWebGPU)(wgslCanvas, { powerPreference: 'high-performance' });
+    // preload textures to use in WGSL Shader
     const wsglTextures = await TextureLoader_1.WGSLTextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
         source: "assets/images/noise.png",
         type: TextureLoader_1.WGSLTextureType.IMAGE,
     });
+    // Set up the WGSL Shader entity to render
     const wgslShaderProps = {
         canvas: wgslCanvas,
         device: webgpu.device,
@@ -73,9 +73,9 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         ]
     };
     const wgslShaderEntity = new WGSLShaderEntity_1.WGSLShaderEntity("wgsl-shader", wgslShaderProps, (ts, shaderRender) => {
-        // this is an action called for each, frame
+        // this is an action called for each frame.
     });
-    // done with wgsl stuf...
+    // done with wgsl stuff  , we just add the entiry to a Scene later on.
     const strobeEntity = new Entity_1.Entity("Strobe", {
         color: "white", // You can change the color
         isOn: false,

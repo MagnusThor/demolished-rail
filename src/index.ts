@@ -51,7 +51,7 @@ export { Uniforms } from './Engine/ShaderRenderers/WebGPU/Uniforms';
 
 export { AssetsHelper } from './Engine/Helpers/AssetsHelper';
 export { DebugHelper } from './Engine/Helpers/DebugHelper';
-export { EntityBuilder } from './Engine/Helpers/EntityBuiilder';
+export { EntityBuilder, EntityRenderer } from './Engine/Helpers/EntityBuilder';
 export {
   createFadeInTransition,
   createFadeOutTransition,

@@ -33,10 +33,10 @@ export class Sequence {
     private frameListeners: ((scene: number, time: number) => void)[] = [];
 
 
-    private audioContext!: AudioContext;
-    private audioBuffer!: AudioBuffer;
-    private audioSource!: AudioBufferSourceNode;
-    private analyser!: AnalyserNode;
+    public audioContext!: AudioContext;
+    public audioBuffer!: AudioBuffer;
+    public audioSource!: AudioBufferSourceNode;
+    public analyser!: AnalyserNode;
     public fftData!: Uint8Array;
 
     public targetCtx!: CanvasRenderingContext2D | null;
