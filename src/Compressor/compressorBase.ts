@@ -1,7 +1,8 @@
 import { crc32 } from 'crc';
 import * as Zlib from 'zlib';
+
 export class CompressorBase {
-    
+
     /**
      * Compress data append HTML and decompressor
      *
@@ -41,15 +42,17 @@ export class CompressorBase {
                 return chunks;
             };
             while (payload.length % 3) {
-                payload = Buffer.concat([payload, new Buffer([0])]);
+                payload = Buffer.concat([payload, Buffer.from([0])]);
             }
+
             let width = Math.ceil(Math.sqrt(payload.length / 3));
             let height = width;
+
             let padding = width * height - payload.length / 3;
             while (padding-- > 0) {
-                payload = Buffer.concat([payload,  Buffer.from([0, 0, 0])]);
+                payload = Buffer.concat([payload, Buffer.from([0, 0, 0])]);
             }
-            let fileSignature =  Buffer.from('\x89\x50\x4e\x47\x0d\x0a\x1a\x0a', 'binary');
+            let fileSignature = Buffer.from('\x89\x50\x4e\x47\x0d\x0a\x1a\x0a', 'binary');
             let IHDRChunk = chunk('IHDR', Buffer.concat([
                 getBytes(width, 4),
                 getBytes(height, 4),
@@ -74,7 +77,7 @@ export class CompressorBase {
                 return Buffer.concat([Buffer.from([0]), scanline]);
             }));
             let pngify = new Promise<Buffer>((resolve, reject) => {
-                Zlib.deflate(scanlinesBuffer, (err, buffer:Buffer) => {
+                Zlib.deflate(scanlinesBuffer, (err, buffer: Buffer) => {
                     if (err)
                         reject();
                     let IDATData = Buffer.concat([
@@ -91,7 +94,7 @@ export class CompressorBase {
                     ]));
                 });
             });
-            pngify.then( (buf:Buffer) => {
+            pngify.then((buf: Buffer) => {
                 resolve(buf);
             }).catch(err => reject(err));
         });

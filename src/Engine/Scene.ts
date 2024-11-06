@@ -1,6 +1,6 @@
 import { EngineLogger } from "./EngineLogger";
-import { Entity, IEntity } from "./entity";
-import { Sequence } from "./sequence";
+import { Entity, IEntity } from "./Entity";
+import { Sequence } from "./Sequence";
 import { GLSLShaderEntity } from "./GLSLShaderEntity";
 
 
@@ -53,40 +53,6 @@ export class Scene {
   getEntity<T>(key: string): IEntity | undefined {
     return this.entities.find(entity => entity.name === key);
   }
-
-  /**
-   * Plays the scene by animating its entities.
-   * @param elapsedTime - The elapsed time in the animation sequence.
-   * @returns A promise that resolves when the scene has finished playing.
-   */
-  // play(elapsedTime: number): Promise<boolean> {
-  //   return new Promise((resolve) => {
-      
-  //     const startTime = performance.now();
-
-  //     const animate = () => {
-  //       const currentTime = performance.now();
-  //       const sceneElapsedTime = currentTime - startTime + elapsedTime;
-  //       const adjustedSceneElapsedTime = sceneElapsedTime - this.startTimeinMs;
-
-  //       if (adjustedSceneElapsedTime >= 0) {
-  //         this.entities.forEach((entity) => {
-  //           entity.update(sceneElapsedTime);
-  //         });
-  //       }
-
-  //       if (sceneElapsedTime < this.durationInMs + this.startTimeinMs) {
-  //         // The requestAnimationFrame call was removed here. 
-  //         // The animation loop is now handled in the Sequence class.
-  //       } else {
-  //         resolve(true);
-  //       }
-  //     };
-
-  //     animate(); // Call animate once to start the initial rendering
-  //   });
-
-  // }
 
   public addPostProcessorToEntities(processor: (ctx: CanvasRenderingContext2D) => void): void {
     this.entities.forEach(entity => {

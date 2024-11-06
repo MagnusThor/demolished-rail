@@ -1,10 +1,28 @@
-import { IWgslTexture } from "../../Interfaces/IWgslTexture";
-import { IWgslTextureData } from "../../Interfaces/IWgslTextureData";
+
+export interface IWGSLTextureData {
+    type: number
+    data: GPUTexture | HTMLVideoElement | HTMLImageElement
+}
+
+export interface IWGSLTexture {
+    key: string
+    source: string | MediaStream
+    sampler?: any
+    type: WGSLTextureType
+}
+
+export enum WGSLTextureType {
+    IMAGE = 0,
+    VIDEO = 1,
+    CANVAS = 2,
+    MEDIASTREAM = 3
+}
+
 
 /**
  * A helper class for loading and creating textures for WebGPU.
  */
-export class TextureLoader {
+export class WGSLTextureLoader {
 
     /**
      * Loads an array of textures and returns an array of ITextureData.
@@ -12,7 +30,7 @@ export class TextureLoader {
      * @param textures - An array of ITexture objects.
      * @returns A Promise that resolves to an array of ITextureData.
      */
-    static async loadAll(device: GPUDevice, ...textures: IWgslTexture[]): Promise<IWgslTextureData[]> {
+    static async loadAll(device: GPUDevice, ...textures: IWGSLTexture[]): Promise<IWGSLTextureData[]> {
         return Promise.all(textures.map(async texture => {
             if (texture.type === 0) {
                 return { type: 0, data: await this.createImageTexture(device, texture) };
@@ -28,7 +46,7 @@ export class TextureLoader {
      * @param texture - The ITexture object containing the image source.
      * @returns A Promise that resolves to the created GPUTexture.
      */
-    static async createImageTexture(device: GPUDevice, texture: IWgslTexture): Promise<GPUTexture> {
+    static async createImageTexture(device: GPUDevice, texture: IWGSLTexture): Promise<GPUTexture> {
         const image = new Image();
         image.src = texture.source as string;
         await image.decode();
@@ -59,7 +77,7 @@ export class TextureLoader {
      * @param texture - The ITexture object containing the video source.
      * @returns A Promise that resolves to the HTMLVideoElement.
      */
-    static async createVideoTexture(device: GPUDevice, texture: IWgslTexture): Promise<HTMLVideoElement> {
+    static async createVideoTexture(device: GPUDevice, texture: IWGSLTexture): Promise<HTMLVideoElement> {
         const video = document.createElement("video") as HTMLVideoElement;
         video.loop = true;
         video.autoplay = true;

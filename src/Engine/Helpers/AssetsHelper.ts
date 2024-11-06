@@ -1,4 +1,4 @@
-import { ITexture } from "../ShaderRenderers/WebGL/glslShaderRenderer";
+import { ITexture } from "../ShaderRenderers/WebGL/GLSLShaderRenderer";
 
 export class AssetsHelper {
 

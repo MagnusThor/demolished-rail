@@ -1,6 +1,6 @@
 
-import { Entity } from "./entity";
-import { Sequence } from "./sequence";
+import { Entity } from "./Entity";
+import { Sequence } from "./Sequence";
 
 export interface ITimelineEvent<T, P> {
     time?: number;        // Time in milliseconds

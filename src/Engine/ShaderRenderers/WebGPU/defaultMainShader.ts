@@ -1,4 +1,4 @@
-import { IMaterialShader } from "../../Interfaces/IMaterialShader";
+import { IMaterialShader } from './Material';
 
 export const defaultMainShader: IMaterialShader = {
     vertex: /* wgsl */ `

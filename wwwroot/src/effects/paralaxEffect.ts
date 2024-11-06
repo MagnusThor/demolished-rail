@@ -1,4 +1,4 @@
-import { Entity } from "../../../src/Engine/entity";
+import { Entity } from "../../../src/Engine/Entity";
 
 
 export interface IParallaxLayerProps {

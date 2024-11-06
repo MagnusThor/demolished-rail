@@ -1,4 +1,4 @@
-import { Sequence } from "../sequence";
+import { Sequence } from "../Sequence";
 
 export class DebugHelper {
     private divElement: HTMLDivElement;

@@ -1,14 +1,23 @@
-
-import { Uniforms } from "./uniforms";
-import { Material } from "./material";
-import { TextureLoader } from "./textureLoader";
-import { IPass, RenderPass } from "../../Interfaces/IPass";
-import { IWgslTextureData } from "../../Interfaces/IWgslTextureData";
-import { RenderPassBuilder } from "./renderPassBuilder";
-import { IWgslTexture } from "../../Interfaces/IWgslTexture";
-import { IMaterialShader } from "../../Interfaces/IMaterialShader";
-import { Geometry, IGeometry, rectGeometry } from "./geometry";
-
+import {
+  Geometry,
+  IGeometry,
+  rectGeometry,
+} from './Geometry';
+import {
+  IMaterialShader,
+  Material,
+} from './Material';
+import {
+  IPass,
+  RenderPass,
+  RenderPassBuilder,
+} from './RenderPassBuilder';
+import {
+  IWGSLTexture,
+  IWGSLTextureData,
+  WGSLTextureLoader,
+} from './TextureLoader';
+import { Uniforms } from './Uniforms';
 
 export const initWebGPU = async (canvas: HTMLCanvasElement,options?:GPURequestAdapterOptions) => {
     const adapter = await navigator.gpu?.requestAdapter(options);
@@ -45,13 +54,13 @@ export class WGSLShaderRenderer {
     isPaused: any;
     screen_bind_group!: GPUBindGroup;
     geometry!: Geometry;
-    textures: Array<IWgslTextureData>;
+    textures: Array<IWGSLTextureData>;
     frame: number = 0;
     uniforms!: Uniforms;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,
         public context: GPUCanvasContext, geometry?: IGeometry) {
         this.renderPassBacklog = new Map<string, IPass>();
-        this.textures = new Array<IWgslTextureData>();
+        this.textures = new Array<IWGSLTextureData>();
         this.renderPassBuilder = new RenderPassBuilder(device, this.canvas);
         this.geometry = new Geometry(device, geometry || rectGeometry);
         this.uniforms = new Uniforms(this.device, this.canvas);
@@ -287,7 +296,7 @@ export class WGSLShaderRenderer {
    * @param geometry - The geometry to use for the render pass.
    * @param textures - An optional array of textures to use in the render pass.
    */
-    addRenderPass(label: string, material: Material, geometry: Geometry, textures?: IWgslTextureData[]): RenderPass {
+    addRenderPass(label: string, material: Material, geometry: Geometry, textures?: IWGSLTextureData[]): RenderPass {
         textures?.forEach(texture => {
             this.textures.push(texture);
         });
@@ -365,7 +374,7 @@ export class WGSLShaderRenderer {
    * @param textures - An optional array of textures to use in the compute pass.
    */
     async addComputeRenderPass(label: string, computeShaderCode: string,
-        textures?: Array<IWgslTexture>, samplers?: Array<GPUSamplerDescriptor>
+        textures?: Array<IWGSLTexture>, samplers?: Array<GPUSamplerDescriptor>
     ) {
 
         if (samplers) throw "Samplers not yet implememted, using default binding 2"
@@ -379,9 +388,9 @@ export class WGSLShaderRenderer {
             for (let i = 0; i < textures!.length; i++) {
                 const texture = textures[i];
                 if (texture.type == 0) {
-                    this.textures.push({ type: 0, data: await TextureLoader.createImageTexture(this.getDevice(), texture) });
+                    this.textures.push({ type: 0, data: await WGSLTextureLoader.createImageTexture(this.getDevice(), texture) });
                 } else
-                    this.textures.push({ type: 1, data: await TextureLoader.createVideoTexture(this.getDevice(), texture) });
+                    this.textures.push({ type: 1, data: await WGSLTextureLoader.createVideoTexture(this.getDevice(), texture) });
             }
         }
         const computePipeline = this.renderPassBuilder.createComputePipeline(shaderModule,

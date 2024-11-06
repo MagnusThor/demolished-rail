@@ -1,39 +1,95 @@
-import { Entity } from "../../src/Engine/entity";
-import { GLSLShaderEntity } from "../../src/Engine/GLSLShaderEntity";
-import { mainFragment } from "../assets/shaders/mainFragment";
-import { mainVertex } from "../assets/shaders/mainVertex";
-import { someKindOfFractal } from "../assets/shaders/someKindOfFractal";
-import { ITypeWriterEffectProps, typeWriterEffect } from "./effects/typeWriterEffet";
-import { IRandomSquareEffectProps, randomSquareEffect } from "./effects/ranndomSquareByTickEffect";
-import { expandingCircleEffect, IExpandingCircleEffectProps } from "./effects/expandingCircleEffect";
-import { IStarburstProps, starburstEffect } from "./effects/starBurstEffct";
-import { ITextEffectProps, textEffect } from "./effects/textEffect";
-import { IImageOverlayEffectProps, imageOverlayEffect, ImagePosition } from "./effects/imageOverlayEffect";
-import { textArrayDisplayEffect, ITextArrayDisplayProps } from './effects/textArrayDisplayEffect'
-import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
-import { audioVisualizerEffect, IAudioVisualizerProps } from "./effects/fftAnalyzerEffect";
-import { IStrobeEffectProps, strobeEffect } from "./effects/strobeEffect";
-import { createBeatShakePostProcessor } from "./postprocessors/createBeatShakePostProcessor";
-import { pseudoKnightyanFractal } from "../assets/shaders/pseudoKnightyanFractal";
-import { SceneBuilder } from "../../src/Engine/Helpers/sceneBuilder";
-import { gridOverlayEffect, IGridOverlayEffectProps } from "./effects/gridOverlayEffect";
-import { ballEffect, IBallEntityProps } from "./effects/bubbleParticles";
-import { IStretchingTextProps, stretchingTextEffect } from "./effects/streachingTextEffect";
-import { creditsScrollerEffect, ICreditsScrollerProps } from "./effects/creditsScroller";
-import { createLensPostProcessor } from "./postprocessors/createLensPostProcessor";
-import { SetupDemo } from "./SetupDemo";
-import { DefaultAudioLoader } from "../../src/Engine/Audio/audioLoader";
-import { IWGSLShaderProperties, IWGSLShaderEntity } from "../../src/Engine/WGSLShaderEntity";
-import { initWebGPU, WGSLShaderRenderer } from "../../src/Engine/ShaderRenderers/WebGPU/wgslShaderRenderer";
-import { defaultMainShader } from "../../src/Engine/ShaderRenderers/WebGPU/defaultMainShader";
-import { Material } from "../../src/Engine/ShaderRenderers/WebGPU/material";
-import { Geometry, rectGeometry } from "../../src/Engine/ShaderRenderers/WebGPU/geometry";
-import { blueColorShader } from "../assets/shaders/wglsl/wgslShaderExample";
-import { TextureLoader } from "../../src/Engine/ShaderRenderers/WebGPU/textureLoader";
-import { WgslTextureType } from "../../src/Engine/Interfaces/IWgslTexture";
-import { wgslFlamesShader } from "../assets/shaders/wglsl/wgslFlamesShader";
-
-
+import { DefaultAudioLoader } from '../../src/Engine/Audio/AudioLoader';
+import { Entity } from '../../src/Engine/Entity';
+import { GLSLShaderEntity } from '../../src/Engine/GLSLShaderEntity';
+import { AssetsHelper } from '../../src/Engine/Helpers/AssetsHelper';
+import { SceneBuilder } from '../../src/Engine/Helpers/SceneBuilder';
+import {
+  defaultMainShader,
+} from '../../src/Engine/ShaderRenderers/WebGPU/DefaultMainShader';
+import {
+  Geometry,
+  rectGeometry,
+} from '../../src/Engine/ShaderRenderers/WebGPU/Geometry';
+import { Material } from '../../src/Engine/ShaderRenderers/WebGPU/Material';
+import {
+  WGSLTextureLoader,
+  WGSLTextureType,
+} from '../../src/Engine/ShaderRenderers/WebGPU/TextureLoader';
+import {
+  initWebGPU,
+  WGSLShaderRenderer,
+} from '../../src/Engine/ShaderRenderers/WebGPU/WGSLShaderRenderer';
+import {
+  IWGSLShaderProperties,
+  WGSLShaderEntity,
+} from '../../src/Engine/WGSLShaderEntity';
+import { mainFragment } from '../assets/shaders/mainFragment';
+import { mainVertex } from '../assets/shaders/mainVertex';
+import {
+  pseudoKnightyanFractal,
+} from '../assets/shaders/pseudoKnightyanFractal';
+import { someKindOfFractal } from '../assets/shaders/someKindOfFractal';
+import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
+import {
+  ballEffect,
+  IBallEntityProps,
+} from './effects/bubbleParticles';
+import {
+  creditsScrollerEffect,
+  ICreditsScrollerProps,
+} from './effects/creditsScroller';
+import {
+  expandingCircleEffect,
+  IExpandingCircleEffectProps,
+} from './effects/expandingCircleEffect';
+import {
+  audioVisualizerEffect,
+  IAudioVisualizerProps,
+} from './effects/fftAnalyzerEffect';
+import {
+  gridOverlayEffect,
+  IGridOverlayEffectProps,
+} from './effects/gridOverlayEffect';
+import {
+  IImageOverlayEffectProps,
+  imageOverlayEffect,
+  ImagePosition,
+} from './effects/imageOverlayEffect';
+import {
+  IRandomSquareEffectProps,
+  randomSquareEffect,
+} from './effects/ranndomSquareByTickEffect';
+import {
+  IStarburstProps,
+  starburstEffect,
+} from './effects/starBurstEffct';
+import {
+  IStretchingTextProps,
+  stretchingTextEffect,
+} from './effects/streachingTextEffect';
+import {
+  IStrobeEffectProps,
+  strobeEffect,
+} from './effects/strobeEffect';
+import {
+  ITextArrayDisplayProps,
+  textArrayDisplayEffect,
+} from './effects/textArrayDisplayEffect';
+import {
+  ITextEffectProps,
+  textEffect,
+} from './effects/textEffect';
+import {
+  ITypeWriterEffectProps,
+  typeWriterEffect,
+} from './effects/typeWriterEffet';
+import {
+  createBeatShakePostProcessor,
+} from './postprocessors/createBeatShakePostProcessor';
+import {
+  createLensPostProcessor,
+} from './postprocessors/createLensPostProcessor';
+import { SetupDemo } from './SetupDemo';
 
 // get the music as baase
 const demo = new SetupDemo(
@@ -63,10 +119,10 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
 
     const webgpu = await initWebGPU(wgslCanvas,{ powerPreference: 'high-performance' });
 
-    const wsglTextures = await TextureLoader.loadAll(webgpu.device, {
+    const wsglTextures = await WGSLTextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
         source: "assets/images/noise.png", 
-        type: WgslTextureType.IMAGE,
+        type: WGSLTextureType.IMAGE,
     }); 
   
     const wgslShaderProps: IWGSLShaderProperties = {
@@ -86,7 +142,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         ]
     };
 
-    const wgslShaderEntity = new IWGSLShaderEntity("wgsl-shader",
+    const wgslShaderEntity = new WGSLShaderEntity("wgsl-shader",
         wgslShaderProps, (ts: number, shaderRender: WGSLShaderRenderer) => {
             // this is an action called for each, frame
      });

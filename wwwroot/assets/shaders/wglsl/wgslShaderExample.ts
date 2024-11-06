@@ -1,6 +1,7 @@
-import { IMaterialShader } from "../../../../src/Engine/Interfaces/IMaterialShader";
-import { defaultWglslVertex } from "../../../../src/Engine/ShaderRenderers/WebGPU/material";
-
+import {
+  defaultWglslVertex,
+  IMaterialShader,
+} from '../../../../src/Engine/ShaderRenderers/WebGPU/Material';
 
 export const blueColorShader:IMaterialShader = {
   vertex: defaultWglslVertex,

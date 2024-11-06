@@ -1,11 +1,9 @@
-import { DefaultAudioLoader, IAudioLoader } from "../../src/Engine/Audio/audioLoader";
-import { Entity } from "../../src/Engine/entity";
-import { AssetsHelper } from "../../src/Engine/Helpers/assetsHelper";
-import { Scene } from "../../src/Engine/scene";
-import { Sequence } from "../../src/Engine/sequence";
-import { GLSLShaderEntity } from "../../src/Engine/GLSLShaderEntity";
-
-
+import { IAudioLoader } from '../../src/Engine/Audio/AudioLoader';
+import { Entity } from '../../src/Engine/Entity';
+import { GLSLShaderEntity } from '../../src/Engine/GLSLShaderEntity';
+import { AssetsHelper } from '../../src/Engine/Helpers/AssetsHelper';
+import { Scene } from '../../src/Engine/Scene';
+import { Sequence } from '../../src/Engine/Sequence';
 
 export class SetupDemo {
     sequence: Sequence;

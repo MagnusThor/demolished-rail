@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { CompressorBase } from './compressorBase';
+
+import { CompressorBase } from './CompressorBase';
 
 export class Compressor extends CompressorBase {
 

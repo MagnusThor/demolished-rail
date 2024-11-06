@@ -1,4 +1,4 @@
-import { IEntity } from "../entity";
+import { IEntity } from "../Entity";
 
 export class EntityBuilder {
     private entities: IEntity[] = [];
