@@ -5,7 +5,6 @@ module.exports = {
     watch: false,
     entry: {
         "demo": "./build/wwwroot/src/demo.js",
-        "fol06" :"./build/wwwroot/src/Fol06.js"
     },
     output: {
         path: __dirname + "/wwwroot/js/",

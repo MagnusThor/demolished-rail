@@ -44,7 +44,7 @@
 ## Installation
  
 
-    npm  install  comming-name-of-the-official-shit
+    npm  install demolished-rail
 
 
 ## Usage

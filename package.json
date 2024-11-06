@@ -18,5 +18,18 @@
     "crc": "^4.3.2",
     "webpack": "^5.95.0",
     "sonantx": "^2.0.1"
-  }
+  },
+  "keywords": [
+    "animation",
+    "typescript",
+    "webgl",
+    "webgpu",
+    "graphics",
+    "shaders"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MagnusThor/demolished-rail.git"
+  },
+  "homepage": "https://github.com/MagnusThor/demolished-rail"
 }
