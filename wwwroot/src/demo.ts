@@ -98,10 +98,7 @@ const demo = new SetupDemo(
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo: SetupDemo) => {
    
    
-    // Create the Scenes
-    // Music length = 139200 ms;
-    const sceneBuilder = new SceneBuilder(139200);
-
+     const sceneBuilder = new SceneBuilder(demo.sequence.audioBuffer.duration/ 1000);
     sceneBuilder
         .addScene("Scene 0", 10000).
         addScene("Scene 1", 20000).
@@ -114,17 +111,19 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const scenes = sceneBuilder.getScenes();
 
     // Set up a wgsl shader entity & renderer
-    const wgslCanvas = document.createElement("canvas");
+    const wgslCanvas = document.createElement("canvas");  // target canvas for WGSLShader
     wgslCanvas.width = demo.settings.width; wgslCanvas.height = demo.settings.height;
 
     const webgpu = await initWebGPU(wgslCanvas,{ powerPreference: 'high-performance' });
 
+    // preload textures to use in WGSL Shader
     const wsglTextures = await WGSLTextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
         source: "assets/images/noise.png", 
         type: WGSLTextureType.IMAGE,
     }); 
   
+    // Set up the WGSL Shader entity to render
     const wgslShaderProps: IWGSLShaderProperties = {
         canvas: wgslCanvas,
         device: webgpu.device,
@@ -141,13 +140,12 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
             }
         ]
     };
-
     const wgslShaderEntity = new WGSLShaderEntity("wgsl-shader",
         wgslShaderProps, (ts: number, shaderRender: WGSLShaderRenderer) => {
-            // this is an action called for each, frame
+            // this is an action called for each frame.
      });
+     // done with wgsl stuff  , we just add the entiry to a Scene later on.
 
-     // done with wgsl stuf...
 
     const strobeEntity = new Entity<IStrobeEffectProps>(
         "Strobe",
