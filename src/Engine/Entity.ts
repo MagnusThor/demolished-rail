@@ -46,7 +46,7 @@ export class Entity<T> implements IEntity {
   constructor(
     public name: string,
     public props?: T,
-    public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence) => void,
+    public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence, entity?: IEntity) => void,
     public startTimeinMs?: number,
     public durationInMs?: number,
     public w?: number,
@@ -138,16 +138,24 @@ export class Entity<T> implements IEntity {
 
 
       if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
-        this.action(timeStamp, this.ctx, this.props);
+        this.action(timeStamp, this.ctx, this.props, this.getScene()?.sequence, this
+        );
       }
     }
   }
 
   /**
- * Retrieves the Sequence instance associated with the entity.
+ * Retrieves the Scene instance associated with the entity.
  * @returns The Sequence instance if available, otherwise null.
  */
-  private getScene(): Scene | undefined {
+  public getScene(): Scene | undefined {
     return this.scene;
+  }
+  /**
+* Retrieves the Sequence instance associated with the entity.
+* @returns The Sequence instance if available, otherwise null.
+*/
+  private getSequence(): Sequence | undefined {
+    return this.scene?.sequence;
   }
 }

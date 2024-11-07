@@ -43,7 +43,7 @@ export class WGSLShaderEntity
         public name: string,
         public props?: IWGSLShaderProperties,
         public action?: (time: number, shaderRender: WGSLShaderRenderer,
-            properties: IWGSLShaderProperties, sequence?: Sequence) => void,
+            properties: IWGSLShaderProperties, sequence?: Sequence,entity?:IEntity) => void,
         public w?: number,
         public h?: number,
         public startTimeinMs?: number,
@@ -101,12 +101,6 @@ export class WGSLShaderEntity
         this.barListeners!.push(listener as any);
         return this;
     }
-
-
-
-
-
-
     /**
      * Updates the ShaderEntity by calling the action function (if provided)
      * and then updating the ShaderRenderer.
@@ -119,7 +113,9 @@ export class WGSLShaderEntity
             const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
 
             if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
-                this.action(timeStamp, this.shaderRenderer, this.props);
+                this.action(timeStamp, this.shaderRenderer, this.props,
+                    this.getSequence(),this
+                );
                 // Calculate shader time relative to the entity's start time (within the scene)
                 const shaderTime = Math.max(0, elapsed);
                 this.shaderRenderer.update(shaderTime / 1000);
@@ -143,4 +139,18 @@ export class WGSLShaderEntity
         }
     }
 
+      /**
+    * Retrieves the Scene instance associated with the entity.
+    * @returns The Sequence instance if available, otherwise null.
+    */
+      private getScene(): Scene | undefined {
+        return this.scene;
+    }
+    /**
+     * Retrieves the Sequence instance associated with the entity.
+     * @returns The Sequence instance if available, otherwise null.
+     */
+    private getSequence(): Sequence | undefined {
+        return this.scene?.sequence;
+    }
 }

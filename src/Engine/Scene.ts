@@ -12,6 +12,9 @@ export class Scene {
   private transitionOutListeners: ((ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void)[] = [];
   private transitionInListeners: ((ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void)[] = [];
 
+
+  public sequence: Sequence | undefined;
+
   /**
    * Creates a new Scene.
    * @param name - The name or identifier for the scene.

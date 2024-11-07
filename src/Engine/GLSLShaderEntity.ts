@@ -1,8 +1,7 @@
-
-import { IEntity } from "./Entity";
-import { Scene } from "./Scene";
-import { Sequence } from "./Sequence";
-import { GLSLShaderRenderer } from "./ShaderRenderers/WebGL/GLSLShaderRenderer";
+import { IEntity } from './Entity';
+import { Scene } from './Scene';
+import { Sequence } from './Sequence';
+import { GLSLShaderRenderer } from './ShaderRenderers/WebGL/GLSLShaderRenderer';
 
 export interface IGLSLShaderRenderBuffer {
     name: string;
@@ -40,7 +39,8 @@ export class GLSLShaderEntity implements IEntity {
     constructor(
         public name: string,
         public props?: IGLSLShaderProperties,
-        public action?: (time: number, shaderRender: GLSLShaderRenderer, properties: IGLSLShaderProperties, sequence?: Sequence) => void,
+
+        public action?: (time: number, shaderRender: GLSLShaderRenderer, properties: IGLSLShaderProperties, sequence?: Sequence, entity?: IEntity) => void,
         public w?: number,
         public h?: number,
         public startTimeinMs?: number,
@@ -63,9 +63,9 @@ export class GLSLShaderEntity implements IEntity {
     }
     scene?: Scene | undefined;
     bindToScene(scene: Scene): void {
-      this.scene = scene;
+        this.scene = scene;
     }
-  
+
 
     /**
  * Adds an event listener for when a beat occurs.
@@ -115,19 +115,21 @@ export class GLSLShaderEntity implements IEntity {
      */
     update(timeStamp: number): void {
         if (this.action && this.shaderRenderer && this.props) {
-          // Calculate elapsed time relative to the scene's start time
-          const sceneStartTime = this.scene ? this.scene.startTimeinMs : 0;
-          const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
-      
-          if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
-            this.action(timeStamp, this.shaderRenderer, this.props);
-      
-            // Calculate shader time relative to the entity's start time (within the scene)
-            const shaderTime = Math.max(0, elapsed); 
-            this.shaderRenderer.update(shaderTime / 1000);
-          }
+            // Calculate elapsed time relative to the scene's start time
+            const sceneStartTime = this.scene ? this.scene.startTimeinMs : 0;
+            const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
+
+            if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
+                this.action(timeStamp, this.shaderRenderer, this.props,
+                    this.getSequence(),this
+                );
+
+                // Calculate shader time relative to the entity's start time (within the scene)
+                const shaderTime = Math.max(0, elapsed);
+                this.shaderRenderer.update(shaderTime / 1000);
+            }
         }
-      }
+    }
 
     /**
      * Copies the entity's canvas to the target canvas.
@@ -143,5 +145,20 @@ export class GLSLShaderEntity implements IEntity {
                 targetCtx.drawImage(this.canvas, 0, 0);
             }
         }
+    }
+
+    /**
+    * Retrieves the Scene instance associated with the entity.
+    * @returns The Sequence instance if available, otherwise null.
+    */
+    private getScene(): Scene | undefined {
+        return this.scene;
+    }
+    /**
+     * Retrieves the Sequence instance associated with the entity.
+     * @returns The Sequence instance if available, otherwise null.
+     */
+    private getSequence(): Sequence | undefined {
+        return this.scene?.sequence;
     }
 }

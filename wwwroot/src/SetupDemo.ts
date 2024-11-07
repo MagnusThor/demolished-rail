@@ -12,7 +12,7 @@ export class SetupDemo {
         width: 800,
         height: 450,
         audioProperties: {
-            bpm: 122,
+            bpm: 110,
             ticks: 4,
             beat: 0,
             tick: 0,
@@ -24,7 +24,7 @@ export class SetupDemo {
     constructor(audioLoader:IAudioLoader) {
         this.sequence = new Sequence(
             document.querySelector("canvas") as HTMLCanvasElement,
-            122, 4, 4,audioLoader);
+            110, 4, 4,audioLoader);
 
     }
 

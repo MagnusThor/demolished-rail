@@ -1,5 +1,6 @@
 import {
   DefaultAudioLoader,
+  Entity,
   GLSLShaderEntity,
   IEntity,
   Scene,
@@ -9,17 +10,23 @@ import {
 import { earthShader } from '../assets/shaders/earthShader';
 import { mainFragment } from '../assets/shaders/mainFragment';
 import { mainVertex } from '../assets/shaders/mainVertex';
+import { TextAlignment } from './effects/FoL/fadeInOutTextEffect';
+import {
+  ISimpleTextEffectProps,
+  simpleTextEffect,
+} from './effects/simpleTextEffect';
 
 /**
-   * A class to demonstrate the usage of WGSL shaders in the demolished-rail framework.
+   * A class to demonstrate the usage of GLSL shaders in the demolished-rail framework.
    */
 export class RunShaderScene {
   screenCanvas: HTMLCanvasElement;
+  sequence!: Sequence;
   /**
    * Creates a new RunShader instance.
    * @param target - The canvas element to render to.
    */
-  constructor(target: HTMLCanvasElement,public bmp:number) {
+  constructor(target: HTMLCanvasElement, public bmp: number) {
     this.screenCanvas = target;
   }
   async setupSequence(): Promise<Sequence> {
@@ -28,9 +35,14 @@ export class RunShaderScene {
     await sequence.initialize();
     const scene = new Scene("glsl-shader-scene", 0, sequence.audioBuffer.duration * 1000);
     scene.addEntities(...this.createShaderSceneEntities());
+    scene.transitionIn(sequence, 0, SequenceHelper.getDurationForBeats(this.bmp,4), (ctx, scene, progress) => {
+      ctx.globalAlpha = progress;
+    });
+
     sequence.addScene(scene);
+    this.sequence = sequence
     return sequence;
-  
+
   }
   createShaderSceneEntities(): Array<IEntity> {
     const cameraPositions = [
@@ -55,7 +67,7 @@ export class RunShaderScene {
       [1.0, 1.5, 1.9]
     ]
     let cameraPos = cameraPositions[0];
-    const waitForMsUntilStart = SequenceHelper.getDurationForBeats(this.bmp,8) // wait 8 beats
+  
 
     const shader = new GLSLShaderEntity("earthShader",
       {
@@ -78,21 +90,55 @@ export class RunShaderScene {
           }
         ]
       }, () => {
-         // ... your additional logic for the shader entity ...
-      }, this.screenCanvas.width, this.screenCanvas.height,waitForMsUntilStart
+        // ... your additional logic for the shader entity ...
+      }, this.screenCanvas.width, this.screenCanvas.height
     );
 
+    
     shader.onBar((ts: number, count: number) => {
       const positionIndex = (count) % cameraPositions.length; // swap camera positon on bar
       cameraPos = cameraPositions[positionIndex];
     });
-    return [shader];
+
+
+    const textEntity = new Entity<ISimpleTextEffectProps>(
+      "textEntity",
+      {
+        x: this.screenCanvas.width / 2,
+        y: this.screenCanvas.height / 2,
+        texts: ["We are a cosmic accident,but a fortunate one.".toUpperCase()
+          , "Swallowed by darkness, crushed by gravity.".toUpperCase(),
+        "A rip in the fabric of spacetime.".toUpperCase(),
+        "Beyond the event horizon, the unknown awaits".toUpperCase(),
+        "The shadow of the universe, holding it all in place".toUpperCase()
+        ],
+        textIndex: 0,
+        font: "Arial",
+        size: 20,
+        fadeInDuration: 1,
+        fadeOutDuration: 1,
+        textDuration: 3,
+        alignment: TextAlignment.CENTER
+      },
+      (ts, ctx, props, sequence, entity) => simpleTextEffect(ts, ctx, props, sequence!, textEntity)
+    );
+
+    // change text onBar..
+    textEntity.onBar<ISimpleTextEffectProps>((ts, count, propertybag: ISimpleTextEffectProps) => {
+      propertybag!.textIndex = (propertybag!.textIndex + 1) % propertybag!.texts.length;
+      const scene = textEntity.getScene()!; 
+      textEntity.startTimeinMs = ts - scene.startTimeinMs;
+    });
+
+
+
+    return [shader, textEntity];
   }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   const canvas = document.querySelector("canvas#main-canvas") as HTMLCanvasElement;
-  const runner = new RunShaderScene(canvas,122); 
+  const runner = new RunShaderScene(canvas, 110);
   const sequence = await runner.setupSequence();
 
   sequence.onLowFrameRate((fps) => {

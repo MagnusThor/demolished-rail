@@ -153,6 +153,8 @@ class Sequence {
             scene.width = this.target.width;
             scene.height = this.target.height;
         }
+        // pass the sequence to the Scene
+        scene.sequence = this;
         this.scenes.push(scene);
         this.recalculateDuration();
     }
@@ -162,7 +164,9 @@ class Sequence {
      * @returns The Sequence instance for chaining.
      */
     addScenes(...scenes) {
-        this.scenes.push(...scenes);
+        scenes.forEach(scene => {
+            this.scenes.push(scene);
+        });
         this.recalculateDuration();
         return this;
     }
@@ -382,17 +386,24 @@ class Sequence {
             // Trigger entity events only when the values change
             if (this.currentBeat !== this.previousBeat) {
                 entity.beatListeners.forEach(listener => listener(timeStamp, this.beatCounter, entity.props));
-                this.previousBeat = this.currentBeat;
             }
             if (this.currentTick !== this.previousTick) {
                 entity.tickListeners.forEach(listener => listener(timeStamp, this.tickCounter, entity.props));
-                this.previousTick = this.currentTick;
             }
             if (this.currentBar !== this.previousBar) {
                 entity.barListeners.forEach(listener => listener(timeStamp, this.currentBar, entity.props));
-                this.previousBar = this.currentBar;
             }
         });
+        // Update previous values for the sequence AFTER processing all entities
+        if (this.currentBeat !== this.previousBeat) {
+            this.previousBeat = this.currentBeat;
+        }
+        if (this.currentTick !== this.previousTick) {
+            this.previousTick = this.currentTick;
+        }
+        if (this.currentBar !== this.previousBar) {
+            this.previousBar = this.currentBar;
+        }
         // Apply post-processing effects
         if (this.targetCtx) {
             this.postProcessors.forEach(processor => processor(this.targetCtx, this));
