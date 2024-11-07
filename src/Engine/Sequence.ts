@@ -38,6 +38,7 @@ export class Sequence {
     public audioSource!: AudioBufferSourceNode;
     public analyser!: AnalyserNode;
     public fftData!: Uint8Array;
+    private audioLoader: IAudioLoader;
 
     public targetCtx!: CanvasRenderingContext2D | null;
 
@@ -50,6 +51,7 @@ export class Sequence {
     private resetContext: (ctx: CanvasRenderingContext2D) => void = (ctx) => {
         ctx.globalAlpha = 1; // Default reset function
     };
+
 
     /**
 * Sets the function to be used for resetting the rendering context when switching scenes.
@@ -101,52 +103,46 @@ export class Sequence {
     }
 
     /**
-     * Creates a new Sequence.
-     * @param target - The canvas element to render the animation on.
-     * @param bpm - The beats per minute for the animation.
-     * @param ticksPerBeat - The number of ticks per beat.
-     * @param beatsPerBar - The number of beats per bar.
-     * @param beatsPerBar - The number of beats per bar.
-     * @param scenes - An array of scenes to include in the sequence.
-     * @param audioFile - An array of scenes to include in the sequence.
-     * @param audioLoader  
-    
-     
-     */
+   * Creates a new Sequence.
+   * @param target - The canvas element to render the animation on.
+   * @param bpm - The beats per minute for the animation.
+   * @param ticksPerBeat - The number of ticks per beat.
+   * @param beatsPerBar - The number of beats per bar.
+   * @param audioLoader - The IAudioLoader instance to load the audio.
+   * @param scenes - An optional array of scenes to include in the sequence.
+   * @param maxFps - The maximum frames per second (not yet implemented).
+   */
     constructor(
         public target: HTMLCanvasElement,
         bpm: number = 120,
         ticksPerBeat: number = 4,
         beatsPerBar: number = 4,
-        scenes: Scene[],
-        audioLoader: IAudioLoader
-
+        audioLoader: IAudioLoader, scenes?: Scene[],
+        maxFps?: 60 // not implemened at the moment
     ) {
-
-        this.scenes = scenes || [];
         this.targetCtx = target.getContext("2d");
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
         this.beatsPerBar = beatsPerBar;
-
         this.audioContext = new AudioContext();
         this.analyser = this.audioContext.createAnalyser();
-
-
-        audioLoader.loadAudio(this.audioContext)
-            .then(audioBuffer => {
-                this.audioBuffer = audioBuffer;
-                this.onReady();
-            })
-            .catch(error => console.error("Error loading audio:", error));
-
-        this.recalculateDuration();
+        this.audioLoader = audioLoader;
     }
 
     /**
-     * Called when the audio file is loaded or when no audio is used.
-     */
-    onReady() { }
+  * Asynchronously initializes the Sequence by loading the audio.
+  * @returns A Promise that resolves to the Sequence instance.
+  */
+    async initialize() {
+        await this.audioLoader.loadAudio(this.audioContext)
+            .then(audioBuffer => {
+                this.audioBuffer = audioBuffer;
+            })
+            .catch(error => console.error("Error loading audio:", error));
+    
+        return this;
+    }
+
 
     /**
      * Adds an event listener for each frame.
@@ -395,8 +391,8 @@ export class Sequence {
         if (this.currentSceneIndex !== currentSceneIndex) {
             this.currentSceneIndex = currentSceneIndex;
 
-          // Reset the rendering context
-            this.resetContext(this.targetCtx!); 
+            // Reset the rendering context
+            this.resetContext(this.targetCtx!);
 
             // Set scene dimensions if not already set
             if (!this.currentScene!.width) {
@@ -405,7 +401,7 @@ export class Sequence {
             if (!this.currentScene!.height) {
                 this.currentScene!.height = this.target.height;
             }
-           
+
 
         }
         // FFT analysis (if analyser is available)

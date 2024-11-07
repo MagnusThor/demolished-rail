@@ -36,7 +36,8 @@ const SetupDemo_1 = require("./SetupDemo");
 const demo = new SetupDemo_1.SetupDemo(new AudioLoader_1.DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo) => {
     var _a, _b;
-    const sceneBuilder = new SceneBuilder_1.SceneBuilder(demo.sequence.audioBuffer.duration / 1000);
+    await demo.sequence.initialize();
+    const sceneBuilder = new SceneBuilder_1.SceneBuilder(demo.sequence.audioBuffer.duration * 1000);
     sceneBuilder
         .addScene("Scene 0", 10000).
         addScene("Scene 1", 20000).
@@ -280,12 +281,10 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     scenes[6].addEntities(creditsEntity, imageOverlayEntity, ballEntity);
     demo.sequence.addSceneArray(scenes);
 });
-demo.sequence.onReady = () => {
-    const btn = document.querySelector("BUTTON");
-    btn.textContent = "CLICK TO START!";
-    btn.addEventListener("click", () => {
-        var _a;
-        (_a = document.querySelector("#launch")) === null || _a === void 0 ? void 0 : _a.remove();
-        demo.sequence.play();
-    });
-};
+const btn = document.querySelector("BUTTON");
+btn.textContent = "CLICK TO START!";
+btn.addEventListener("click", () => {
+    var _a;
+    (_a = document.querySelector("#launch")) === null || _a === void 0 ? void 0 : _a.remove();
+    demo.sequence.play();
+});

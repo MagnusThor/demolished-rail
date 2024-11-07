@@ -92,13 +92,14 @@ import {
 import { SetupDemo } from './SetupDemo';
 
 // get the music as baase
-const demo = new SetupDemo(
-    new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
+const demo = new SetupDemo(new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
+
 
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo: SetupDemo) => {
-   
-   
-     const sceneBuilder = new SceneBuilder(demo.sequence.audioBuffer.duration/ 1000);
+
+await demo.sequence.initialize();
+    
+    const sceneBuilder = new SceneBuilder(demo.sequence.audioBuffer.duration * 1000);
     sceneBuilder
         .addScene("Scene 0", 10000).
         addScene("Scene 1", 20000).
@@ -114,15 +115,15 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const wgslCanvas = document.createElement("canvas");  // target canvas for WGSLShader
     wgslCanvas.width = demo.settings.width; wgslCanvas.height = demo.settings.height;
 
-    const webgpu = await initWebGPU(wgslCanvas,{ powerPreference: 'high-performance' });
+    const webgpu = await initWebGPU(wgslCanvas, { powerPreference: 'high-performance' });
 
     // preload textures to use in WGSL Shader
     const wsglTextures = await WGSLTextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
-        source: "assets/images/noise.png", 
+        source: "assets/images/noise.png",
         type: WGSLTextureType.IMAGE,
-    }); 
-  
+    });
+
     // Set up the WGSL Shader entity to render
     const wgslShaderProps: IWGSLShaderProperties = {
         canvas: wgslCanvas,
@@ -133,18 +134,18 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
             {
                 name: "iChannel0",
                 shader: new Material(webgpu.device,
-                    wgslFlamesShader 
+                    wgslFlamesShader
                 ),
                 geometry: new Geometry(webgpu.device, rectGeometry),
-                textures: wsglTextures 
+                textures: wsglTextures
             }
         ]
     };
     const wgslShaderEntity = new WGSLShaderEntity("wgsl-shader",
         wgslShaderProps, (ts: number, shaderRender: WGSLShaderRenderer) => {
             // this is an action called for each frame.
-     });
-     // done with wgsl stuff  , we just add the entiry to a Scene later on.
+        });
+    // done with wgsl stuff  , we just add the entiry to a Scene later on.
 
 
     const strobeEntity = new Entity<IStrobeEffectProps>(
@@ -459,7 +460,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     scenes[0].addEntities(wgslShaderEntity);
 
     scenes[1].addEntities(
-     typeWriter2EntityForFirstScene,
+        typeWriter2EntityForFirstScene,
         gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
         .addPostProcessorToEntities(createLensPostProcessor(AssetsHelper.textureCache!.get("lens.png")?.src));
 
@@ -472,9 +473,9 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     demo.sequence.addSceneArray(scenes)
 
 
+
 });
 
-demo.sequence.onReady = () => {
 
     const btn = document.querySelector("BUTTON");
     btn!.textContent = "CLICK TO START!";
@@ -482,7 +483,12 @@ demo.sequence.onReady = () => {
         document.querySelector("#launch")?.remove();
         demo.sequence.play();
     });
-}
+
+
+
+
+
+
 
 
 

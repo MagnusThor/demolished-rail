@@ -19,6 +19,7 @@ export {
   RenderTarget,
 } from './Engine/ShaderRenderers/WebGL/GLSLShaderRenderer';
 export {
+  initWebGPU,
   WGSLShaderRenderer,
 } from './Engine/ShaderRenderers/WebGPU/WGSLShaderRenderer';
 export {
@@ -28,6 +29,8 @@ export {
   DefaultIndicies,
   Geometry,
   IGeometry,
+  rectGeometry,
+  VERTEXType,
 } from './Engine/ShaderRenderers/WebGPU/Geometry';
 export {
   defaultWglslVertex,
