@@ -374,6 +374,15 @@ class Sequence {
         }
         // Clear the target canvas and update/draw entities
         (_a = this.targetCtx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.target.width, this.target.height);
+        this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
+            if (scene === this.currentScene) {
+                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
+                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
+                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
+                    listener(this.targetCtx, scene, transitionProgress);
+                }
+            }
+        });
         this.currentScene.entities.forEach(entity => {
             var _a, _b;
             // Update the conductor's time and trigger events
@@ -404,19 +413,6 @@ class Sequence {
         if (this.currentBar !== this.previousBar) {
             this.previousBar = this.currentBar;
         }
-        // Apply post-processing effects
-        if (this.targetCtx) {
-            this.postProcessors.forEach(processor => processor(this.targetCtx, this));
-        }
-        this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
-            if (scene === this.currentScene) {
-                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
-                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
-                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
-                    listener(this.targetCtx, scene, transitionProgress);
-                }
-            }
-        });
         this.sceneTransitionOutListeners.forEach(({ scene, startTime, duration, listener }) => {
             if (scene === this.currentScene) {
                 const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
@@ -426,6 +422,10 @@ class Sequence {
                 }
             }
         });
+        // Apply post-processing effects
+        if (this.targetCtx) {
+            this.postProcessors.forEach(processor => processor(this.targetCtx, this));
+        }
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
         // Trigger frame listeners
         this.frameListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));

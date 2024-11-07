@@ -454,6 +454,21 @@ export class Sequence {
         }
         // Clear the target canvas and update/draw entities
         this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
+
+
+
+        this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
+            if (scene === this.currentScene) {
+                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
+
+                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
+                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
+                    listener(this.targetCtx!, scene, transitionProgress);
+                }
+            }
+        });
+
+
         this.currentScene!.entities.forEach(entity => {
             // Update the conductor's time and trigger events
             this.conductor?.updateTime(timeStamp);
@@ -487,22 +502,6 @@ export class Sequence {
         }
 
 
-        // Apply post-processing effects
-        if (this.targetCtx) {
-            this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
-        }
-
-        this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
-            if (scene === this.currentScene) {
-                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
-
-                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
-                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
-                    listener(this.targetCtx!, scene, transitionProgress);
-                }
-            }
-        });
-
 
         this.sceneTransitionOutListeners.forEach(({ scene, startTime, duration, listener }) => {
             if (scene === this.currentScene) {
@@ -513,6 +512,12 @@ export class Sequence {
                 }
             }
         });
+
+        // Apply post-processing effects
+        if (this.targetCtx) {
+            this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
+        }
+
 
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
         // Trigger frame listeners
