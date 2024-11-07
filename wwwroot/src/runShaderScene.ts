@@ -94,10 +94,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const canvas = document.querySelector("canvas#main-canvas") as HTMLCanvasElement;
   const runner = new RunShaderScene(canvas,122); 
   const sequence = await runner.setupSequence();
+
+  sequence.onLowFrameRate((fps) => {
+    console.warn(`Low frame rate detected: ${fps.toFixed(2)} FPS`);
+  });
+
   const btn = document.querySelector("BUTTON");
   btn!.textContent = "CLICK TO START!";
   btn!.addEventListener("click", () => {
     document.querySelector("#launch")?.remove();
-    sequence.play();
+    sequence.play(25);
   });
 });

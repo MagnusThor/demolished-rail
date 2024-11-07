@@ -44,9 +44,20 @@ export class Sequence {
 
     private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
 
+    private lowFrameRateListeners: ((fps: number) => void)[] = [];
+
+
     private sceneTransitionInListeners: { scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void }[] = [];
     private sceneTransitionOutListeners: { scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void }[] = [];
 
+
+    /**
+  * Adds an event listener for when the frame rate drops below a threshold.
+  * @param listener - The function to call when the frame rate is low.
+  */
+    onLowFrameRate(listener: (fps: number) => void) {
+        this.lowFrameRateListeners.push(listener);
+    }
 
     private resetContext: (ctx: CanvasRenderingContext2D) => void = (ctx) => {
         ctx.globalAlpha = 1; // Default reset function
@@ -118,7 +129,7 @@ export class Sequence {
         ticksPerBeat: number = 4,
         beatsPerBar: number = 4,
         audioLoader: IAudioLoader, scenes?: Scene[],
-        maxFps?: 60 // not implemened at the moment
+        private maxFps: number = 60 // not implemened at the moment
     ) {
         this.targetCtx = target.getContext("2d");
         this.bpm = bpm;
@@ -139,7 +150,7 @@ export class Sequence {
                 this.audioBuffer = audioBuffer;
             })
             .catch(error => console.error("Error loading audio:", error));
-    
+
         return this;
     }
 
@@ -304,16 +315,51 @@ export class Sequence {
     }
 
     /**
-     * Starts the animation sequence.
-     */
-    play(): void {
+       * Starts the animation sequence.
+       * @param maxFps - The maximum frames per second.
+       */
+    play(maxFps?: number): void { // Add maxFps parameter
         this.isPlaying = true;
         this.currentSceneIndex = 0;
         this.lastBeatTime = 0;
         this.currentTick = 0;
-        this.currentBeat = 0; // Initialize currentBeat to 0
+        this.currentBeat = 0;
         this.startTime = performance.now();
 
+
+        if (maxFps) { this.maxFps = maxFps }
+
+
+        console.log(`Rendering at ${this.maxFps}`);
+
+        let then = performance.now();
+        const interval = 1000 / this.maxFps;
+        let frameCount = 0;
+        let lastFpsUpdateTime = 0;
+
+        const animate = (ts: number) => {
+            const now = performance.now();
+            const delta = now - then;
+
+            if (delta > interval) {
+                then = now - (delta % interval);
+                const adjustedTimeStamp = ts - this.startTime;
+                this.playCurrentScene(adjustedTimeStamp);
+                frameCount++;
+                if (now - lastFpsUpdateTime >= 1000) {
+                    const fps = frameCount / ((now - lastFpsUpdateTime) / 1000);
+                    frameCount = 0;
+                    lastFpsUpdateTime = now;
+                    if (fps < this.maxFps * 0.8) {
+                        this.lowFrameRateListeners.forEach(listener => listener(fps));
+                    }
+                }
+            }
+            if (this.isPlaying) {
+                this.requestAnimationFrameID = requestAnimationFrame(animate);
+            }
+        };
+        // Start audio playback
         if (this.audioBuffer) {
             this.audioSource = this.audioContext.createBufferSource();
             this.audioSource.buffer = this.audioBuffer;
@@ -322,14 +368,6 @@ export class Sequence {
             this.analyser.connect(this.audioContext.destination);
             this.fftData = new Uint8Array(this.analyser.frequencyBinCount);
             this.audioSource.start();
-        }
-
-        const animate = (ts: number) => {
-            const adjustedTimeStamp = ts - this.startTime;
-            this.playCurrentScene(adjustedTimeStamp);
-            if (this.isPlaying) {
-                this.requestAnimationFrameID = requestAnimationFrame(animate);
-            }
         }
         this.requestAnimationFrameID = requestAnimationFrame(animate);
     }
