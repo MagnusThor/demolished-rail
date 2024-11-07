@@ -16,7 +16,7 @@ import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
 /**
    * A class to demonstrate the usage of WGSL shaders in the demolished-rail framework.
    */
-  export class RunShader {
+  export class RunWGSLShader {
     screenCanvas: HTMLCanvasElement;
   
     /**
@@ -78,7 +78,7 @@ import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
   
   document.addEventListener("DOMContentLoaded", async () => {
     const canvas = document.querySelector("canvas#main-canvas") as HTMLCanvasElement;
-    const runShader = new RunShader(canvas);
-    const running = await runShader.run();
+    const runner = new RunWGSLShader(canvas);
+    const running = await runner.run();
     console.log(`Running ${running.name}`);
   });

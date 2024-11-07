@@ -24,9 +24,14 @@ export class SetupDemo {
     constructor(audioLoader:IAudioLoader) {
         this.sequence = new Sequence(
             document.querySelector("canvas") as HTMLCanvasElement,
-            122, 4, 4, [], audioLoader);
+            122, 4, 4,audioLoader);
 
     }
+
+    async initialize(){
+        return this.sequence.initialize();
+    }    
+
     async addAssets(...urls: string[]) {
         await AssetsHelper.loadImages(urls);
         return this;

@@ -47,19 +47,17 @@ class Sequence {
         return Math.max(0, this.currentScene.durationInMs - elapsedTime);
     }
     /**
-     * Creates a new Sequence.
-     * @param target - The canvas element to render the animation on.
-     * @param bpm - The beats per minute for the animation.
-     * @param ticksPerBeat - The number of ticks per beat.
-     * @param beatsPerBar - The number of beats per bar.
-     * @param beatsPerBar - The number of beats per bar.
-     * @param scenes - An array of scenes to include in the sequence.
-     * @param audioFile - An array of scenes to include in the sequence.
-     * @param audioLoader
-    
-     
-     */
-    constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, scenes, audioLoader) {
+   * Creates a new Sequence.
+   * @param target - The canvas element to render the animation on.
+   * @param bpm - The beats per minute for the animation.
+   * @param ticksPerBeat - The number of ticks per beat.
+   * @param beatsPerBar - The number of beats per bar.
+   * @param audioLoader - The IAudioLoader instance to load the audio.
+   * @param scenes - An optional array of scenes to include in the sequence.
+   * @param maxFps - The maximum frames per second (not yet implemented).
+   */
+    constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, audioLoader, scenes, maxFps // not implemened at the moment
+    ) {
         this.target = target;
         this.durationMs = 0;
         this.scenes = [];
@@ -89,25 +87,26 @@ class Sequence {
         this.resetContext = (ctx) => {
             ctx.globalAlpha = 1; // Default reset function
         };
-        this.scenes = scenes || [];
         this.targetCtx = target.getContext("2d");
         this.bpm = bpm;
         this.ticksPerBeat = ticksPerBeat;
         this.beatsPerBar = beatsPerBar;
         this.audioContext = new AudioContext();
         this.analyser = this.audioContext.createAnalyser();
-        audioLoader.loadAudio(this.audioContext)
-            .then(audioBuffer => {
-            this.audioBuffer = audioBuffer;
-            this.onReady();
-        })
-            .catch(error => console.error("Error loading audio:", error));
-        this.recalculateDuration();
+        this.audioLoader = audioLoader;
     }
     /**
-     * Called when the audio file is loaded or when no audio is used.
-     */
-    onReady() { }
+  * Asynchronously initializes the Sequence by loading the audio.
+  * @returns A Promise that resolves to the Sequence instance.
+  */
+    async initialize() {
+        await this.audioLoader.loadAudio(this.audioContext)
+            .then(audioBuffer => {
+            this.audioBuffer = audioBuffer;
+        })
+            .catch(error => console.error("Error loading audio:", error));
+        return this;
+    }
     /**
      * Adds an event listener for each frame.
      * @param listener - The function to call on each frame.

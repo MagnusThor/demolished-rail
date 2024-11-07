@@ -5,7 +5,9 @@ module.exports = {
     watch: false,
     entry: {
         "demo": "./build/wwwroot/src/demo.js",
-        "shader": "./build/wwwroot/src/runshader.js"
+        "runsWgslShaderOnly": "./build/wwwroot/src/runsWgslShaderOnly.js",
+        "runShaderScene" :"./build/wwwroot/src/runShaderScene.js"
+
     },
     output: {
         path: __dirname + "/wwwroot/js/",
