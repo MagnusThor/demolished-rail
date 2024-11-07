@@ -17,8 +17,9 @@ import {
 } from './effects/simpleTextEffect';
 
 /**
-   * A class to demonstrate the usage of GLSL shaders in the demolished-rail framework.
-   */
+ * A class to demonstrate the usage of the demolished-rail framework,
+ * including GLSL shaders, Canvas2D rendering, transitions, and music synchronization.
+ */
 export class RunShaderScene {
   screenCanvas: HTMLCanvasElement;
   sequence!: Sequence;
@@ -29,21 +30,28 @@ export class RunShaderScene {
   constructor(target: HTMLCanvasElement, public bmp: number) {
     this.screenCanvas = target;
   }
+   /**
+   * Sets up the Sequence and Scene for the demo.
+   * @returns A Promise that resolves to the created Sequence.
+   */
   async setupSequence(): Promise<Sequence> {
     const sequence = new Sequence(this.screenCanvas, this.bmp, 4, 4, new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
     // create a scene starting at 0ms , duration is as long as the audioBuffer 
     await sequence.initialize();
     const scene = new Scene("glsl-shader-scene", 0, sequence.audioBuffer.duration * 1000);
     scene.addEntities(...this.createShaderSceneEntities());
-    scene.transitionIn(sequence, 0, SequenceHelper.getDurationForBeats(this.bmp,4), (ctx, scene, progress) => {
+    scene.transitionIn(sequence, 0, SequenceHelper.getDurationForBeats(this.bmp, 4), (ctx, scene, progress) => {
       ctx.globalAlpha = progress;
     });
-
     sequence.addScene(scene);
     this.sequence = sequence
-    return sequence;
-
+    return sequence;  
   }
+   /**
+   * Creates the entities for the shader scene.
+   * @param sequence - The Sequence instance.
+   * @returns An array of IEntity objects.
+   */
   createShaderSceneEntities(): Array<IEntity> {
     const cameraPositions = [
       [0.0, 1.2, 0.7],
@@ -65,9 +73,9 @@ export class RunShaderScene {
       [0.0, 1.2, 1.9],
       [1.0, 1.5, 1.1],
       [1.0, 1.5, 1.9]
-    ]
+    ];
     let cameraPos = cameraPositions[0];
-  
+    let amountOfLightning = 1500.0; // Initialize amountOfLightning
 
     const shader = new GLSLShaderEntity("earthShader",
       {
@@ -80,6 +88,11 @@ export class RunShaderScene {
             vertex: mainVertex,
             textures: [],
             customUniforms: {
+              "amountOfLightning": (uniformLocation: WebGLUniformLocation, gl: WebGLRenderingContext) => {
+                if (uniformLocation) { // uniform float amountOfLightning
+                  gl.uniform1f(uniformLocation, amountOfLightning);
+                }
+              },
               "cameraPos": (uniformLoction: Map<string, WebGLUniformLocation>, gl: WebGLRenderingContext) => {
                 if (uniformLoction) { // uniform cameraPos vec3 
                   gl.uniform3fv(uniformLoction!,
@@ -94,13 +107,20 @@ export class RunShaderScene {
       }, this.screenCanvas.width, this.screenCanvas.height
     );
 
-    
+    // Swap camera positon on bar
     shader.onBar((ts: number, count: number) => {
-      const positionIndex = (count) % cameraPositions.length; // swap camera positon on bar
+      const positionIndex = (count) % cameraPositions.length; 
       cameraPos = cameraPositions[positionIndex];
     });
 
+     // chnage amountOfLightning each tick, 4 times per beat in this case
+    shader.onTick((ts: number, count: number) => {
+      const avgFrequency = this.sequence.fftData.reduce((sum, val) => sum + val, 0) / this.sequence.fftData.length;
+      amountOfLightning = (avgFrequency / 255) * 2000; 
+    });
 
+
+    // set ut a Canvas2D Entity  - Layer that we put on top on the glsl shader
     const textEntity = new Entity<ISimpleTextEffectProps>(
       "textEntity",
       {
@@ -122,16 +142,12 @@ export class RunShaderScene {
       },
       (ts, ctx, props, sequence, entity) => simpleTextEffect(ts, ctx, props, sequence!, textEntity)
     );
-
     // change text onBar..
     textEntity.onBar<ISimpleTextEffectProps>((ts, count, propertybag: ISimpleTextEffectProps) => {
       propertybag!.textIndex = (propertybag!.textIndex + 1) % propertybag!.texts.length;
-      const scene = textEntity.getScene()!; 
+      const scene = textEntity.getScene()!;
       textEntity.startTimeinMs = ts - scene.startTimeinMs;
     });
-
-
-
     return [shader, textEntity];
   }
 }
