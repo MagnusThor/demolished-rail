@@ -1,4 +1,9 @@
-;
+import { IGLSLShaderProperties } from '../../../src';
+
+export interface IEarthShader extends IGLSLShaderProperties{
+    cameraPos:number[];
+    amountOfLightning:number;
+}
 
 export const earthShader = /*glsl*/ `uniform float time;
 uniform vec2 mouse;

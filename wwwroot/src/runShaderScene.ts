@@ -7,7 +7,10 @@ import {
   Sequence,
   SequenceHelper,
 } from '../../src';
-import { earthShader } from '../assets/shaders/earthShader';
+import {
+  earthShader,
+  IEarthShader,
+} from '../assets/shaders/earthShader';
 import { mainFragment } from '../assets/shaders/mainFragment';
 import { mainVertex } from '../assets/shaders/mainVertex';
 import { TextAlignment } from './effects/FoL/fadeInOutTextEffect';
@@ -30,10 +33,10 @@ export class RunShaderScene {
   constructor(target: HTMLCanvasElement, public bmp: number) {
     this.screenCanvas = target;
   }
-   /**
-   * Sets up the Sequence and Scene for the demo.
-   * @returns A Promise that resolves to the created Sequence.
-   */
+  /**
+  * Sets up the Sequence and Scene for the demo.
+  * @returns A Promise that resolves to the created Sequence.
+  */
   async setupSequence(): Promise<Sequence> {
     const sequence = new Sequence(this.screenCanvas, this.bmp, 4, 4, new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
     // create a scene starting at 0ms , duration is as long as the audioBuffer 
@@ -45,13 +48,13 @@ export class RunShaderScene {
     });
     sequence.addScene(scene);
     this.sequence = sequence
-    return sequence;  
+    return sequence;
   }
-   /**
-   * Creates the entities for the shader scene.
-   * @param sequence - The Sequence instance.
-   * @returns An array of IEntity objects.
-   */
+  /**
+  * Creates the entities for the shader scene.
+  * @param sequence - The Sequence instance.
+  * @returns An array of IEntity objects.
+  */
   createShaderSceneEntities(): Array<IEntity> {
     const cameraPositions = [
       [0.0, 1.2, 0.7],
@@ -74,11 +77,11 @@ export class RunShaderScene {
       [1.0, 1.5, 1.1],
       [1.0, 1.5, 1.9]
     ];
-    let cameraPos = cameraPositions[0];
-    let amountOfLightning = 1500.0; // Initialize amountOfLightning
 
-    const shader = new GLSLShaderEntity("earthShader",
+    const shader = new GLSLShaderEntity<IEarthShader>("earthShader",
       {
+        cameraPos: cameraPositions[0],
+        amountOfLightning: 1500,
         mainFragmentShader: mainFragment,
         mainVertexShader: mainVertex,
         renderBuffers: [
@@ -88,39 +91,42 @@ export class RunShaderScene {
             vertex: mainVertex,
             textures: [],
             customUniforms: {
-              "amountOfLightning": (uniformLocation: WebGLUniformLocation, gl: WebGLRenderingContext) => {
+              "amountOfLightning": (uniformLocation: WebGLUniformLocation, gl: WebGLRenderingContext,
+                program: WebGLProgram, time: number, entity: GLSLShaderEntity<IEarthShader>
+              ) => {
                 if (uniformLocation) { // uniform float amountOfLightning
-                  gl.uniform1f(uniformLocation, amountOfLightning);
+                  gl.uniform1f(uniformLocation, entity.props!.amountOfLightning);
                 }
               },
-              "cameraPos": (uniformLoction: Map<string, WebGLUniformLocation>, gl: WebGLRenderingContext) => {
-                if (uniformLoction) { // uniform cameraPos vec3 
-                  gl.uniform3fv(uniformLoction!,
-                    cameraPos)
+              "cameraPos": (uniformLocation: WebGLUniformLocation, gl: WebGLRenderingContext,
+                program: WebGLProgram, time: number, entity: GLSLShaderEntity<IEarthShader>
+              ) => {
+                if (uniformLocation) { // uniform cameraPos vec3 
+                  gl.uniform3fv(uniformLocation!,
+                    entity.props!.cameraPos)
                 };
               }
             }
           }
         ]
       }, () => {
-        // ... your additional logic for the shader entity ...
+        // ... your additional logic for the shader entity, argument is optional,but i wanted to show it anyway ...
       }, this.screenCanvas.width, this.screenCanvas.height
     );
 
-    // Swap camera positon on bar
-    shader.onBar((ts: number, count: number) => {
-      const positionIndex = (count) % cameraPositions.length; 
-      cameraPos = cameraPositions[positionIndex];
+    // Swap camera positon on each bar
+    shader.onBar<IEarthShader>((ts: number, count: number, propertyBag?: IEarthShader) => {
+      const positionIndex = (count) % cameraPositions.length;
+      propertyBag!.cameraPos = cameraPositions[positionIndex];
     });
 
-     // chnage amountOfLightning each tick, 4 times per beat in this case
-    shader.onTick((ts: number, count: number) => {
+    // change amountOfLightning each tick, 4 times per beat in this case
+    shader.onTick<IEarthShader>((ts: number, count: number, propertyBag?: IEarthShader) => {
       const avgFrequency = this.sequence.fftData.reduce((sum, val) => sum + val, 0) / this.sequence.fftData.length;
-      amountOfLightning = (avgFrequency / 255) * 2000; 
+      propertyBag!.amountOfLightning = (avgFrequency / 255) * 2000;
     });
 
-
-    // set ut a Canvas2D Entity  - Layer that we put on top on the glsl shader
+    // set up a Canvas2D Entity  - Layer that we put on top on the glsl shader
     const textEntity = new Entity<ISimpleTextEffectProps>(
       "textEntity",
       {
@@ -140,10 +146,11 @@ export class RunShaderScene {
         textDuration: 3,
         alignment: TextAlignment.CENTER
       },
-      (ts, ctx, props, sequence, entity) => simpleTextEffect(ts, ctx, props, sequence!, textEntity)
+      (ts, ctx, props, sequence, entity) => simpleTextEffect(ts, ctx, props, sequence!, entity!)
     );
-    // change text onBar..
-    textEntity.onBar<ISimpleTextEffectProps>((ts, count, propertybag: ISimpleTextEffectProps) => {
+
+    // Change text onBar, just showing
+    textEntity.onBar<ISimpleTextEffectProps>((ts, count, propertybag?: ISimpleTextEffectProps) => {
       propertybag!.textIndex = (propertybag!.textIndex + 1) % propertybag!.texts.length;
       const scene = textEntity.getScene()!;
       textEntity.startTimeinMs = ts - scene.startTimeinMs;

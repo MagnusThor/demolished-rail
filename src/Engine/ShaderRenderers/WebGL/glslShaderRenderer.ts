@@ -23,6 +23,7 @@ export class RenderTarget {
 }
 
 export class GLSLShaderRenderer {
+        entity: any;
         gl: WebGLRenderingContext;
         mainProgram: WebGLProgram;
         programs: Map<string, { program: WebGLProgram | null, state: boolean }>;
@@ -43,6 +44,10 @@ precision highp int;
 precision mediump sampler3D;
 #endif
 `;
+
+        setEntity(entity:any){
+                this.entity = entity;
+        }
         /**
          * Create a Shader
          *
@@ -57,14 +62,10 @@ precision mediump sampler3D;
                 gl.shaderSource(shader!, source);
                 gl.compileShader(shader!);
                 gl.attachShader(program, shader!);
-                if (!gl.getShaderParameter(shader!, 35713)) { // this.gl.COMPILE_STATUS
-
-
-
-                        // gl.getShaderInfoLog(shader).trim().split("\n").forEach((l: string) =>
-                        //         console.error("[shader] " + l))
-
-                        throw new Error("Error while compiling vertex/fragment" + source)
+                if (!gl.getShaderParameter(shader!, 35713)) { 
+                        gl.getShaderInfoLog(shader!)!.trim().split("\n").forEach((l: string) =>
+                                console.error("[shader] " + l))
+                        throw new Error(`Error while compiling vertex/fragment: ` + source)
                 };
         }
         /**
@@ -283,7 +284,7 @@ precision mediump sampler3D;
                         let customUniforms = fT!.uniforms;
                     
                         customUniforms && Object.keys(customUniforms).forEach((v: string) => {
-                                customUniforms[v](fT!.locations.get(v), gl, current, time);
+                                customUniforms[v](fT!.locations.get(v), gl, current, time,this.entity);
                         });
                         let bl = gl.getUniformLocation(current!, key); // todo: get this from cache?
 

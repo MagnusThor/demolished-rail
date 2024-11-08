@@ -15,7 +15,7 @@ export interface IEntity {
   w?: number;
   h?: number;
   props?: any
-  beatListeners?: ((time: number, count: number, propertyBag: any) => void)[];
+  beatListeners?: ((time: number, count: number, propertyBag?: any) => void)[];
   tickListeners?: ((time: number, count: number, propertyBag: any) => void)[];
   barListeners?: ((time: number, count: number, propertyBag: any) => void)[];
 
@@ -31,9 +31,9 @@ export class Entity<T> implements IEntity {
 
   scene?: Scene | undefined;
 
-  beatListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
-  tickListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
-  barListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
+  beatListeners?: ((time: number, count: number, propertyBag?: T) => void)[] = [];
+  tickListeners?: ((time: number, count: number, propertyBag?: T) => void)[] = [];
+  barListeners?: ((time: number, count: number, propertyBag?: T) => void)[] = [];
 
   /**
    * Creates a new Entity.
@@ -46,7 +46,8 @@ export class Entity<T> implements IEntity {
   constructor(
     public name: string,
     public props?: T,
-    public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence, entity?: IEntity) => void,
+    public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence, 
+      entity?: Entity<T> | undefined) => void,
     public startTimeinMs?: number,
     public durationInMs?: number,
     public w?: number,
@@ -72,7 +73,7 @@ export class Entity<T> implements IEntity {
   * @param listener - The function to call when a beat occurs.
   * @returns The Entity instance for chaining.
   */
-  onBeat<T>(listener: (time: number, count: number, propeetyBag: T) => void): this {
+  onBeat<T>(listener: (time: number, count: number, propertyBag?: T) => void): this {
     this.beatListeners!.push(listener as any);
     return this;
   }
@@ -82,7 +83,7 @@ export class Entity<T> implements IEntity {
    * @param listener - The function to call when a tick occurs.
    * @returns The Entity instance for chaining.
    */
-  onTick<T>(listener: (time: number, count: number) => void): this {
+  onTick<T>(listener: (time: number, count: number,propertyBag?: T) => void): this {
     this.tickListeners!.push(listener as any);
     return this;
   }
@@ -92,7 +93,7 @@ export class Entity<T> implements IEntity {
    * @param listener - The function to call when a bar is complete.
    * @returns The Entity instance for chaining.
    */
-  onBar<T>(listener: (ts: number, count: number, props: T) => void): this {
+  onBar<T>(listener: (ts: number, count: number, propertyBag?: T) => void): this {
     this.barListeners!.push(listener as any);
     return this;
   }

@@ -1,6 +1,4 @@
 import { IEntity } from '../Entity';
-import { GLSLShaderEntity } from '../GLSLShaderEntity';
-import { WGSLShaderEntity } from '../WGSLShaderEntity';
 
 export class EntityBuilder {
   private entities: IEntity[] = [];
@@ -77,7 +75,7 @@ export class EntityRenderer {
    * Adds an entity to the renderer.
    * @param entity - The entity to add.
    */
-  addEntity(entity: IEntity | GLSLShaderEntity | WGSLShaderEntity) {
+  addEntity(entity: IEntity) {
     this.entities.push(entity);
     entity.canvas.width = this.canvas.width;
     entity.canvas.height = this.canvas.height;

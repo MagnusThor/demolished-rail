@@ -31,7 +31,7 @@ import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
      * Runs the WGSL shader demo.
      * @returns A Promise that resolves to the created WGSLShaderEntity.
      */
-    async run(): Promise<WGSLShaderEntity> {
+    async run(): Promise<WGSLShaderEntity<IWGSLShaderProperties>> {
       const wsglShaderCanvas = document.createElement("canvas");
       wsglShaderCanvas.width = this.screenCanvas.width;
       wsglShaderCanvas.height = this.screenCanvas.height;

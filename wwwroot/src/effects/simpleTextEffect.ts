@@ -23,7 +23,7 @@ export const simpleTextEffect = (
   ctx: CanvasRenderingContext2D,
   propertybag: ISimpleTextEffectProps,
   sequence: Sequence,
-  entity: Entity<ISimpleTextEffectProps> // Add entity parameter
+  entity?: Entity<ISimpleTextEffectProps> // Add entity parameter
 ) => {
   const { x, y, texts, textIndex, font, size, fadeInDuration, fadeOutDuration, textDuration, alignment, margin } = propertybag;
 
@@ -48,8 +48,8 @@ export const simpleTextEffect = (
       break;
   }
 
-  const sceneStartTime = entity.getScene()?.startTimeinMs || 0; // Get sceneStartTime from the entity
-  const elapsed = (ts - sceneStartTime - (entity.startTimeinMs || 0)) / 1000; // Calculate elapsed time
+  const sceneStartTime = entity!.getScene()?.startTimeinMs || 0; // Get sceneStartTime from the entity
+  const elapsed = (ts - sceneStartTime - (entity!.startTimeinMs || 0)) / 1000; // Calculate elapsed time
 
   let alpha = 1;
   if (elapsed < fadeInDuration) {

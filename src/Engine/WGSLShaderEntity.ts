@@ -25,15 +25,12 @@ export interface IWGSLShaderProperties {
     context: GPUCanvasContext;
     renderBuffers?: IWGSLShaderRenderBuffer[];
 }
-export class WGSLShaderEntity
+export class WGSLShaderEntity<T extends IWGSLShaderProperties>
  implements IEntity {
-
     canvas: HTMLCanvasElement;
     scene?: Scene | undefined;
-
     transitionIn?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
     transitionOut?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
-
     beatListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
     tickListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
     barListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
@@ -41,9 +38,9 @@ export class WGSLShaderEntity
 
     constructor(
         public name: string,
-        public props?: IWGSLShaderProperties,
+        public props?: T,
         public action?: (time: number, shaderRender: WGSLShaderRenderer,
-            properties: IWGSLShaderProperties, sequence?: Sequence,entity?:IEntity) => void,
+            properties: IWGSLShaderProperties, sequence?: Sequence,entity?:WGSLShaderEntity<T>) => void,
         public w?: number,
         public h?: number,
         public startTimeinMs?: number,
@@ -77,7 +74,7 @@ export class WGSLShaderEntity
  * @param listener - The function to call when a beat occurs.
  * @returns The Entity instance for chaining.
  */
-    onBeat<T>(listener: (time: number, count: number, propeetyBag: T) => void): this {
+    onBeat<T>(listener: (time: number, count: number, propertyBag?: T) => void): this {
         this.beatListeners!.push(listener as any);
         return this;
     }
@@ -87,7 +84,7 @@ export class WGSLShaderEntity
      * @param listener - The function to call when a tick occurs.
      * @returns The Entity instance for chaining.
      */
-    onTick<T>(listener: (time: number, count: number) => void): this {
+    onTick<T>(listener: (time: number, count: number,propertyBag?:T) => void): this {
         this.tickListeners!.push(listener as any);
         return this;
     }
@@ -97,7 +94,7 @@ export class WGSLShaderEntity
      * @param listener - The function to call when a bar is complete.
      * @returns The Entity instance for chaining.
      */
-    onBar<T>(listener: (ts: number, count: number, props: T) => void): this {
+    onBar<T>(listener: (ts: number, count: number, propertyBag?: T) => void): this {
         this.barListeners!.push(listener as any);
         return this;
     }

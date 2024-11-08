@@ -1,15 +1,15 @@
-
 # demolished-rail
 
-  This repository contains a TypeScript animation framework called **demolished-rail**, designed for creating complex and dynamic animations with ease. The framework provides a structured approach to building animations using scenes, entities, and a sequence controller. It also includes features like BPM synchronization, beat and tick events, and audio analysis (FFT) to create interactive and audio-reactive visualizations.
-  
+This repository contains a TypeScript animation framework called **demolished-rail**, designed for creating complex and dynamic animations with ease. The framework provides a structured approach to building animations using scenes, entities, and a sequence controller. It also includes features like BPM synchronization, beat and tick events, and audio analysis (FFT) to create interactive and audio-reactive visualizations.
 
 ## Features
 
 * **Scene-based animation:** Organize animations into scenes with defined start times and durations.
 * **Entity management:** Create and manage individual animatable entities within scenes.
     * **Canvas-based entities:** Draw animations using the HTML5 Canvas API.
-    * **Shader-based entities:** Leverage WebGL shaders for high-performance graphics.
+    * **Shader-based entities:** Leverage WebGL shaders or WebGPU shaders for high-performance graphics.
+        * **WebGL support:** Create entities with WebGL shaders using `GLSLShaderEntity` and `GLSLShaderRenderer`.
+        * **WGSL support:** Create entities with WGSL shaders for modern, safe, and portable graphics.
         * **Multi-pass rendering:** Supports 1-n shader programs/buffers for complex effects.
         * **Texture support:** Use 1-n textures within each shader program.
         * **Custom uniforms:** Pass custom data to your shaders for dynamic control.
@@ -32,30 +32,23 @@
 * **Entity Builder:** Use the `EntityBuilder` class to easily arrange entities within a scene with precise timing control.
 * **Sequence Helper:** Use the `SequenceHelper` class to calculate durations based on beats, bars, or ticks, given a specific BPM and time signature.
 * **Compressor:** Compress your animation and JavaScript code into a single, self-contained PNG image using the integrated `Compressor` class.
-* **Demoscene Production Helpers:**
-    *   `SetupDemo` class: Provides a structured way to set up and run your demoscene productions.
-    *   `CompressDemo` class:  Simplifies the process of compressing assets and bundling your demo into a single executable file.
 * **Conductor:**  Use the `Conductor` class to create a timeline of events that trigger actions on entities based on time, beats, bars, or custom conditions.
-* **Effects and Helpers:**
-    *   Variety of built-in effects (e.g., `typeWriterEffect`, `randomSquareEffect`, `expandingCircleEffect`, `strobeEffect`, `parallaxLayerEffect`, `creditsScrollerEffect`, `audioVisualizerEffect`, etc.).
-    *   Helper functions for common tasks (e.g., `createFadeInTransition`, `createFadeOutTransition`, `createBlurPostProcessor`, etc.).
-
+* **Effects and Helpers for common tasks:**
+* **EntityRenderer:**  A helper class to render and test individual entities or combinations of entities without needing a full `Sequence`.
 
 ## Installation
- 
 
-    npm  install demolished-rail
+```bash
+npm install demolished-rail
 
 
 ## Usage
-
   
 (See  the  repository  for  detailed  examples  and  documentation)
   
 
 ## Contributing
 
-  
 Contributions  are  welcome!  Feel  free  to  open  issues  or  submit  pull  requests.
 
   

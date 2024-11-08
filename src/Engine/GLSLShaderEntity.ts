@@ -3,11 +3,21 @@ import { Scene } from './Scene';
 import { Sequence } from './Sequence';
 import { GLSLShaderRenderer } from './ShaderRenderers/WebGL/GLSLShaderRenderer';
 
+export type IGLSLCustomUniform<T> = (
+    location: WebGLUniformLocation,
+    gl: WebGLRenderingContext,
+    program: WebGLProgram,
+    time: number,
+    entity?: T
+  ) => void;
+
 export interface IGLSLShaderRenderBuffer {
     name: string;
     vertex: string;
     fragment: string;
-    customUniforms?: {};
+    customUniforms?: {
+        [key: string]: IGLSLCustomUniform<any>;
+    };
     textures: string[];
 }
 
@@ -17,15 +27,15 @@ export interface IGLSLShaderProperties {
     renderBuffers: IGLSLShaderRenderBuffer[];
 }
 
-export class GLSLShaderEntity implements IEntity {
+export class GLSLShaderEntity<T extends IGLSLShaderProperties> implements IEntity {
     canvas: HTMLCanvasElement;
     shaderRenderer: GLSLShaderRenderer;
     transitionIn?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
     transitionOut?: ((ctx: CanvasRenderingContext2D, progress: number) => void) | undefined;
 
-    beatListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
-    tickListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
-    barListeners?: ((time: number, count: number, propertyBag: any) => void)[] = [];
+    beatListeners?: ((time: number, count: number, propertyBag: T) => void)[] = [];
+    tickListeners?: ((time: number, count: number, propertyBag: T) => void)[] = [];
+    barListeners?: ((time: number, count: number, propertyBag: T) => void)[] = [];
 
     private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
     /**
@@ -38,14 +48,12 @@ export class GLSLShaderEntity implements IEntity {
      */
     constructor(
         public name: string,
-        public props?: IGLSLShaderProperties,
-
-        public action?: (time: number, shaderRender: GLSLShaderRenderer, properties: IGLSLShaderProperties, sequence?: Sequence, entity?: IEntity) => void,
+        public props?: T,
+        public action?: (time: number, shaderRender: GLSLShaderRenderer, properties: IGLSLShaderProperties, sequence?: Sequence, entity?: GLSLShaderEntity<T>) => void,
         public w?: number,
         public h?: number,
         public startTimeinMs?: number,
         public durationInMs?: number
-
     ) {
         this.canvas = document.createElement("canvas");
         if (w && h) {
@@ -54,8 +62,13 @@ export class GLSLShaderEntity implements IEntity {
         }
         if (props?.mainFragmentShader && props.mainVertexShader) {
             this.shaderRenderer = new GLSLShaderRenderer(this.canvas, props?.mainVertexShader, props?.mainFragmentShader);
+            this.shaderRenderer.setEntity(this);
             props.renderBuffers.forEach(buffer => {
-                this.shaderRenderer.addBuffer(buffer.name, buffer.vertex, buffer.fragment, buffer.textures, buffer.customUniforms);
+                this.shaderRenderer.addBuffer(buffer.name, 
+                    buffer.vertex, 
+                    buffer.fragment, 
+                    buffer.textures, 
+                    buffer.customUniforms);
             });
         } else {
             throw new Error("Cannot create ShaderEntity: Missing main shader code.");
@@ -70,9 +83,9 @@ export class GLSLShaderEntity implements IEntity {
     /**
  * Adds an event listener for when a beat occurs.
  * @param listener - The function to call when a beat occurs.
- * @returns The Entity instance for chaining.
+ * @returns The Entity instance for chaining.§
  */
-    onBeat<T>(listener: (time: number, count: number, propeetyBag: T) => void): this {
+    onBeat<T>(listener: (time: number, count: number, propertyBag?: T) => void): this {
         this.beatListeners!.push(listener as any);
         return this;
     }
@@ -82,7 +95,7 @@ export class GLSLShaderEntity implements IEntity {
      * @param listener - The function to call when a tick occurs.
      * @returns The Entity instance for chaining.
      */
-    onTick<T>(listener: (time: number, count: number) => void): this {
+    onTick<T>(listener: (time: number, count: number,propertyBag?: T) => void): this {
         this.tickListeners!.push(listener as any);
         return this;
     }
@@ -92,7 +105,7 @@ export class GLSLShaderEntity implements IEntity {
      * @param listener - The function to call when a bar is complete.
      * @returns The Entity instance for chaining.
      */
-    onBar<T>(listener: (ts: number, count: number, props: T) => void): this {
+    onBar<T>(listener: (ts: number, count: number, propertyBag?: T) => void): this {
         this.barListeners!.push(listener as any);
         return this;
     }
@@ -100,14 +113,12 @@ export class GLSLShaderEntity implements IEntity {
 
 
     /**
- * Adds a post-processing function to the entity.
- * @param processor - The post-processing function to add.
- */
+     * Adds a post-processing function to the entity.
+     * @param processor - The post-processing function to add.
+     */
     addPostProcessor(processor: (ctx: CanvasRenderingContext2D, sequence: Sequence) => void) {
         this.postProcessors.push(processor);
     }
-
-
     /**
      * Updates the ShaderEntity by calling the action function (if provided)
      * and then updating the ShaderRenderer.

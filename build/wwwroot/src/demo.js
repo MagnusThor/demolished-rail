@@ -49,8 +49,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const scenes = sceneBuilder.getScenes();
     // Set up a wgsl shader entity & renderer
     const wgslCanvas = document.createElement("canvas"); // target canvas for WGSLShader
-    wgslCanvas.width = demo.settings.width;
-    wgslCanvas.height = demo.settings.height;
+    wgslCanvas.width = demo.targetCanvas.width;
+    wgslCanvas.height = demo.targetCanvas.height;
     const webgpu = await (0, WGSLShaderRenderer_1.initWebGPU)(wgslCanvas, { powerPreference: 'high-performance' });
     // preload textures to use in WGSL Shader
     const wsglTextures = await TextureLoader_1.WGSLTextureLoader.loadAll(webgpu.device, {
@@ -84,8 +84,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     }, (ts, ctx, props, sequence) => (0, strobeEffect_1.strobeEffect)(ts, ctx, props, demo.sequence));
     const imageOverlayEntity = new Entity_1.Entity("ImageOverlay", {
         position: imageOverlayEffect_1.ImagePosition.FILL,
-        width: demo.settings.width,
-        height: demo.settings.height,
+        width: demo.targetCanvas.width,
+        height: demo.targetCanvas.height,
         image: (_a = AssetsHelper_1.AssetsHelper.textureCache.get("silhouette.png")) === null || _a === void 0 ? void 0 : _a.src,
         opacity: 0.7,
         fadeIn: true,
@@ -93,8 +93,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         duration: 5,
     }, (ts, ctx, props) => (0, imageOverlayEffect_1.imageOverlayEffect)(ts, ctx, props, demo.sequence));
     const expandingCircleEntity = new Entity_1.Entity("ExpandingCircle", {
-        x: demo.settings.width / 2,
-        y: demo.settings.height / 2,
+        x: demo.targetCanvas.width / 2,
+        y: demo.targetCanvas.height / 2,
         radius: 0,
         maxRadius: 450,
         growthRate: 15,
@@ -102,8 +102,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     }, (ts, ctx, props) => (0, expandingCircleEffect_1.expandingCircleEffect)(ts, ctx, props, demo.sequence) // Pass the sequence instance
     );
     const starburstEntity = new Entity_1.Entity("Starburst", {
-        x: demo.settings.width / 2, // Example x-coordinate
-        y: demo.settings.height / 2, // Example y-coordinate
+        x: demo.targetCanvas.width / 2, // Example x-coordinate
+        y: demo.targetCanvas.height / 2, // Example y-coordinate
         numPoints: 8, // Example number of points
         outerRadius: 50,
         innerRadius: 25,
@@ -121,8 +121,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
         useBPM: true,
-        bpm: demo.settings.audioProperties.bpm,
-        ticksPerBeat: demo.settings.audioProperties.ticks
+        bpm: demo.audioProperties.bpm,
+        ticksPerBeat: demo.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect);
     const randomSquareEntity = new Entity_1.Entity("RandomSquare", {
         x: 0,
@@ -141,7 +141,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const audioVisualizerEntity = new Entity_1.Entity("AudioVisualizer", {
         x: 0,
         y: 150,
-        width: demo.settings.width,
+        width: demo.targetCanvas.width,
         height: 300,
         barWidth: 5,
         barSpacing: 2,
@@ -160,7 +160,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
             }
         ]
     }, (ts, render, propertybag) => {
-    }, demo.settings.width, demo.settings.height);
+    }, demo.targetCanvas.width, demo.targetCanvas.height);
     const someKindOfFractalShaderEntity = new GLSLShaderEntity_1.GLSLShaderEntity("ShaderEnriry", {
         mainFragmentShader: mainFragment_1.mainFragment,
         mainVertexShader: mainVertex_1.mainVertex,
@@ -173,7 +173,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
             }
         ]
     }, (ts, render, propertybag) => {
-    }, demo.settings.width, demo.settings.height);
+    }, demo.targetCanvas.width, demo.targetCanvas.height);
     const textOverlay = new Entity_1.Entity("TextEffect", {
         x: 100,
         y: 100,
@@ -192,7 +192,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
             "1-N TEXTURES",
             "CUSTOM UNIFORMS",
         ],
-        font: demo.settings.font,
+        font: demo.font,
         size: 60,
         currentBeat: 0,
     }, (ts, ctx, props) => {
@@ -207,8 +207,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
         useBPM: true,
-        bpm: demo.settings.audioProperties.bpm,
-        ticksPerBeat: demo.settings.audioProperties.ticks
+        bpm: demo.audioProperties.bpm,
+        ticksPerBeat: demo.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect, 1000, 10000);
     const typeWriter2EntityForFirstScene = new Entity_1.Entity("Typewriter", {
         x: 0,
@@ -218,8 +218,8 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         speed: 5, // 5 characters per second
         lastCharacterTime: 0,
         useBPM: true,
-        bpm: demo.settings.audioProperties.bpm,
-        ticksPerBeat: demo.settings.audioProperties.ticks
+        bpm: demo.audioProperties.bpm,
+        ticksPerBeat: demo.audioProperties.ticks
     }, typeWriterEffet_1.typeWriterEffect, 5000, 10000);
     const gridOverlayEffectEntity = new Entity_1.Entity("gridOverlayEffets", {
         activeCells: new Set(),
