@@ -106,7 +106,7 @@ Call the play() method on the Sequence instance to start the animation.
 
 **Example code**
  
-
+```typescript
      import { Scene, Sequence, DefaultAudioLoader, Entity } from 'demolished-rail';
       // ... import other classes and effects ...
       
@@ -136,7 +136,7 @@ Call the play() method on the Sequence instance to start the animation.
     
     sequence.play();
 
-
+```
 
 ### Creating a Canvas2D Entity in Demolished-rail
 
@@ -152,7 +152,7 @@ Demolished-rail provides a flexible way to create and animate entities using the
 *   The action function will be called on each frame, allowing you to draw and animate the entity using the Canvas 2D rendering context (`ctx`).
 
 **Example Code**
-
+```typescript
 	import { Entity } from 'demolished-rail';
     
     // Define entity properties
@@ -183,7 +183,7 @@ Demolished-rail provides a flexible way to create and animate entities using the
     
     // Add the entity to a scene
     someScene.addEntity(circleEntity);
-
+```
 
 ### Creating a WebGL Shader Entity in Demolished-Rail
 
@@ -274,7 +274,7 @@ Demolished-rail also supports WebGL, allowing you to create shader entities usin
     // Add the entity to a scene
     someScene.addEntity(shader);
 
-
+```
 
 
 ### Building a WebGPU Shader Entity in Demolished-Rail
@@ -361,7 +361,7 @@ Demolished-rail now includes support for WebGPU, allowing you to create high-per
     // Add the entity to a scene
     someScene.addEntity(wgslShaderEntity)
 
-
+```
 
 
 ## Contributing  
