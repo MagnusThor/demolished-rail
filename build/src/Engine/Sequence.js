@@ -3,6 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sequence = void 0;
 class Sequence {
     /**
+  * Adds an event listener for when the frame rate drops below a threshold.
+  * @param listener - The function to call when the frame rate is low.
+  */
+    onLowFrameRate(listener) {
+        this.lowFrameRateListeners.push(listener);
+    }
+    /**
 * Sets the function to be used for resetting the rendering context when switching scenes.
 * @param resetFunction - The function to call to reset the context.
 */
@@ -56,9 +63,10 @@ class Sequence {
    * @param scenes - An optional array of scenes to include in the sequence.
    * @param maxFps - The maximum frames per second (not yet implemented).
    */
-    constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, audioLoader, scenes, maxFps // not implemened at the moment
+    constructor(target, bpm = 120, ticksPerBeat = 4, beatsPerBar = 4, audioLoader, scenes, maxFps = 60 // not implemened at the moment
     ) {
         this.target = target;
+        this.maxFps = maxFps;
         this.durationMs = 0;
         this.scenes = [];
         this.currentSceneIndex = 0;
@@ -82,6 +90,7 @@ class Sequence {
         this.barListeners = [];
         this.frameListeners = [];
         this.postProcessors = [];
+        this.lowFrameRateListeners = [];
         this.sceneTransitionInListeners = [];
         this.sceneTransitionOutListeners = [];
         this.resetContext = (ctx) => {
@@ -144,6 +153,8 @@ class Sequence {
             scene.width = this.target.width;
             scene.height = this.target.height;
         }
+        // pass the sequence to the Scene
+        scene.sequence = this;
         this.scenes.push(scene);
         this.recalculateDuration();
     }
@@ -153,7 +164,9 @@ class Sequence {
      * @returns The Sequence instance for chaining.
      */
     addScenes(...scenes) {
-        this.scenes.push(...scenes);
+        scenes.forEach(scene => {
+            this.scenes.push(scene);
+        });
         this.recalculateDuration();
         return this;
     }
@@ -245,15 +258,46 @@ class Sequence {
         this.frameListeners.forEach(listener => listener(this.currentSceneIndex, time));
     }
     /**
-     * Starts the animation sequence.
-     */
-    play() {
+       * Starts the animation sequence.
+       * @param maxFps - The maximum frames per second.
+       */
+    play(maxFps) {
         this.isPlaying = true;
         this.currentSceneIndex = 0;
         this.lastBeatTime = 0;
         this.currentTick = 0;
-        this.currentBeat = 0; // Initialize currentBeat to 0
+        this.currentBeat = 0;
         this.startTime = performance.now();
+        if (maxFps) {
+            this.maxFps = maxFps;
+        }
+        console.log(`Rendering at ${this.maxFps}`);
+        let then = performance.now();
+        const interval = 1000 / this.maxFps;
+        let frameCount = 0;
+        let lastFpsUpdateTime = 0;
+        const animate = (ts) => {
+            const now = performance.now();
+            const delta = now - then;
+            if (delta > interval) {
+                then = now - (delta % interval);
+                const adjustedTimeStamp = ts - this.startTime;
+                this.playCurrentScene(adjustedTimeStamp);
+                frameCount++;
+                if (now - lastFpsUpdateTime >= 1000) {
+                    const fps = frameCount / ((now - lastFpsUpdateTime) / 1000);
+                    frameCount = 0;
+                    lastFpsUpdateTime = now;
+                    if (fps < this.maxFps * 0.8) {
+                        this.lowFrameRateListeners.forEach(listener => listener(fps));
+                    }
+                }
+            }
+            if (this.isPlaying) {
+                this.requestAnimationFrameID = requestAnimationFrame(animate);
+            }
+        };
+        // Start audio playback
         if (this.audioBuffer) {
             this.audioSource = this.audioContext.createBufferSource();
             this.audioSource.buffer = this.audioBuffer;
@@ -262,13 +306,6 @@ class Sequence {
             this.fftData = new Uint8Array(this.analyser.frequencyBinCount);
             this.audioSource.start();
         }
-        const animate = (ts) => {
-            const adjustedTimeStamp = ts - this.startTime;
-            this.playCurrentScene(adjustedTimeStamp);
-            if (this.isPlaying) {
-                this.requestAnimationFrameID = requestAnimationFrame(animate);
-            }
-        };
         this.requestAnimationFrameID = requestAnimationFrame(animate);
     }
     /**
@@ -337,6 +374,15 @@ class Sequence {
         }
         // Clear the target canvas and update/draw entities
         (_a = this.targetCtx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.target.width, this.target.height);
+        this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
+            if (scene === this.currentScene) {
+                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
+                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
+                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
+                    listener(this.targetCtx, scene, transitionProgress);
+                }
+            }
+        });
         this.currentScene.entities.forEach(entity => {
             var _a, _b;
             // Update the conductor's time and trigger events
@@ -349,30 +395,24 @@ class Sequence {
             // Trigger entity events only when the values change
             if (this.currentBeat !== this.previousBeat) {
                 entity.beatListeners.forEach(listener => listener(timeStamp, this.beatCounter, entity.props));
-                this.previousBeat = this.currentBeat;
             }
             if (this.currentTick !== this.previousTick) {
                 entity.tickListeners.forEach(listener => listener(timeStamp, this.tickCounter, entity.props));
-                this.previousTick = this.currentTick;
             }
             if (this.currentBar !== this.previousBar) {
                 entity.barListeners.forEach(listener => listener(timeStamp, this.currentBar, entity.props));
-                this.previousBar = this.currentBar;
             }
         });
-        // Apply post-processing effects
-        if (this.targetCtx) {
-            this.postProcessors.forEach(processor => processor(this.targetCtx, this));
+        // Update previous values for the sequence AFTER processing all entities
+        if (this.currentBeat !== this.previousBeat) {
+            this.previousBeat = this.currentBeat;
         }
-        this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
-            if (scene === this.currentScene) {
-                const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
-                if (sceneElapsedTime >= startTime && sceneElapsedTime <= startTime + duration) {
-                    const transitionProgress = (sceneElapsedTime - startTime) / duration; // Calculate progress based on duration
-                    listener(this.targetCtx, scene, transitionProgress);
-                }
-            }
-        });
+        if (this.currentTick !== this.previousTick) {
+            this.previousTick = this.currentTick;
+        }
+        if (this.currentBar !== this.previousBar) {
+            this.previousBar = this.currentBar;
+        }
         this.sceneTransitionOutListeners.forEach(({ scene, startTime, duration, listener }) => {
             if (scene === this.currentScene) {
                 const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
@@ -382,6 +422,10 @@ class Sequence {
                 }
             }
         });
+        // Apply post-processing effects
+        if (this.targetCtx) {
+            this.postProcessors.forEach(processor => processor(this.targetCtx, this));
+        }
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
         // Trigger frame listeners
         this.frameListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));

@@ -1,4 +1,4 @@
-import { Sequence } from "../../../../src/Engine/Sequence";
+import { Sequence } from '../../../../src/Engine/Sequence';
 
 export enum TextAlignment {
   LEFT,
@@ -37,11 +37,10 @@ export const textFadeInOut = (
 
   // If looping, take the modulus to keep elapsed within the total duration
   if (loop) {
-    const totalDuration = texts.length * textDuration;
+    const totalDuration = texts.length * textDuration ;
     elapsed = elapsed % totalDuration;
   }
-
-
+  
   // Calculate the index of the current text element
   let textIndex = Math.floor(elapsed / textDuration);
 

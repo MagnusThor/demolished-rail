@@ -89,23 +89,31 @@ class Entity {
     * @param timeStamp - The current timestamp in the animation.
     */
     update(timeStamp) {
-        var _a;
+        var _a, _b;
         (_a = this.ctx) === null || _a === void 0 ? void 0 : _a.clearRect(0, 0, this.canvas.width, this.canvas.height);
         if (this.action && this.ctx && this.props) {
             // Calculate elapsed time relative to the scene's start time    
             const sceneStartTime = this.getScene().startTimeinMs || 0;
             const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
             if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
-                this.action(timeStamp, this.ctx, this.props);
+                this.action(timeStamp, this.ctx, this.props, (_b = this.getScene()) === null || _b === void 0 ? void 0 : _b.sequence, this);
             }
         }
     }
     /**
-   * Retrieves the Sequence instance associated with the entity.
+   * Retrieves the Scene instance associated with the entity.
    * @returns The Sequence instance if available, otherwise null.
    */
     getScene() {
         return this.scene;
+    }
+    /**
+  * Retrieves the Sequence instance associated with the entity.
+  * @returns The Sequence instance if available, otherwise null.
+  */
+    getSequence() {
+        var _a;
+        return (_a = this.scene) === null || _a === void 0 ? void 0 : _a.sequence;
     }
 }
 exports.Entity = Entity;

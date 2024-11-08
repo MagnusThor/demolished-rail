@@ -1,9 +1,15 @@
-;
+import { IGLSLShaderProperties } from '../../../src';
+
+export interface IEarthShader extends IGLSLShaderProperties{
+    cameraPos:number[];
+    amountOfLightning:number;
+}
 
 export const earthShader = /*glsl*/ `uniform float time;
 uniform vec2 mouse;
 uniform vec2 resolution;
 uniform vec3 cameraPos;
+uniform float amountOfLightning;
 out vec4 fragColor;
 
 const mat2 m = mat2(1.616, 1.212, -1.212, 1.616);
@@ -120,7 +126,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
         vec2 strike;
         if (getPosition(camera, getDir(hash21(time)), strike)) {
             vec2 diff = position - strike;
-            lightning += clamp(1.0 - 1500.0 * dot(diff, diff), 0.0, 1.0);
+            lightning += clamp(1.0 - amountOfLightning * dot(diff, diff), 0.0, 1.0);
         }
         lightning *= smoothstep(0.65, 0.75, weather);
         earth += lightning * vec3(1.0, 1.0, 1.0);

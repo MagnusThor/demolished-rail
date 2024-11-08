@@ -2,15 +2,16 @@ import {
   Entity,
   IEntity,
 } from './Entity';
-import { GLSLShaderEntity } from './GLSLShaderEntity';
 import { Sequence } from './Sequence';
-import { WGSLShaderEntity } from './WGSLShaderEntity';
 
 export class Scene {
   public entities: IEntity[] = [];
 
   private transitionOutListeners: ((ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void)[] = [];
   private transitionInListeners: ((ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void)[] = [];
+
+
+  public sequence: Sequence | undefined;
 
   /**
    * Creates a new Scene.
@@ -27,7 +28,7 @@ export class Scene {
    * Adds an entity to the scene.
    * @param entity - The entity to add.
    */
-  addEntity(entity: IEntity | GLSLShaderEntity | WGSLShaderEntity): void {
+  addEntity(entity: IEntity): void {
     // If the entity's canvas dimensions are not set, use the scene's dimensions
     if (!entity.w && !entity.h) {
       entity.canvas.width = this.width || 800;

@@ -94,7 +94,6 @@ import { SetupDemo } from './SetupDemo';
 // get the music as baase
 const demo = new SetupDemo(new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
 
-
 demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(async (demo: SetupDemo) => {
 
 await demo.sequence.initialize();
@@ -113,7 +112,7 @@ await demo.sequence.initialize();
 
     // Set up a wgsl shader entity & renderer
     const wgslCanvas = document.createElement("canvas");  // target canvas for WGSLShader
-    wgslCanvas.width = demo.settings.width; wgslCanvas.height = demo.settings.height;
+    wgslCanvas.width = demo.targetCanvas.width; wgslCanvas.height = demo.targetCanvas.height;
 
     const webgpu = await initWebGPU(wgslCanvas, { powerPreference: 'high-performance' });
 
@@ -165,8 +164,8 @@ await demo.sequence.initialize();
 
         {
             position: ImagePosition.FILL,
-            width: demo.settings.width,
-            height: demo.settings.height,
+            width: demo.targetCanvas.width,
+            height: demo.targetCanvas.height,
             image: AssetsHelper.textureCache!.get("silhouette.png")?.src,
             opacity: 0.7,
             fadeIn: true,
@@ -181,8 +180,8 @@ await demo.sequence.initialize();
         "ExpandingCircle",
 
         {
-            x: demo.settings.width / 2,
-            y: demo.settings.height / 2,
+            x: demo.targetCanvas.width / 2,
+            y: demo.targetCanvas.height / 2,
             radius: 0,
             maxRadius: 450,
             growthRate: 15,
@@ -195,8 +194,8 @@ await demo.sequence.initialize();
         "Starburst",
 
         {
-            x: demo.settings.width / 2, // Example x-coordinate
-            y: demo.settings.height / 2, // Example y-coordinate
+            x: demo.targetCanvas.width / 2, // Example x-coordinate
+            y: demo.targetCanvas.height / 2, // Example y-coordinate
             numPoints: 8,  // Example number of points
             outerRadius: 50,
             innerRadius: 25,
@@ -220,8 +219,8 @@ await demo.sequence.initialize();
             speed: 5, // 5 characters per second
             lastCharacterTime: 0,
             useBPM: true,
-            bpm: demo.settings.audioProperties.bpm,
-            ticksPerBeat: demo.settings.audioProperties.ticks
+            bpm: demo.audioProperties.bpm,
+            ticksPerBeat: demo.audioProperties.ticks
         },
         typeWriterEffect
     );
@@ -258,7 +257,7 @@ await demo.sequence.initialize();
         {
             x: 0,
             y: 150,
-            width: demo.settings.width,
+            width: demo.targetCanvas.width,
             height: 300,
             barWidth: 5,
             barSpacing: 2,
@@ -281,7 +280,7 @@ await demo.sequence.initialize();
                 }
             ]
         }, (ts, render, propertybag) => {
-        }, demo.settings.width, demo.settings.height);
+        }, demo.targetCanvas.width, demo.targetCanvas.height);
 
     const someKindOfFractalShaderEntity = new GLSLShaderEntity("ShaderEnriry",
 
@@ -297,7 +296,7 @@ await demo.sequence.initialize();
                 }
             ]
         }, (ts, render, propertybag) => {
-        }, demo.settings.width, demo.settings.height);
+        }, demo.targetCanvas.width, demo.targetCanvas.height);
 
 
     const textOverlay = new Entity<ITextEffectProps>(
@@ -327,7 +326,7 @@ await demo.sequence.initialize();
                 "1-N TEXTURES",
                 "CUSTOM UNIFORMS",
             ],
-            font: demo.settings.font,
+            font: demo.font,
             size: 60,
             currentBeat: 0,
         },
@@ -349,8 +348,8 @@ await demo.sequence.initialize();
             speed: 5, // 5 characters per second
             lastCharacterTime: 0,
             useBPM: true,
-            bpm: demo.settings.audioProperties.bpm,
-            ticksPerBeat: demo.settings.audioProperties.ticks
+            bpm: demo.audioProperties.bpm,
+            ticksPerBeat: demo.audioProperties.ticks
         },
         typeWriterEffect, 1000, 10000
     );
@@ -366,8 +365,8 @@ await demo.sequence.initialize();
             speed: 5, // 5 characters per second
             lastCharacterTime: 0,
             useBPM: true,
-            bpm: demo.settings.audioProperties.bpm,
-            ticksPerBeat: demo.settings.audioProperties.ticks
+            bpm: demo.audioProperties.bpm,
+            ticksPerBeat: demo.audioProperties.ticks
         },
         typeWriterEffect, 5000, 10000
     );
