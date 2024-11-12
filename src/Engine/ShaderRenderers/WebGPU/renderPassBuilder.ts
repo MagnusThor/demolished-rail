@@ -9,6 +9,11 @@ export interface IPassBuilder {
     device: GPUDevice;
 }
 
+export enum RENDERPASS{
+    COMPUTESHADER = 0,
+    FRAGMENTSHADER = 1    
+}
+
 export interface IPass {
     label: string;
     pipleline: GPUComputePipeline | GPURenderPipeline;
@@ -25,7 +30,6 @@ export class RenderPass implements IPass
         public uniforms: Uniforms,public bindGroup:GPUBindGroup, public buffer:GPUTexture,
         public bufferView: GPUTextureView){
     }
-
 }
 
 
@@ -40,13 +44,10 @@ export class RenderPassBuilder implements IPassBuilder {
     /**
   * Creates a new RenderPassBuilder.
   * @param device - The GPUDevice to use for creating resources.
-  * @param canvas - The HTMLCanvasElement to render to.
   */
-
-    constructor(device: GPUDevice, public canvas: HTMLCanvasElement) {
+    constructor(device: GPUDevice) {
         this.device = device;
     }
-
     /**
    * Creates a bind group layout and entries for a render pipeline.
    * @param uniformBuffer - The uniform buffer for the pipeline.
@@ -89,11 +90,8 @@ export class RenderPassBuilder implements IPassBuilder {
   */
     createRenderPipeline(material: Material, geometry: Geometry, textures: Array<IWGSLTextureData>,
         priorRenderPasses: IPass[]
-
     ): GPURenderPipeline {
-
         const bindGroupLayoutEntries = new Array<GPUBindGroupLayoutEntry>();
-
         // add uniforms
         bindGroupLayoutEntries.push(
             {
@@ -103,8 +101,6 @@ export class RenderPassBuilder implements IPassBuilder {
                     type: "uniform"
                 }
             });
-
-
         // add sampler
         bindGroupLayoutEntries.push({ // sampler
             binding: 1,
@@ -115,23 +111,16 @@ export class RenderPassBuilder implements IPassBuilder {
         });
 
         let offset = bindGroupLayoutEntries.length;
-
         // add prior render passes
-
         priorRenderPasses.forEach((p, index) => {
             bindGroupLayoutEntries.push({
                 binding: offset + index,
                 visibility: GPUShaderStage.FRAGMENT,
                 texture: {}
             });
-
-        })
-
+        });
         offset = bindGroupLayoutEntries.length;
-
-
         if (textures.length > 0) {
-
             for (let i = 0; i < textures.length; i++) { //  1-n texture bindings
                 if (textures[i].type === 0) {
                     bindGroupLayoutEntries.push({
@@ -156,8 +145,6 @@ export class RenderPassBuilder implements IPassBuilder {
             entries: bindGroupLayoutEntries
         });
 
-
-
         const pipeline = this.device.createRenderPipeline({
             layout: this.device.createPipelineLayout({
                 bindGroupLayouts: [bindGroupLayout],
@@ -179,10 +166,7 @@ export class RenderPassBuilder implements IPassBuilder {
             }
 
         });
-
         return pipeline;
-
-
     }
     /**
      * Creates a compute pipeline.

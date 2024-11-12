@@ -43,12 +43,24 @@ export class Sequence {
     public targetCtx!: CanvasRenderingContext2D | null;
 
     private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
+    private wgslPostProcessors: { scene: Scene, device:GPUDevice, processor: (ctx: CanvasRenderingContext2D, scene: Scene, device: GPUDevice) => void }[] = [];
 
     private lowFrameRateListeners: ((fps: number) => void)[] = [];
 
 
     private sceneTransitionInListeners: { scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void }[] = [];
     private sceneTransitionOutListeners: { scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void }[] = [];
+
+
+    /**
+   * Adds a WGSL post-processing effect to the sequence for a specific scene.
+   * @param scene - The scene to apply the effect to.
+   * @param processor - The WGSL post-processing function.
+   */
+    addWgslPostProcessor(scene: Scene,device:GPUDevice, processor: (ctx: CanvasRenderingContext2D, scene: Scene, device: GPUDevice) => void) {
+        this.wgslPostProcessors.push({ scene, processor,device:device });
+    }
+
 
 
     /**
@@ -455,8 +467,6 @@ export class Sequence {
         // Clear the target canvas and update/draw entities
         this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
 
-
-
         this.sceneTransitionInListeners.forEach(({ scene, startTime, duration, listener }) => {
             if (scene === this.currentScene) {
                 const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
@@ -467,7 +477,6 @@ export class Sequence {
                 }
             }
         });
-
 
         this.currentScene!.entities.forEach(entity => {
             // Update the conductor's time and trigger events
@@ -501,8 +510,6 @@ export class Sequence {
             this.previousBar = this.currentBar;
         }
 
-
-
         this.sceneTransitionOutListeners.forEach(({ scene, startTime, duration, listener }) => {
             if (scene === this.currentScene) {
                 const sceneElapsedTime = this.currentTime - scene.startTimeinMs;
@@ -517,6 +524,16 @@ export class Sequence {
         if (this.targetCtx) {
             this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
         }
+
+          // Apply WGSL post-processing effects
+    const wgslPostProcessor = this.wgslPostProcessors.find(p => p.scene === this.currentScene);
+    if (wgslPostProcessor) {
+      wgslPostProcessor.processor(this.targetCtx!,this.currentScene!,wgslPostProcessor.device);
+      
+    } else {
+      // ... (rest of the rendering logic) ...
+    }
+
 
 
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events

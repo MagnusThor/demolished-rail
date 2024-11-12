@@ -10,16 +10,13 @@ import {
 import {
   IPass,
   RenderPass,
+  RENDERPASS,
   RenderPassBuilder,
 } from './RenderPassBuilder';
-import {
-  IWGSLTexture,
-  IWGSLTextureData,
-  WGSLTextureLoader,
-} from './TextureLoader';
+import { IWGSLTextureData } from './TextureLoader';
 import { Uniforms } from './Uniforms';
 
-export const initWebGPU = async (canvas: HTMLCanvasElement,options?:GPURequestAdapterOptions) => {
+export const initWebGPU = async (canvas: HTMLCanvasElement, options?: GPURequestAdapterOptions) => {
     const adapter = await navigator.gpu?.requestAdapter(options);
     const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
     const device = await adapter?.requestDevice({
@@ -47,24 +44,22 @@ export const initWebGPU = async (canvas: HTMLCanvasElement,options?:GPURequestAd
  */
 export class WGSLShaderRenderer {
     renderPassBacklog: Map<string, IPass>;
-    renderTarget!: GPUTexture;
     renderPipleline!: GPURenderPipeline;
     renderPassBuilder!: RenderPassBuilder;
     frameCount: number = 0;
-    isPaused: any;
-    screen_bind_group!: GPUBindGroup;
-    geometry!: Geometry;
-    textures: Array<IWGSLTextureData>;
     frame: number = 0;
+    isPaused: any;
+    screenBindGroup!: GPUBindGroup;
+    geometry!: Geometry;
+    textures: Array<IWGSLTextureData>;   
     uniforms!: Uniforms;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,
         public context: GPUCanvasContext, geometry?: IGeometry) {
         this.renderPassBacklog = new Map<string, IPass>();
         this.textures = new Array<IWGSLTextureData>();
-        this.renderPassBuilder = new RenderPassBuilder(device, this.canvas);
+        this.renderPassBuilder = new RenderPassBuilder(device);
         this.geometry = new Geometry(device, geometry || rectGeometry);
         this.uniforms = new Uniforms(this.device, this.canvas);
-
     }
     /**
   * Gets the WebGPU device.
@@ -145,14 +140,15 @@ export class WGSLShaderRenderer {
 
     /**
    * Creates a main render pipeline for a given material.
+   * This pipeline combines the output of other render passes.
    * @param uniformBuffer - The uniform buffer for the pipeline.
    * @param material - The material to use for the pipeline.
    * @returns The created GPURenderPipeline.
    */
     createMainRenderPipeline(uniformBuffer: GPUBuffer, material: Material): GPURenderPipeline {
+        const bindingGroupEntries: Array<GPUBindGroupEntry> = [];
 
-        const bindingGroupEntrys: Array<GPUBindGroupEntry> = [];
-
+        // Create a default sampler
         const sampler = this.getDevice().createSampler({
             addressModeU: 'repeat',
             addressModeV: 'repeat',
@@ -160,59 +156,51 @@ export class WGSLShaderRenderer {
             minFilter: 'nearest'
         });
 
-        bindingGroupEntrys.push({
-            binding: 0,
-            resource: sampler
-        }, {
-            binding: 1,
-            resource: {
-                buffer: uniformBuffer
-            }
-        });
+        // Bind the sampler and uniform buffer
+        bindingGroupEntries.push(
+            { binding: 0, resource: sampler },
+            { binding: 1, resource: { buffer: uniformBuffer } }
+        );
 
         const layout = new Array<GPUBindGroupLayoutEntry>();
 
-        layout.push({
-            binding: 0,
-            visibility: GPUShaderStage.FRAGMENT,
-            sampler: {}
-        }, {
+        // Define the layout entries for the sampler and uniform buffer
+        layout.push(
+            {
+                binding: 0,
+                visibility: GPUShaderStage.FRAGMENT,
+                sampler: {}
+            }, {
             binding: 1,
             visibility: GPUShaderStage.FRAGMENT,
-            buffer: {
-                type: "uniform"
-            }
-        });
+            buffer: { type: "uniform" }
+        }
+        );
 
+        // Include the output textures from other render passes in the bind group
         const renderPasses = Array.from(this.renderPassBacklog.values());
-        renderPasses.forEach((pass, i) => {
-            bindingGroupEntrys.push({
-                binding: 2 + i,
+        renderPasses.forEach((pass, index) => {
+            bindingGroupEntries.push({
+                binding: 2 + index,
                 resource: pass.bufferView
             });
-            layout.push(
-                {
-                    binding: 2 + i,
-                    visibility: GPUShaderStage.FRAGMENT,
-                    texture: {}
-                });
+            layout.push({
+                binding: 2 + index,
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {}
+            });
         });
 
-        const screen_bind_group_layout = this.getDevice().createBindGroupLayout({
-            entries: layout
+        // Create the bind group layout and pipeline layout
+        const screenBindGroupLayout = this.getDevice().createBindGroupLayout({ entries: layout });
+        this.screenBindGroup = this.getDevice().createBindGroup({
+            layout: screenBindGroupLayout,
+            entries: bindingGroupEntries
         });
+        const screenPipelineLayout = this.device.createPipelineLayout({ bindGroupLayouts: [screenBindGroupLayout] });
 
-        this.screen_bind_group = this.getDevice().createBindGroup({
-            layout: screen_bind_group_layout,
-            entries: bindingGroupEntrys
-        });
-
-        const screen_pipeline_layout = this.getDevice().createPipelineLayout({
-            bindGroupLayouts: [screen_bind_group_layout]
-        });
-
-
-        const pipelineDescriptor: GPURenderPipelineDescriptor = {
+        // Create the render pipeline
+        return this.device.createRenderPipeline({
             vertex: {
                 module: material.vertexShaderModule,
                 entryPoint: material.shader.vertexEntryPoint || 'main_vertex',
@@ -221,30 +209,24 @@ export class WGSLShaderRenderer {
             fragment: {
                 module: material.fragmentShaderModule,
                 entryPoint: material.shader.fragmentEntryPoint || 'main_fragment',
-                targets: [{
-                    format: 'bgra8unorm'
-                }]
+                targets: [{ format: 'bgra8unorm' }]
             },
-            primitive: {
-                topology: 'triangle-list',
-            },
-            layout: screen_pipeline_layout
-        };
-
-        return this.getDevice().createRenderPipeline(pipelineDescriptor);
-
+            primitive: { topology: 'triangle-list' },
+            layout: screenPipelineLayout
+        });
     }
-
     /**
-   * Creates render targets for the pipeline.
-   * @returns An object containing the texture and texture view for the render target.
-   */
-    createAssets(): { buffer: GPUTexture; bufferView: GPUTextureView; } {
+     * Creates a render target texture.
+     * @param width - The width of the render target.
+     * @param height - The height of the render target.
+     * @returns An object containing the texture and texture view for the render target.
+     */
+    createRenderTarget(width: number, height: number): { buffer: GPUTexture; bufferView: GPUTextureView } {
         const buffer = this.getDevice().createTexture(
             {
                 size: {
-                    width: this.canvas.width,
-                    height: this.canvas.height,
+                    width: width,
+                    height: height,
                 },
                 format: "bgra8unorm",
                 usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
@@ -253,8 +235,6 @@ export class WGSLShaderRenderer {
         return { buffer, bufferView: buffer.createView() };
 
     }
-
-
 
     /**
      * Creates a buffer on the GPU.
@@ -290,173 +270,113 @@ export class WGSLShaderRenderer {
     }
 
     /**
-   * Adds a render pass to the backlog.
-   * @param label - The label for the render pass.
-   * @param material - The material to use for the render pass.
-   * @param geometry - The geometry to use for the render pass.
-   * @param textures - An optional array of textures to use in the render pass.
-   */
-    addRenderPass(label: string, material: Material, geometry: Geometry, textures?: IWGSLTextureData[]): RenderPass {
-        textures?.forEach(texture => {
-            this.textures.push(texture);
-        });
+     * Adds a render pass to the backlog.
+     * @param label - The label for the render pass.
+     * @param material - The material to use for the render pass.
+     * @param geometry - The geometry to use for the render pass.
+     * @param textures - An optional array of textures to use in the render pass.
+     * @returns The created RenderPass object.
+     */
+    addRenderPass(label: string, material: Material, geometry: Geometry, textures: IWGSLTextureData[] = []): RenderPass {
+        this.textures.push(...textures); // Add textures to the renderer's textures array
+
         const priorRenderPasses = Array.from(this.renderPassBacklog.values());
-        const uniforms = this.uniforms;
-        const renderPipeline = this.renderPassBuilder.createRenderPipeline(material, geometry,
-            this.textures, priorRenderPasses);
+        const renderPipeline = this.renderPassBuilder.createRenderPipeline(material, geometry, this.textures, priorRenderPasses);
+        const renderTarget = this.createRenderTarget(this.canvas.width, this.canvas.height);
 
-        const assets = this.createAssets();
-        const bindingGroupEntrys: Array<GPUBindGroupEntry> = [];
+        // Create bind group entries for the uniform buffer, sampler, and textures
+        const bindingGroupEntries: Array<GPUBindGroupEntry> = [
+            { binding: 0, resource: { buffer: this.uniforms.uniformBuffer } },
+            { binding: 1, resource: this.getDevice().createSampler() }
+        ];
 
-        const sampler = this.getDevice().createSampler({
-            addressModeU: 'repeat',
-            addressModeV: 'repeat',
-            magFilter: 'linear',
-            minFilter: 'nearest'
-        });
+        let bindingIndex = bindingGroupEntries.length;
 
-        bindingGroupEntrys.push({
-            binding: 0,
-            resource: {
-                buffer: uniforms.uniformBuffer
-            }
-        }, {
-            binding: 1,
-            resource: sampler
-        }
-        );
-
-        let offset = bindingGroupEntrys.length;
-        // Pass the previos renderpasses to current
+        // Add textures from previous render passes to the bind group
         priorRenderPasses.forEach((pass, i) => {
-            bindingGroupEntrys.push({
-                binding: offset + i,
-                resource: pass.bufferView,
+            bindingGroupEntries.push({
+                binding: bindingIndex++,
+                resource: pass.bufferView
             });
         });
-        // Add the bindings for the textures  
-        offset = bindingGroupEntrys.length;
-        this.textures.forEach((t, i) => {
-            let entry: GPUBindGroupEntry;
-            if (t.type === 0) {
-                entry = {
-                    binding: i + offset,
-                    resource: (t.data as GPUTexture).createView()
-                }
-            } else {
-                entry = {
-                    binding: i + 2,
-                    resource: this.getDevice().importExternalTexture({ source: t.data as HTMLVideoElement }),
-                };
-            }
-            bindingGroupEntrys.push(entry);
+
+        // Add textures to the bind group
+        this.textures.forEach((texture, i) => {
+            const entry = texture.type === 0
+                ? { binding: bindingIndex++, resource: (texture.data as GPUTexture).createView() }
+                : { binding: bindingIndex++, resource: this.getDevice().importExternalTexture({ source: texture.data as HTMLVideoElement }) };
+
+            bindingGroupEntries.push(entry);
         });
 
+        // Create the bind group
         const bindGroup = this.getDevice().createBindGroup({
             layout: renderPipeline.getBindGroupLayout(0),
-            entries: bindingGroupEntrys,
+            entries: bindingGroupEntries,
             label: `${label} renderpass`
         });
 
-        const renderPass = new RenderPass(
-            1, label, renderPipeline, uniforms, bindGroup, assets.buffer, assets.bufferView
-        );
+        // Create and return the render pass
+        const renderPass = new RenderPass(RENDERPASS.FRAGMENTSHADER, label, renderPipeline, this.uniforms, bindGroup, renderTarget.buffer, renderTarget.bufferView);
+        this.renderPassBacklog.set(label, renderPass);
+        return renderPass;
+    }
+    /**
+     * Adds a compute pass to the backlog.
+     * @param label - The label for the compute pass.
+     * @param computeShaderCode - The WGSL code for the compute shader.
+     * @param textures - An optional array of textures to use in the compute pass.
+     * @returns The created RenderPass object.
+     */
+    async addComputeRenderPass(label: string, computeShaderCode: string, textures: IWGSLTextureData[] = []): Promise<RenderPass> {
+        this.textures.push(...textures); // Add textures to the renderer's textures array
 
-        this.renderPassBacklog.set(label, renderPass); // send it the the renderpass backlog
+        const computeShaderModule = this.getDevice().createShaderModule({ code: computeShaderCode });
+        const computePipeline = this.renderPassBuilder.createComputePipeline(computeShaderModule, this.textures);
+        const renderTarget = this.createRenderTarget(this.canvas.width, this.canvas.height);
 
+        // Create bind group entries for the render target, uniform buffer, sampler, and textures
+        const bindingGroupEntries: Array<GPUBindGroupEntry> = [
+            { binding: 0, resource: renderTarget.bufferView },
+            { binding: 1, resource: { buffer: this.uniforms.uniformBuffer } },
+            { binding: 2, resource: this.getDevice().createSampler() }
+        ];
+
+        let bindingIndex = bindingGroupEntries.length;
+
+        // Add textures to the bind group
+        this.textures.forEach((texture, i) => {
+            const entry = texture.type === 0
+                ? { binding: bindingIndex++, resource: (texture.data as GPUTexture).createView() }
+                : { binding: bindingIndex++, resource: this.getDevice().importExternalTexture({ source: texture.data as HTMLVideoElement }) };
+
+            bindingGroupEntries.push(entry);
+        });
+
+        // Create the bind group
+        const bindGroup = this.getDevice().createBindGroup({
+            layout: computePipeline.getBindGroupLayout(0),
+            entries: bindingGroupEntries,
+            label: `${label} computepass`
+        });
+
+        // Create and return the render pass
+        const renderPass = new RenderPass(RENDERPASS.COMPUTESHADER, label, computePipeline, this.uniforms, bindGroup, renderTarget.buffer, renderTarget.bufferView);
+        this.renderPassBacklog.set(label, renderPass);
         return renderPass;
     }
 
-    /**
-   * Adds a compute render pass to the backlog.
-   * @param label - The label for the compute pass.
-   * @param computeShaderCode - The WGSL code for the compute shader.
-   * @param textures - An optional array of textures to use in the compute pass.
-   */
-    async addComputeRenderPass(label: string, computeShaderCode: string,
-        textures?: Array<IWGSLTexture>, samplers?: Array<GPUSamplerDescriptor>
-    ) {
-
-        if (samplers) throw "Samplers not yet implememted, using default binding 2"
-
-        const shaderModule = this.getDevice().createShaderModule(
-            { code: computeShaderCode });
-
-        const uniforms = this.uniforms    //new Uniforms(this.device, this.canvas);
-
-        if (textures) {
-            for (let i = 0; i < textures!.length; i++) {
-                const texture = textures[i];
-                if (texture.type == 0) {
-                    this.textures.push({ type: 0, data: await WGSLTextureLoader.createImageTexture(this.getDevice(), texture) });
-                } else
-                    this.textures.push({ type: 1, data: await WGSLTextureLoader.createVideoTexture(this.getDevice(), texture) });
-            }
-        }
-        const computePipeline = this.renderPassBuilder.createComputePipeline(shaderModule,
-            this.textures);
-        const assets = this.createAssets();
-        const bindingGroupEntrys: Array<GPUBindGroupEntry> = [];
-
-        const sampler = this.getDevice().createSampler({
-            addressModeU: 'repeat',
-            addressModeV: 'repeat',
-            magFilter: 'linear',
-            minFilter: 'nearest'
-        });
-
-        bindingGroupEntrys.push({
-            binding: 0,
-            resource: assets.bufferView
-        }, {
-            binding: 1,
-            resource: {
-                buffer: uniforms.uniformBuffer
-            }
-        }
-
-        );
-
-        const offset = bindingGroupEntrys.length;
-
-        this.textures.forEach((t, i) => {
-            let entry: GPUBindGroupEntry;
-            if (t.type === 0) {
-                entry = {
-                    binding: i + offset,
-                    resource: (t.data as GPUTexture).createView()
-                }
-            } else {
-                entry = {
-                    binding: i + 2,
-                    resource: this.getDevice().importExternalTexture({ source: t.data as HTMLVideoElement }),
-                };
-            }
-            bindingGroupEntrys.push(entry);
-        });
-
-        const bindGroup = this.getDevice().createBindGroup({
-            layout: computePipeline.getBindGroupLayout(0),
-            entries: bindingGroupEntrys,
-            label: `${label} computepass`
-        });
-        const renderPass = new RenderPass(
-            0, label, computePipeline, uniforms, bindGroup, assets.buffer, assets.bufferView
-        );
-        this.renderPassBacklog.set(label, renderPass);
-    }
 
     /**
-   * Updates the renderer and executes all render passes in the backlog.
-   * @param time - The current time in seconds.
-   */
-
+      * Updates the renderer and executes all render passes in the backlog.
+      * @param time - The current time in seconds.
+      */
     update(ts: number) {
         const encoder = this.getDevice().createCommandEncoder();
         const arrRenderPasses = Array.from(this.renderPassBacklog.values());
         // get the compute shaders from the back log
         arrRenderPasses.filter((pre) => {
-            return pre.type == 0
+            return pre.type == RENDERPASS.COMPUTESHADER
         }).forEach(pass => {
             const computePass = encoder.beginComputePass();
             computePass.setPipeline(pass.pipleline as GPUComputePipeline);
@@ -465,7 +385,7 @@ export class WGSLShaderRenderer {
             computePass.end();
         });
         arrRenderPasses.filter(pre => {
-            return pre.type == 1
+            return pre.type == RENDERPASS.FRAGMENTSHADER
         }).forEach(pass => {
             const renderPassDescriptor: GPURenderPassDescriptor = {
                 colorAttachments: [{
@@ -497,7 +417,7 @@ export class WGSLShaderRenderer {
 
         mainRenderer.setPipeline(this.renderPipleline);
         mainRenderer.setVertexBuffer(0, this.geometry.vertexBuffer);
-        mainRenderer.setBindGroup(0, this.screen_bind_group);
+        mainRenderer.setBindGroup(0, this.screenBindGroup);
         mainRenderer.draw(6, 1, 0, 0);
         mainRenderer.end();
         this.getDevice().queue.submit([encoder.finish()]);

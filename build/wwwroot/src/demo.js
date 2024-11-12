@@ -9,7 +9,7 @@ const DefaultMainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/Def
 const Geometry_1 = require("../../src/Engine/ShaderRenderers/WebGPU/Geometry");
 const Material_1 = require("../../src/Engine/ShaderRenderers/WebGPU/Material");
 const TextureLoader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/TextureLoader");
-const WGSLShaderRenderer_1 = require("../../src/Engine/ShaderRenderers/WebGPU/WGSLShaderRenderer");
+const WgslShaderRenderer_1 = require("../../src/Engine/ShaderRenderers/WebGPU/WgslShaderRenderer");
 const WGSLShaderEntity_1 = require("../../src/Engine/WGSLShaderEntity");
 const mainFragment_1 = require("../assets/shaders/mainFragment");
 const mainVertex_1 = require("../assets/shaders/mainVertex");
@@ -51,7 +51,7 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
     const wgslCanvas = document.createElement("canvas"); // target canvas for WGSLShader
     wgslCanvas.width = demo.targetCanvas.width;
     wgslCanvas.height = demo.targetCanvas.height;
-    const webgpu = await (0, WGSLShaderRenderer_1.initWebGPU)(wgslCanvas, { powerPreference: 'high-performance' });
+    const webgpu = await (0, WgslShaderRenderer_1.initWebGPU)(wgslCanvas, { powerPreference: 'high-performance' });
     // preload textures to use in WGSL Shader
     const wsglTextures = await TextureLoader_1.WGSLTextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",

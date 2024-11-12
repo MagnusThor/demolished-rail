@@ -30,6 +30,7 @@ export const blueColorShader:IMaterialShader = {
   @fragment
   fn main_fragment(in: VertexOutput) -> @location(0) vec4<f32> {      
     return main(in.uv);
-}`
+}
+`
 };
 

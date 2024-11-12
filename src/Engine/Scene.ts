@@ -3,6 +3,10 @@ import {
   IEntity,
 } from './Entity';
 import { Sequence } from './Sequence';
+import {
+  IWGSLPostProcessorProperties,
+  WGSLShaderEntity,
+} from './WGSLShaderEntity';
 
 export class Scene {
   public entities: IEntity[] = [];
@@ -12,6 +16,43 @@ export class Scene {
 
 
   public sequence: Sequence | undefined;
+
+   /**
+   * Adds a WGSL post-processing effect to the scene.
+   * @param sequence - The Sequence instance.
+   * @param device - GPUDevice
+   * @param wgslEntity - The WGSLShaderEntity to use for post-processing.
+   */
+   addWgslPostProcessor<T extends IWGSLPostProcessorProperties>(sequence: Sequence,device:GPUDevice, wgslEntity: WGSLShaderEntity<T>) {
+    wgslEntity.bindToScene(this); 
+    sequence.addWgslPostProcessor(this,device, (ctx: CanvasRenderingContext2D,scene:Scene,device:GPUDevice) => {
+    
+      const targetTexture = device.createTexture({ 
+        size: { width: ctx.canvas.width, height: ctx.canvas.height },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST  | GPUTextureUsage.RENDER_ATTACHMENT 
+        | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING
+      });
+  
+      // Copy the canvas contents to the texture
+      device.queue.copyExternalImageToTexture( // Access device and queue from sequence
+        { source: ctx.canvas },
+        { texture: targetTexture },
+        { width: ctx.canvas.width, height: ctx.canvas.height }
+      ); 
+
+    // Find the texture in the shader renderer and update its data
+    const textureData = wgslEntity.shaderRenderer.textures.find(texture => texture.key === wgslEntity.props!.textureKey);
+    if (textureData) {
+      textureData.data = targetTexture;
+    } else {
+      console.warn(`Texture with key "${wgslEntity.props!.textureKey}" not found in the shader renderer.`);
+    }
+      wgslEntity.shaderRenderer.update(sequence.currentTime / 1000);
+      wgslEntity.copyToCanvas(ctx.canvas,this.sequence!); 
+      return;
+    });
+  }
 
   /**
    * Creates a new Scene.

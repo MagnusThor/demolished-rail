@@ -3,6 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sequence = void 0;
 class Sequence {
     /**
+   * Adds a WGSL post-processing effect to the sequence for a specific scene.
+   * @param scene - The scene to apply the effect to.
+   * @param processor - The WGSL post-processing function.
+   */
+    addWgslPostProcessor(scene, device, processor) {
+        this.wgslPostProcessors.push({ scene, processor, device: device });
+    }
+    /**
   * Adds an event listener for when the frame rate drops below a threshold.
   * @param listener - The function to call when the frame rate is low.
   */
@@ -90,6 +98,7 @@ class Sequence {
         this.barListeners = [];
         this.frameListeners = [];
         this.postProcessors = [];
+        this.wgslPostProcessors = [];
         this.lowFrameRateListeners = [];
         this.sceneTransitionInListeners = [];
         this.sceneTransitionOutListeners = [];
@@ -425,6 +434,14 @@ class Sequence {
         // Apply post-processing effects
         if (this.targetCtx) {
             this.postProcessors.forEach(processor => processor(this.targetCtx, this));
+        }
+        // Apply WGSL post-processing effects
+        const wgslPostProcessor = this.wgslPostProcessors.find(p => p.scene === this.currentScene);
+        if (wgslPostProcessor) {
+            wgslPostProcessor.processor(this.targetCtx, this.currentScene, wgslPostProcessor.device);
+        }
+        else {
+            // ... (rest of the rendering logic) ...
         }
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
         // Trigger frame listeners

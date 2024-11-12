@@ -2,9 +2,9 @@
 
 
 export interface IMaterialShader {
-  vertex: any;
+  vertex: string;
   vertexEntryPoint?: string;
-  fragment: any;
+  fragment: string;
   fragmentEntryPoint?: string;
 }
 
@@ -41,7 +41,6 @@ export const defaultWglslVertex = /* glsl */ `
 export class Material {
   vertexShaderModule: GPUShaderModule;
   fragmentShaderModule: GPUShaderModule;
-
   /**
    * Creates a new Material.
    * @param device - The GPUDevice to use for creating shader modules.
@@ -57,20 +56,5 @@ export class Material {
     });
   }
 
-  /**
-   * Creates an IMaterialShader object from the provided shader code and entry points.
-   * @param vertex - The vertex shader code as a Uint32Array.
-   * @param fragment - The fragment shader code as a Uint32Array.
-   * @param vertexEntryPoint - The entry point function name for the vertex shader.
-   * @param fragmentEntryPoint - The entry point function name for the fragment shader.
-   * @returns The created IMaterialShader object.
-   */
-  static createMaterialShader(vertex: Uint32Array, fragment: Uint32Array, vertexEntryPoint: string, fragmentEntryPoint: string): IMaterialShader {
-    return {
-      fragment: fragment,
-      fragmentEntryPoint: fragmentEntryPoint,
-      vertex: vertex,
-      vertexEntryPoint: vertexEntryPoint
-    };
-  }
+  
 }

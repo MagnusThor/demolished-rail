@@ -1,19 +1,31 @@
 import {
   DefaultAudioLoader,
+  defaultMainShader,
   Entity,
+  Geometry,
   GLSLShaderEntity,
   IEntity,
+  initWebGPU,
+  IWGSLTextureData,
+  Material,
+  rectGeometry,
   Scene,
   Sequence,
   SequenceHelper,
+  WGSLShaderEntity,
+  WGSLTextureType,
 } from '../../src';
+import {
+  IWGSLPostProcessorProperties,
+} from '../../src/Engine/WGSLShaderEntity';
 import {
   earthShader,
   IEarthShader,
 } from '../assets/shaders/earthShader';
 import { mainFragment } from '../assets/shaders/mainFragment';
 import { mainVertex } from '../assets/shaders/mainVertex';
-import { TextAlignment } from './effects/FoL/fadeInOutTextEffect';
+import { wgslFAXXS } from '../assets/shaders/wglsl/wgslFAXXS';
+import { TextAlignment } from './effects/fadeInOutTextEffect';
 import {
   ISimpleTextEffectProps,
   simpleTextEffect,
@@ -38,6 +50,10 @@ export class RunShaderScene {
   * @returns A Promise that resolves to the created Sequence.
   */
   async setupSequence(): Promise<Sequence> {
+
+   
+  
+
     const sequence = new Sequence(this.screenCanvas, this.bmp, 4, 4, new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
     // create a scene starting at 0ms , duration is as long as the audioBuffer 
     await sequence.initialize();
@@ -47,6 +63,44 @@ export class RunShaderScene {
       ctx.globalAlpha = progress;
     });
     sequence.addScene(scene);
+
+    
+
+    // we can also add a WGSL Post Processor to the Scene
+    const wsglShaderCanvas = document.createElement("canvas");
+    wsglShaderCanvas.width = this.screenCanvas.width;
+    wsglShaderCanvas.height = this.screenCanvas.height;
+    const {device,context} = await initWebGPU(wsglShaderCanvas, { powerPreference: 'high-performance' });
+    const postProcessingTextures = new Array<IWGSLTextureData>();
+    postProcessingTextures.push({
+      key:"myTexture",
+      type: WGSLTextureType.IMAGE,
+      data : device.createTexture({
+        size: { width: wsglShaderCanvas.width, height: wsglShaderCanvas.height },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+      })  
+    });
+    const postProcessingEntity = new WGSLShaderEntity<IWGSLPostProcessorProperties>(
+      "postProcessingEntity",
+      {
+        canvas: wsglShaderCanvas,
+        device:device,
+        context:context!,
+        textureKey: "myTexture",
+        shader: defaultMainShader,        
+        renderBuffers: [
+          {
+            name:"renderbuffer1",
+            geometry: new Geometry(device,rectGeometry),
+            shader: new Material(device, wgslFAXXS),
+            textures:postProcessingTextures
+          }
+        ]
+      }
+    );
+    scene.addWgslPostProcessor(sequence,device, postProcessingEntity);
+
     this.sequence = sequence
     return sequence;
   }
@@ -172,6 +226,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   btn!.textContent = "CLICK TO START!";
   btn!.addEventListener("click", () => {
     document.querySelector("#launch")?.remove();
-    sequence.play(25);
+    sequence.play();
   });
 });
