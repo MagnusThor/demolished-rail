@@ -1,8 +1,8 @@
-import { ITexture } from '../ShaderRenderers/WebGL/GlslShaderRenderer';
+import { IGLSLTexture } from '../ShaderRenderers/WebGL/GlslShaderRenderer';
 
 export class AssetsHelper {
 
-  public static textureCache = new Map<string, ITexture>();
+  public static textureCache = new Map<string, IGLSLTexture>();
 
   static async loadImage(url: string): Promise<HTMLImageElement> {
 

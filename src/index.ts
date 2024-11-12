@@ -15,7 +15,7 @@ export { Scene } from './Engine/Scene';
 export { Sequence } from './Engine/Sequence';
 export {
   GLSLShaderRenderer,
-  ITexture,
+  IGLSLTexture as ITexture,
   RenderTarget,
 } from './Engine/ShaderRenderers/WebGL/GlslShaderRenderer';
 export {
