@@ -9,7 +9,7 @@ import {
 import { IWGSLTextureData } from './ShaderRenderers/WebGPU/TextureLoader';
 import {
   WGSLShaderRenderer,
-} from './ShaderRenderers/WebGPU/WGSLShaderRenderer';
+} from './ShaderRenderers/WebGPU/WgslShaderRenderer';
 
 export interface IWGSLShaderRenderBuffer {
     name: string;
@@ -25,6 +25,11 @@ export interface IWGSLShaderProperties {
     context: GPUCanvasContext;
     renderBuffers?: IWGSLShaderRenderBuffer[];
 }
+
+export interface IWGSLPostProcessorProperties extends IWGSLShaderProperties {
+    textureKey:string
+  }
+
 export class WGSLShaderEntity<T extends IWGSLShaderProperties>
  implements IEntity {
     canvas: HTMLCanvasElement;
@@ -116,6 +121,7 @@ export class WGSLShaderEntity<T extends IWGSLShaderProperties>
                 // Calculate shader time relative to the entity's start time (within the scene)
                 const shaderTime = Math.max(0, elapsed);
                 this.shaderRenderer.update(shaderTime / 1000);
+              
             }
         }
     }

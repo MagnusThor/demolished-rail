@@ -17,11 +17,11 @@ export {
   GLSLShaderRenderer,
   ITexture,
   RenderTarget,
-} from './Engine/ShaderRenderers/WebGL/GLSLShaderRenderer';
+} from './Engine/ShaderRenderers/WebGL/GlslShaderRenderer';
 export {
   initWebGPU,
   WGSLShaderRenderer,
-} from './Engine/ShaderRenderers/WebGPU/WGSLShaderRenderer';
+} from './Engine/ShaderRenderers/WebGPU/WgslShaderRenderer';
 export {
   defaultMainShader,
 } from './Engine/ShaderRenderers/WebGPU/DefaultMainShader';

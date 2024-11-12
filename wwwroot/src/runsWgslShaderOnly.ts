@@ -42,6 +42,7 @@ import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
         source: "assets/images/noise.png",
         type: WGSLTextureType.IMAGE,
       });
+      
   
       const wgslMainShader = defaultMainShader;
   
@@ -52,7 +53,7 @@ import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
         shader: wgslMainShader,
         renderBuffers: [
           {
-            name: "buffer-01",
+            name: "buffer1",
             shader: new Material(webgpu.device, wgslFlamesShader),
             geometry: new Geometry(webgpu.device, rectGeometry),
             textures: wsglTextures

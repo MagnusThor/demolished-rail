@@ -18,7 +18,7 @@ import {
 import {
   initWebGPU,
   WGSLShaderRenderer,
-} from '../../src/Engine/ShaderRenderers/WebGPU/WGSLShaderRenderer';
+} from '../../src/Engine/ShaderRenderers/WebGPU/WgslShaderRenderer';
 import {
   IWGSLShaderProperties,
   WGSLShaderEntity,

@@ -87,5 +87,5 @@ export enum VERTEXType {
       -1, 1, 0,
       1, -1, 0,
     ]),
-    indicies: DefaultIndicies, // Use the DefaultIndicies constant
+    indicies: new Uint16Array([0, 1, 2, 3, 4, 5]), 
   };

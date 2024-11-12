@@ -2,6 +2,7 @@
 export interface IWGSLTextureData {
     type: number
     data: GPUTexture | HTMLVideoElement | HTMLImageElement
+    key: string
 }
 
 export interface IWGSLTexture {
@@ -33,9 +34,10 @@ export class WGSLTextureLoader {
     static async loadAll(device: GPUDevice, ...textures: IWGSLTexture[]): Promise<IWGSLTextureData[]> {
         return Promise.all(textures.map(async texture => {
             if (texture.type === 0) {
-                return { type: 0, data: await this.createImageTexture(device, texture) };
+                return {                 
+                    type: WGSLTextureType.IMAGE, data: await this.createImageTexture(device, texture),key: texture.key };
             } else {
-                return { type: 1, data: await this.createVideoTexture(device, texture) };
+                return { type: WGSLTextureType.VIDEO, data: await this.createVideoTexture(device, texture),key:texture.key };
             }
         }));
     }
