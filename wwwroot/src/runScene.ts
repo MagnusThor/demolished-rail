@@ -7,10 +7,10 @@ import {
   SequenceHelper,
 } from '../../src';
 import {
-  BlockEntity,
-  IBlock,
-  IBlockEntityProps,
-} from '../../src/Engine/BlockEntity';
+  CompositeEntity,
+  ICompositeEntity,
+  ICompositeEntityProps,
+} from '../../src/Engine/CompositeEntity';
 import { easeInOutCubic } from '../../src/Engine/Helpers/EntityHelpers';
 import {
   ITextEntranceEffectProps,
@@ -79,7 +79,7 @@ export class RunScene {
       size: number;
       color: string;
     }    
-    const textBlock: IBlock<ITextBlockProps> = {
+    const textBlock: ICompositeEntity<ITextBlockProps> = {
       key:"textBlock",
       props: {      
         text: "Hello, world!",
@@ -87,7 +87,7 @@ export class RunScene {
         size: 30,
         color: "white"
       },
-      update(timeStamp: number, ctx: CanvasRenderingContext2D, entity:  IBlock<ITextBlockProps>) {
+      update(timeStamp: number, ctx: CanvasRenderingContext2D, entity:  ICompositeEntity<ITextBlockProps>) {
         const { text, font, size, color } = this.props; 
         ctx.font = `${size}px ${font}`;
         ctx.fillStyle = color;
@@ -95,7 +95,7 @@ export class RunScene {
       }
     };
 
-    const scrollingTextBlock :IBlock<ITextEntranceEffectProps> = {
+    const scrollingTextBlock :ICompositeEntity<ITextEntranceEffectProps> = {
       key:"scrollingTextBlock",
       props:  {
         x: 400, // Target x-coordinate
@@ -107,13 +107,13 @@ export class RunScene {
         easingFunction: easeInOutCubic,
         duration: 3 // Scroll in over 3 seconds
       },
-      update(timeStamp: number, ctx: CanvasRenderingContext2D, entity:  IBlock<ITextBlockProps>) {
+      update(timeStamp: number, ctx: CanvasRenderingContext2D, entity:  ICompositeEntity<ITextBlockProps>) {
         textEntranceEffect(timeStamp, ctx, this.props, entity!)
     }
   };
     
   // Create a BlockEntity and add the textBlock to it
-  const blockEntity = new BlockEntity<IBlockEntityProps<any>>(
+  const blockEntity = new CompositeEntity<ICompositeEntityProps<any>>(
     "TextBlockEntity", 
     800, 
     450, 
