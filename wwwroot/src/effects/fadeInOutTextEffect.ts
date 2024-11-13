@@ -1,4 +1,4 @@
-import { Sequence } from '../../../../src/Engine/Sequence';
+import { Sequence } from '../../../src';
 
 export enum TextAlignment {
   LEFT,

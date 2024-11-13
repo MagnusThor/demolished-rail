@@ -68,8 +68,9 @@ export class Scene {
   /**
    * Adds an entity to the scene.
    * @param entity - The entity to add.
+   * @returns The Scene instance for chaining.
    */
-  addEntity(entity: IEntity): void {
+  addEntity(entity: IEntity): Scene {
     // If the entity's canvas dimensions are not set, use the scene's dimensions
     if (!entity.w && !entity.h) {
       entity.canvas.width = this.width || 800;
@@ -77,6 +78,7 @@ export class Scene {
     }
     entity.bindToScene(this)
     this.entities.push(entity);
+    return this;
   }
 
   /**

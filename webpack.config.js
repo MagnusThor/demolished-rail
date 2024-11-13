@@ -6,7 +6,8 @@ module.exports = {
     entry: {
         "demo": "./build/wwwroot/src/demo.js",
         "runsWgslShaderOnly": "./build/wwwroot/src/runsWgslShaderOnly.js",
-        "runShaderScene" :"./build/wwwroot/src/runShaderScene.js"
+        "runShaderScene" :"./build/wwwroot/src/runShaderScene.js",
+        "runScene" :"./build/wwwroot/src/runScene.js"
 
     },
     output: {

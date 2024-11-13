@@ -4,32 +4,18 @@ import { GLSLShaderEntity } from '../../src/Engine/GLSLShaderEntity';
 import { AssetsHelper } from '../../src/Engine/Helpers/AssetsHelper';
 import { SceneBuilder } from '../../src/Engine/Helpers/SceneBuilder';
 import {
-  defaultMainShader,
-} from '../../src/Engine/ShaderRenderers/WebGPU/DefaultMainShader';
-import {
-  Geometry,
-  rectGeometry,
-} from '../../src/Engine/ShaderRenderers/WebGPU/Geometry';
-import { Material } from '../../src/Engine/ShaderRenderers/WebGPU/Material';
-import {
   WGSLTextureLoader,
   WGSLTextureType,
 } from '../../src/Engine/ShaderRenderers/WebGPU/TextureLoader';
 import {
   initWebGPU,
-  WGSLShaderRenderer,
 } from '../../src/Engine/ShaderRenderers/WebGPU/WgslShaderRenderer';
-import {
-  IWGSLShaderProperties,
-  WGSLShaderEntity,
-} from '../../src/Engine/WGSLShaderEntity';
 import { mainFragment } from '../assets/shaders/mainFragment';
 import { mainVertex } from '../assets/shaders/mainVertex';
 import {
   pseudoKnightyanFractal,
 } from '../assets/shaders/pseudoKnightyanFractal';
 import { someKindOfFractal } from '../assets/shaders/someKindOfFractal';
-import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
 import {
   ballEffect,
   IBallEntityProps,
@@ -123,29 +109,7 @@ await demo.sequence.initialize();
         type: WGSLTextureType.IMAGE,
     });
 
-    // Set up the WGSL Shader entity to render
-    const wgslShaderProps: IWGSLShaderProperties = {
-        canvas: wgslCanvas,
-        device: webgpu.device,
-        context: webgpu.context!,
-        shader: defaultMainShader,
-        renderBuffers: [
-            {
-                name: "iChannel0",
-                shader: new Material(webgpu.device,
-                    wgslFlamesShader
-                ),
-                geometry: new Geometry(webgpu.device, rectGeometry),
-                textures: wsglTextures
-            }
-        ]
-    };
-    const wgslShaderEntity = new WGSLShaderEntity("wgsl-shader",
-        wgslShaderProps, (ts: number, shaderRender: WGSLShaderRenderer) => {
-            // this is an action called for each frame.
-        });
-    // done with wgsl stuff  , we just add the entiry to a Scene later on.
-
+   
 
     const strobeEntity = new Entity<IStrobeEffectProps>(
         "Strobe",
@@ -456,7 +420,7 @@ await demo.sequence.initialize();
     });
 
 
-    scenes[0].addEntities(wgslShaderEntity);
+    
 
     scenes[1].addEntities(
         typeWriter2EntityForFirstScene,

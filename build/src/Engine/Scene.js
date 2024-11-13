@@ -53,6 +53,7 @@ class Scene {
     /**
      * Adds an entity to the scene.
      * @param entity - The entity to add.
+     * @returns The Scene instance for chaining.
      */
     addEntity(entity) {
         // If the entity's canvas dimensions are not set, use the scene's dimensions
@@ -62,6 +63,7 @@ class Scene {
         }
         entity.bindToScene(this);
         this.entities.push(entity);
+        return this;
     }
     /**
      * Adds multiple entities to the scene.

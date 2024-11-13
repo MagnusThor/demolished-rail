@@ -5,17 +5,12 @@ const Entity_1 = require("../../src/Engine/Entity");
 const GLSLShaderEntity_1 = require("../../src/Engine/GLSLShaderEntity");
 const AssetsHelper_1 = require("../../src/Engine/Helpers/AssetsHelper");
 const SceneBuilder_1 = require("../../src/Engine/Helpers/SceneBuilder");
-const DefaultMainShader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/DefaultMainShader");
-const Geometry_1 = require("../../src/Engine/ShaderRenderers/WebGPU/Geometry");
-const Material_1 = require("../../src/Engine/ShaderRenderers/WebGPU/Material");
 const TextureLoader_1 = require("../../src/Engine/ShaderRenderers/WebGPU/TextureLoader");
 const WgslShaderRenderer_1 = require("../../src/Engine/ShaderRenderers/WebGPU/WgslShaderRenderer");
-const WGSLShaderEntity_1 = require("../../src/Engine/WGSLShaderEntity");
 const mainFragment_1 = require("../assets/shaders/mainFragment");
 const mainVertex_1 = require("../assets/shaders/mainVertex");
 const pseudoKnightyanFractal_1 = require("../assets/shaders/pseudoKnightyanFractal");
 const someKindOfFractal_1 = require("../assets/shaders/someKindOfFractal");
-const wgslFlamesShader_1 = require("../assets/shaders/wglsl/wgslFlamesShader");
 const bubbleParticles_1 = require("./effects/bubbleParticles");
 const creditsScroller_1 = require("./effects/creditsScroller");
 const expandingCircleEffect_1 = require("./effects/expandingCircleEffect");
@@ -58,25 +53,6 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         source: "assets/images/noise.png",
         type: TextureLoader_1.WGSLTextureType.IMAGE,
     });
-    // Set up the WGSL Shader entity to render
-    const wgslShaderProps = {
-        canvas: wgslCanvas,
-        device: webgpu.device,
-        context: webgpu.context,
-        shader: DefaultMainShader_1.defaultMainShader,
-        renderBuffers: [
-            {
-                name: "iChannel0",
-                shader: new Material_1.Material(webgpu.device, wgslFlamesShader_1.wgslFlamesShader),
-                geometry: new Geometry_1.Geometry(webgpu.device, Geometry_1.rectGeometry),
-                textures: wsglTextures
-            }
-        ]
-    };
-    const wgslShaderEntity = new WGSLShaderEntity_1.WGSLShaderEntity("wgsl-shader", wgslShaderProps, (ts, shaderRender) => {
-        // this is an action called for each frame.
-    });
-    // done with wgsl stuff  , we just add the entiry to a Scene later on.
     const strobeEntity = new Entity_1.Entity("Strobe", {
         color: "white", // You can change the color
         isOn: false,
@@ -271,7 +247,6 @@ demo.addAssets("assets/images/silhouette.png", "assets/images/lens.png").then(as
         console.log(`${ts} bar #${count}.`);
         // modify props on bar in this case;
     });
-    scenes[0].addEntities(wgslShaderEntity);
     scenes[1].addEntities(typeWriter2EntityForFirstScene, gridOverlayEffectEntity, ballEntity, stretchingTextEntity)
         .addPostProcessorToEntities((0, createLensPostProcessor_1.createLensPostProcessor)((_b = AssetsHelper_1.AssetsHelper.textureCache.get("lens.png")) === null || _b === void 0 ? void 0 : _b.src));
     scenes[2].addEntities(expandingCircleEntity, starburstEntity, imageOverlayEntity);

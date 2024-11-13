@@ -14,10 +14,10 @@
   "description": "This repository contains a TypeScript animation framework called demolished-rail, designed for creating complex and dynamic animations with ease. ",
   "dependencies": {
     "@webgpu/types": "^0.1.50",
-    "webgpu": "^0.1.16",
     "crc": "^4.3.2",
-    "webpack": "^5.95.0",
-    "sonantx": "^2.0.1"
+    "sonantx": "^2.0.1",
+    "webgpu": "^0.1.16",
+    "webpack": "^5.95.0"
   },
   "keywords": [
     "animation",
@@ -31,5 +31,8 @@
     "type": "git",
     "url": "git+https://github.com/MagnusThor/demolished-rail.git"
   },
-  "homepage": "https://github.com/MagnusThor/demolished-rail"
+  "homepage": "https://github.com/MagnusThor/demolished-rail",
+  "devDependencies": {
+    "typedoc": "^0.26.11"
+  }
 }

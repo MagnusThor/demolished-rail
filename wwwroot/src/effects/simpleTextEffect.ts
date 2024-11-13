@@ -2,7 +2,7 @@ import {
   Entity,
   Sequence,
 } from '../../../src';
-import { TextAlignment } from './FoL/fadeInOutTextEffect';
+import { TextAlignment } from './fadeInOutTextEffect';
 
 export interface ISimpleTextEffectProps {
   x?: number;

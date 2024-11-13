@@ -1,9 +1,10 @@
-export interface ITexture {
+export interface IGLSLTexture {
         src?: any;
         fn?(prg: WebGLProgram, gl: WebGLRenderingContext, src: any): Function;
         w?: number;
         h?: number;
 }
+
 export class RenderTarget {
         framebuffer: WebGLFramebuffer | null;
         renderbuffer: WebGLRenderbuffer | null;
@@ -22,13 +23,18 @@ export class RenderTarget {
         }
 }
 
+/**
+ * The `GLSLShaderRenderer` class is responsible for managing WebGL rendering, 
+ * including shader programs, textures, and render targets. It provides methods for
+ * adding and updating buffers, rendering scenes, and managing resources.
+ */
 export class GLSLShaderRenderer {
         entity: any;
         gl: WebGLRenderingContext;
         mainProgram: WebGLProgram;
         programs: Map<string, { program: WebGLProgram | null, state: boolean }>;
         surfaceBuffer: WebGLBuffer;
-        textureCache: Map<string, ITexture>;
+        textureCache: Map<string, IGLSLTexture>;
         targets: Map<string, RenderTarget>;
         mainUniforms: Map<string, WebGLUniformLocation>
         buffer: WebGLBuffer;
@@ -45,48 +51,50 @@ precision mediump sampler3D;
 #endif
 `;
 
-        setEntity(entity:any){
+        /**
+           * Sets the entity associated with this renderer.
+           * @param entity - The entity to associate with the renderer.
+           */
+        setEntity(entity: any) {
                 this.entity = entity;
         }
         /**
-         * Create a Shader
-         *
-         * @param {WebGLProgram} program
-         * @param {number} type
-         * @param {string} source
-         * @memberof DR
-         */
+   * Creates a shader of the specified type and attaches it to the program.
+   * @param program - The WebGLProgram to attach the shader to.
+   * @param type - The type of shader (gl.VERTEX_SHADER or gl.FRAGMENT_SHADER).
+   * @param source - The shader source code.
+   * @throws Error if the shader compilation fails.
+   */
         createShader(program: WebGLProgram, type: number, source: string): void {
                 let gl = this.gl;
                 let shader = gl.createShader(type)
                 gl.shaderSource(shader!, source);
                 gl.compileShader(shader!);
                 gl.attachShader(program, shader!);
-                if (!gl.getShaderParameter(shader!, 35713)) { 
+                if (!gl.getShaderParameter(shader!, 35713)) {
                         gl.getShaderInfoLog(shader!)!.trim().split("\n").forEach((l: string) =>
                                 console.error("[shader] " + l))
                         throw new Error(`Error while compiling vertex/fragment: ` + source)
                 };
         }
+
         /**
-         * Create and a WebGLProgram
-         *
-         * @param {string} name
-         * @returns {WebGLProgram}
-         * @memberof DR
-         */
+  * Creates   
+a new WebGLProgram and adds it to the list of programs.
+  * @param name - The name of the program.
+  * @returns The created WebGLProgram.
+  */
         addProgram(name: string): WebGLProgram {
                 let p = this.gl.createProgram();
                 this.programs.set(name, { program: p, state: true });
                 return p!;
         }
         /**
-         *  Create a new WEBGLTexture
-         *
-         * @param {*} data  image or UInt8Array
-         * @returns WebGLTexture
-         * @memberof DR
-         */
+   * Creates a new WebGLTexture.
+   * @param data - The image or Uint8Array data for the texture.
+   * @param d - The texture unit index.
+   * @returns The created WebGLTexture.
+   */
         createTexture(data: HTMLImageElement | Uint8Array, d: number): WebGLTexture {
                 let gl = this.gl;
                 let texture = gl.createTexture();
@@ -102,15 +110,12 @@ precision mediump sampler3D;
                 gl.generateMipmap(3553);
                 return texture!;
         }
-
         /**
-         * Create a texture cube map
-         *
-         * @param {Array<any>} sources
-         * @param {number} d
-         * @returns {WebGLTexture}
-         * @memberof DR
-         */
+           * Creates a cube map texture.
+           * @param sources - An array of image sources for the cube map faces.
+           * @param d - The texture unit index.
+           * @returns The created WebGLTexture.
+           */
         createTextureCube(sources: Array<any>, d: number): WebGLTexture {
                 let gl = this.gl;
                 let texture = gl.createTexture();
@@ -159,13 +164,11 @@ precision mediump sampler3D;
                 return texture!;
         }
         /**
-         * add assets ( textures )
-         *
-         * @param {*} assets
-         * @param {()=>void} cb
-         * @returns {this}
-         * @memberof DR
-         */
+  * Adds assets (textures) to the renderer.
+  * @param assets - An object containing texture data.
+  * @param cb - A callback function to be called after the assets are loaded.
+  * @returns The GLSLShaderRenderer instance for chaining.
+  */
         addAssets(assets: any, cb: (r?: any) => void): this {
                 const cache = (k: string, v: WebGLTexture, f: any) => {
                         this.textureCache.set(k, { src: v, fn: f });
@@ -201,17 +204,17 @@ precision mediump sampler3D;
                 });
                 return this;
         }
+
+
         /**
-         * add a new buffer / shader program
-         *
-         * @param {string} name
-         * @param {string} vertex
-         * @param {string} fragment
-         * @param {Array<string>} [textures]
-         * @param {*} [customUniforms]
-         * @returns {this}
-         * @memberof DR
-         */
+   * Adds a buffer (shader program) to the renderer.
+   * @param name - The name of the buffer.
+   * @param vertex - The vertex shader code.
+   * @param fragment - The fragment shader code.
+   * @param textures - An optional array of texture names.
+   * @param customUniforms - An optional object containing custom uniform functions.
+   * @returns The GLSLShaderRenderer instance for chaining.
+   */
         addBuffer(name: string, vertex: string, fragment: string, textures?: Array<string>, customUniforms?: any): GLSLShaderRenderer {
                 let gl = this.gl;
 
@@ -251,21 +254,17 @@ precision mediump sampler3D;
                 return this;
         }
         /**
-         * Set program state ( enable / or disable)
-         *   
-         * @param {string} key
-         * @param {boolean} state
-         * @memberof DR
-         */
+  * Sets the state of a shader program.
+  * @param key - The name of the shader program.
+  * @param state - Whether the program should be enabled or disabled.
+  */
         setProgramState(key: string, state: boolean): void {
                 this.programs.get(key)!.state = state;
         }
         /**
-         * Render
-         *
-         * @param {number} time
-         * @memberof DR
-         */
+   * Updates the renderer and executes all shader programs.
+   * @param time - The current time in seconds.
+   */
         update(time: number) {
                 let gl = this.gl;
                 let main = this.mainProgram;
@@ -282,16 +281,15 @@ precision mediump sampler3D;
                         gl.uniform1f(fT!.locations.get("deltaTime")!, this.frameCount);
                         gl.uniform1f(fT!.locations.get("frame")!, this.frameCount);
                         let customUniforms = fT!.uniforms;
-                    
+
                         customUniforms && Object.keys(customUniforms).forEach((v: string) => {
-                                customUniforms[v](fT!.locations.get(v), gl, current, time,this.entity);
+                                customUniforms[v](fT!.locations.get(v), gl, current, time, this.entity);
                         });
                         let bl = gl.getUniformLocation(current!, key); // todo: get this from cache?
 
                         gl.uniform1i(bl, 0);
                         gl.activeTexture(gl.TEXTURE0);
                         gl.bindTexture(gl.TEXTURE_2D, bT!.texture)
-
 
                         fT!.textures.forEach((tk: string, index: number) => {
                                 let ct = this.textureCache.get(tk);
@@ -348,14 +346,13 @@ precision mediump sampler3D;
         }
 
         /**
-         * Create render target
-         *
-         * @param {number} width
-         * @param {number} height
-         * @param {Array<string>} textures
-         * @returns {*}
-         * @memberof DR
-         */
+ * Creates a render target.
+ * @param width - The width of the render target.
+ * @param height - The height of the render target.
+ * @param textures - An array of texture names to use in the render target.
+ * @param customUniforms - An object containing custom uniform functions.
+ * @returns The created RenderTarget object.
+ */
         createTarget(width: number, height: number, textures: Array<string>, customUniforms: any): RenderTarget {
                 let gl = this.gl;
                 let target = new RenderTarget(gl, textures, customUniforms);
@@ -382,37 +379,45 @@ precision mediump sampler3D;
 
                 return target;
         }
+
         /**
-         * Render loop
-         *
-         * @param {number} t
-         * @param {number} fps
-         * @returns {this}
-         * @memberof DR
+         * Starts the rendering loop with a fixed timestep.
+         * @param t - The initial time in milliseconds.
+         * @param fps - The desired frames per second.
+         * @returns The GLSLShaderRenderer instance for chaining.
          */
         run(t: number, fps: number): this {
-                let pt: number = performance.now();
+                let previousTime: number = performance.now();
                 let interval = 1000 / fps;
-                let dt = 0;
-                const a = (t: number) => {
-                        requestAnimationFrame(a);
-                        dt = t - pt;
-                        if (dt > interval) {
-                                pt = t - (dt % interval);
-                                this.update(pt / 1000);
+                let deltaTime = 0;
+
+                const animate = (currentTime: number) => {
+                        requestAnimationFrame(animate);
+                        deltaTime = currentTime - previousTime;
+
+                        if (deltaTime > interval) {
+                                previousTime = currentTime - (deltaTime % interval);
+                                this.update(previousTime / 1000);
                         }
                 };
-                a(t | 0);
-                return this;
 
+                animate(t | 0);
+                return this;
         }
+        /**
+  * Creates a new GLSLShaderRenderer.
+  * @param canvas - The canvas element to render to.
+  * @param v - The vertex shader code.
+  * @param f - The fragment shader code.
+  * @param cU - Optional custom uniforms.
+  */
         constructor(public canvas: HTMLCanvasElement, v: string, f: string, public cU: any = {}) {
 
                 this.targets = new Map<string, any>();
                 this.mainUniforms = new Map<string, WebGLUniformLocation>();
 
                 this.programs = new Map<string, { program: WebGLProgram, state: boolean }>();
-                this.textureCache = new Map<string, ITexture>();
+                this.textureCache = new Map<string, IGLSLTexture>();
 
                 let gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true }) as WebGLRenderingContext;
 
@@ -455,17 +460,17 @@ precision mediump sampler3D;
         }
 
         /**
-         *  Generate a texture and return a canvas element
+         * Generate a GLSLShaderRenderer 
          *
          * @static
          * @param {string} mainVertex
          * @param {string} mainFrag
          * @param {string} textureVertex
-         * @param {*} textureFrag
+         * @param {string} textureFrag
          * @param {number} w
          * @param {number} h
-         * @returns {HTMLCanvasElement}
-         * @memberof DR
+         * @return {*}  {HTMLCanvasElement}
+         * @memberof GLSLShaderRenderer
          */
         static generateTexture(mainVertex: string, mainFrag: string,
                 textureVertex: string,
