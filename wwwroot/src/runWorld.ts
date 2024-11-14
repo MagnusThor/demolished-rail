@@ -20,6 +20,7 @@ interface IBallBlockProps {
   radius: number;
   vx: number;
   vy: number;
+  collidingRectIndex?: number
 }
 
 /**
@@ -43,36 +44,30 @@ export class RunWorld {
   async setupSequence(): Promise<Sequence> {
 
     const instance = new Sequence(this.screenCanvas, this.bmp, 4, 4, new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
-    // create a scene starting at 0ms , duration is as long as the audioBuffer 
     const sequence = await instance.initialize();
-
     const sb = new SceneBuilder(sequence.audioBuffer.duration * 1000);
 
-    sb.durationUntilEndInMs("scene0") // first scene last for 30 seconds
-
-    const scens = sb.getScenes();
-
-    scens[0]!.addEntities(...this.createWorld(sequence));
-
-
-
+        // create a scene starting at 0ms , duration is as long as the audioBuffer 
+    sb.durationUntilEndInMs("scene0"); 
+    (sb.getScenes())[0]!.addEntities(...this.createWorld(sequence));
     sequence.addScenes(...sb.getScenes());
 
     this.sequence = sequence
     return sequence;
   }
+
   createWorld(sequence: Sequence): Array<IEntity> {
 
     const world = new WorldEntity("our-world", {
       worldHeight: this.screenCanvas.height,
-      worldWidth: this.screenCanvas.width * 10,
+      worldWidth: this.screenCanvas.width * 10 ,// make it 10 x the screen canvas
       viewportWidth: this.screenCanvas.width,
       viewportHeight: this.screenCanvas.height,
       viewportX: 0,
       blocks: []
     });
 
-    // set up the background using in the World
+    // Set up the background entity to use in the World
     const backgroundProps: IBackgroundProps = {
       rectangles: []
     }
@@ -83,9 +78,9 @@ export class RunWorld {
         worldBackgroundEffect(timeStamp, ctx, this.props);
       },
       props: backgroundProps
-    }
+    };
 
-    // set up a second entity for the world
+    // Set up a second entity for the World
     const ballBlock: ICompositeEntity<IBallBlockProps> = {
       key: "ballBlock",
       props: {
@@ -93,8 +88,8 @@ export class RunWorld {
         y: 225,
         radius: 20,
         vx: 5,
-        vy: 3
-      },
+        vy: 3        
+      },      
       update(timeStamp: number, ctx: CanvasRenderingContext2D, entity: CompositeEntity<any>) {
         const { x, y, radius, vx, vy } = this.props;
         // Update ball position for bouncing
@@ -108,7 +103,6 @@ export class RunWorld {
           this.props.vy = -vy;
           this.props.vx += (Math.random() - 0.5) * 2; // Add random horizontal velocity
         }
-        // Draw the ball (optional, if you want to visualize the ball)
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.fillStyle = "red"; // Example color
@@ -116,32 +110,38 @@ export class RunWorld {
       }
     };
 
-
-    // add a collision detector
-
-    // In your WorldEntity or other CompositeEntity
-    world.addCollisionDetector<{ x: number, y: number, radius: number }, { x: number, y: number, width: number, height: number }>(
-      "ballBlock",
-      "background",
-      (ball, rect) => {
-        // Use CollisionHelper to check for collision between the ball and the rectangle
+    // add a collision detector , of the ball is colliding with a rect 
+    world.addCollisionDetector<
+    { x: number, y: number, radius: number,collidingRectIndex?: number },
+    { rectangles: { x: number, y: number, width: number, height: number }[] }  >(
+    "ballBlock",
+    "background",
+    (ball, background) => {
+      // Find the index of the colliding rectangle
+      const collidingIndex = background.rectangles.findIndex(rect => {
         return CollisionHelper.rectangularDetection(
           { x: ball.x, y: ball.y, w: ball.radius * 2, h: ball.radius * 2 },
           { x: rect.x, y: rect.y, w: rect.width, h: rect.height }
         );
-      },
-      (ball, rect) => {
-        // Collision handling logic
-        console.log("Collision detected between ball and rectangle!");
-        // ...
+      });  
+      if (collidingIndex !== -1) {
+        // Store the colliding rectangle's index in the ball's props
+        ball.collidingRectIndex = collidingIndex; 
+        return true; // Collision detected
+      }  
+      return false; // No collision
+    },
+    (ball, background) => {
+      // Access the colliding rectangle's index from the ball's props , and remove it
+      const collidingIndex = ball.collidingRectIndex; 
+      if (collidingIndex !== undefined) {
+        background.rectangles.splice(collidingIndex, 1); 
       }
-    );
+    }
+  );
 
-
-    // add entities to the world
-    world.props.blocks.push(
-      worldBg,
-      ballBlock);
+    // add entities to the world's "building blocks"
+    world.addBlocks(worldBg,ballBlock);
 
     // just a test how we can sync viewports on frame?
     sequence.onFrame((scene, time) => {
