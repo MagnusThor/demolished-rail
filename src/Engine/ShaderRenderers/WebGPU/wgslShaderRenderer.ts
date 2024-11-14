@@ -261,7 +261,7 @@ export class WGSLShaderRenderer {
 
     /**
    * Adds a main render pass to the backlog.
-   * @param material - The material to use for the render pass.
+   * @param shader - The material to use for the render pass.
    */
     addMainRenderPass(shader: IMaterialShader) {
         const material = new Material(this.device, shader);
@@ -371,7 +371,7 @@ export class WGSLShaderRenderer {
       * Updates the renderer and executes all render passes in the backlog.
       * @param time - The current time in seconds.
       */
-    update(ts: number) {
+    update(time: number) {
         const encoder = this.getDevice().createCommandEncoder();
         const arrRenderPasses = Array.from(this.renderPassBacklog.values());
         // get the compute shaders from the back log
@@ -412,7 +412,7 @@ export class WGSLShaderRenderer {
             }]
         });
         this.uniforms.setUniforms([this.frame], 8);
-        this.uniforms.setUniforms([ts], 3);
+        this.uniforms.setUniforms([time], 3);
         this.uniforms.updateUniformBuffer();
 
         mainRenderer.setPipeline(this.renderPipleline);

@@ -2,15 +2,15 @@ export {
   IWGSLShaderProperties,
   IWGSLShaderRenderBuffer,
   WGSLShaderEntity,
-} from './Engine/WGSLShaderEntity';
+} from './Engine/Entity/WGSLShaderEntity';
 export { Conductor, ITimelineEvent } from './Engine/Conductor';
 export { EngineLogger } from './Engine/EngineLogger';
-export { Entity, IEntity } from './Engine/Entity';
+export { Canvas2DEntity, IEntity } from './Engine/Entity/Canvas2DEntity';
 export {
   GLSLShaderEntity,
   IGLSLShaderProperties,
   IGLSLShaderRenderBuffer,
-} from './Engine/GLSLShaderEntity';
+} from './Engine/Entity/GLSLShaderEntity';
 export { Scene } from './Engine/Scene';
 export { Sequence } from './Engine/Sequence';
 export {
@@ -72,3 +72,23 @@ export {
   IAudioLoader,
   SonantAudioLoader,
 } from './Engine/Audio/AudioLoader';
+
+export {
+  CompositeEntity,
+  ICompositeEntity,
+  ICompositeEntityProps,
+} from './Engine/Entity/CompositeEntity';
+
+export { InputHelper } from './Engine/Helpers/InputHelper';
+
+export { Point2D } from './Engine/Helpers/Math/Point2D';
+export { Point3D } from './Engine/Helpers/Math/Point3D';
+export { MathHelper } from './Engine/Helpers/Math/MathHelper';
+
+export {
+  CanvasTextureGen,
+  TextureGenerator,
+  TextureGeneratorBase,
+} from './Engine/Helpers/TextureHelper';
+
+export { IWorldProps, WorldEntity } from './Engine/Entity/WorldEntity';

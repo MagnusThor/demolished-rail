@@ -9,7 +9,7 @@ import {
   CompositeEntity,
   ICompositeEntity,
   ICompositeEntityProps,
-} from '../../src/Engine/CompositeEntity';
+} from '../../src/Engine/Entity/CompositeEntity';
 import { easeInOutCubic } from '../../src/Engine/Helpers/EntityHelpers';
 import {
   IParticle,

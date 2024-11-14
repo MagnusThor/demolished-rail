@@ -1,4 +1,4 @@
-import { IEntity } from '../Entity';
+import { IEntity } from '../Entity/Canvas2DEntity';
 
 export class EntityBuilder {
   private entities: IEntity[] = [];
@@ -57,7 +57,6 @@ export class EntityBuilder {
   }
 }
 
-
 export class EntityRenderer {
   public entities: IEntity[] = [];
   private canvas: HTMLCanvasElement;
@@ -103,8 +102,8 @@ export class EntityRenderer {
       this.copyToCanvas(entity.canvas);
     });
   }
-  copyToCanvas(result: HTMLCanvasElement) {   
-      this.ctx.drawImage(result, 0, 0);
+  copyToCanvas(result: HTMLCanvasElement) {
+    this.ctx.drawImage(result, 0, 0);
 
   }
 

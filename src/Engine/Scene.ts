@@ -1,12 +1,12 @@
 import {
-  Entity,
+  Canvas2DEntity,
   IEntity,
-} from './Entity';
-import { Sequence } from './Sequence';
+} from './Entity/Canvas2DEntity';
 import {
   IWGSLPostProcessorProperties,
   WGSLShaderEntity,
-} from './WGSLShaderEntity';
+} from './Entity/WGSLShaderEntity';
+import { Sequence } from './Sequence';
 
 export class Scene {
   public entities: IEntity[] = [];
@@ -42,7 +42,7 @@ export class Scene {
       ); 
 
     // Find the texture in the shader renderer and update its data
-    const textureData = wgslEntity.shaderRenderer.textures.find(texture => texture.key === wgslEntity.props!.textureKey);
+    const textureData = wgslEntity.shaderRenderer.textures.find((texture: { key: string; }) => texture.key === wgslEntity.props!.textureKey);
     if (textureData) {
       textureData.data = targetTexture;
     } else {
@@ -102,13 +102,12 @@ export class Scene {
 
   public addPostProcessorToEntities(processor: (ctx: CanvasRenderingContext2D) => void): void {
     this.entities.forEach(entity => {
-      if (entity instanceof Entity) { // Check if the entity is an instance of the Entity class
+      if (entity instanceof Canvas2DEntity) { // Check if the entity is an instance of the Entity class
         entity.addPostProcessor(processor);
       }
     });
   }
-
-
+  
   /**
     * Adds a transition-in effect to the scene.
     * @param sequence - The Sequence instance associated with the scene.
