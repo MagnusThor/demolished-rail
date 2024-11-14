@@ -267,7 +267,6 @@ export class Sequence {
      * Render a specific time
      *
      * @param {number} time
-     * @memberof Sequence
      */
     renderAtTime(time: number) {
         this.currentTime = time; // Update the currentTime
@@ -488,14 +487,14 @@ export class Sequence {
             }
             // Trigger entity events only when the values change
             if (this.currentBeat !== this.previousBeat) {
-                entity.beatListeners!.forEach(listener => listener(timeStamp, this.beatCounter, entity.props));
+                entity.beatListeners!.forEach((listener: (arg0: number, arg1: number, arg2: any) => any) => listener(timeStamp, this.beatCounter, entity.props));
             }
             if (this.currentTick !== this.previousTick) {
-                entity.tickListeners!.forEach(listener => listener(timeStamp, this.tickCounter, entity.props));
+                entity.tickListeners!.forEach((listener: (arg0: number, arg1: number, arg2: any) => any) => listener(timeStamp, this.tickCounter, entity.props));
 
             }
             if (this.currentBar !== this.previousBar) {
-                entity.barListeners!.forEach(listener => listener(timeStamp, this.currentBar, entity.props))
+                entity.barListeners!.forEach((listener: (arg0: number, arg1: number, arg2: any) => any) => listener(timeStamp, this.currentBar, entity.props))
             }
         });
 

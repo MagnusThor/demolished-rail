@@ -1,6 +1,3 @@
-import { Entity } from "../../../src/Engine/Entity";
-
-
 export interface IParallaxLayerProps {
     image: HTMLImageElement;
     x: number;

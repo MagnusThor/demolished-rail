@@ -1,5 +1,5 @@
 import {
-  Entity,
+  Canvas2DEntity,
   Sequence,
 } from '../../../src';
 import { TextAlignment } from './fadeInOutTextEffect';
@@ -23,7 +23,7 @@ export const simpleTextEffect = (
   ctx: CanvasRenderingContext2D,
   propertybag: ISimpleTextEffectProps,
   sequence: Sequence,
-  entity?: Entity<ISimpleTextEffectProps> // Add entity parameter
+  entity?: Canvas2DEntity<ISimpleTextEffectProps> // Add entity parameter
 ) => {
   const { x, y, texts, textIndex, font, size, fadeInDuration, fadeOutDuration, textDuration, alignment, margin } = propertybag;
 

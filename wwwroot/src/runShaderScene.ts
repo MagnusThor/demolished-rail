@@ -1,7 +1,7 @@
 import {
+  Canvas2DEntity,
   DefaultAudioLoader,
   defaultMainShader,
-  Entity,
   Geometry,
   GLSLShaderEntity,
   IEntity,
@@ -17,7 +17,7 @@ import {
 } from '../../src';
 import {
   IWGSLPostProcessorProperties,
-} from '../../src/Engine/WGSLShaderEntity';
+} from '../../src/Engine/Entity/WGSLShaderEntity';
 import {
   earthShader,
   IEarthShader,
@@ -181,7 +181,7 @@ export class RunShaderScene {
     });
 
     // set up a Canvas2D Entity  - Layer that we put on top on the glsl shader
-    const textEntity = new Entity<ISimpleTextEffectProps>(
+    const textEntity = new Canvas2DEntity<ISimpleTextEffectProps>(
       "textEntity",
       {
         x: this.screenCanvas.width / 2,
@@ -200,11 +200,11 @@ export class RunShaderScene {
         textDuration: 3,
         alignment: TextAlignment.CENTER
       },
-      (ts, ctx, props, sequence, entity) => simpleTextEffect(ts, ctx, props, sequence!, entity!)
+      (ts:number, ctx:CanvasRenderingContext2D, props:ISimpleTextEffectProps,sequence:any, entity:any): void => simpleTextEffect(ts, ctx, props, sequence!, entity!)
     );
 
     // Change text onBar, just showing
-    textEntity.onBar<ISimpleTextEffectProps>((ts, count, propertybag?: ISimpleTextEffectProps) => {
+    textEntity.onBar<ISimpleTextEffectProps>((ts:number, count:number, propertybag?: ISimpleTextEffectProps) => {
       propertybag!.textIndex = (propertybag!.textIndex + 1) % propertybag!.texts.length;
       const scene = textEntity.getScene()!;
       textEntity.startTimeinMs = ts - scene.startTimeinMs;

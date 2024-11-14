@@ -1,4 +1,4 @@
-import { Entity } from './entity';
+import { Canvas2DEntity } from './Canvas2DEntity';
 
 /**
  * Interface for a CompositeEntity, which is a reusable component within a CompositeEntity.
@@ -25,7 +25,7 @@ export interface ICompositeEntityProps<T> {
  * Each block can have its own update function and properties, allowing for modular and reusable components within an entity.
  * @typeparam T - The type of ICompositeEntityProps for the entity.
  */
-export class CompositeEntity<T extends ICompositeEntityProps<any>> extends Entity<ICompositeEntityProps<any>> {
+export class CompositeEntity<T extends ICompositeEntityProps<any>> extends Canvas2DEntity<ICompositeEntityProps<any>> {
   /**
    * Creates a new CompositeEntity.
    * @param name - The name or identifier for the entity.

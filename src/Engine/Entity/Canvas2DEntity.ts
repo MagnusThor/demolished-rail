@@ -1,5 +1,5 @@
-import { Scene } from './Scene';
-import { Sequence } from './Sequence';
+import { Scene } from '../Scene';
+import { Sequence } from '../Sequence';
 
 export interface IEntity {
   name: string;
@@ -24,7 +24,7 @@ export interface IEntity {
   onBar(listener?: (time: number, count: number, propertyBag: any) => void): void;
 }
 
-export class Entity<T> implements IEntity {
+export class Canvas2DEntity<T> implements IEntity {
   canvas: HTMLCanvasElement;
   ctx!: CanvasRenderingContext2D;
   private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
@@ -46,8 +46,8 @@ export class Entity<T> implements IEntity {
   constructor(
     public name: string,
     public props?: T,
-    public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence, 
-      entity?: Entity<T> | undefined) => void,
+    public action?: (time: number, ctx: CanvasRenderingContext2D, properties: T, sequence?: Sequence,
+      entity?: Canvas2DEntity<T> | undefined) => void,
     public startTimeinMs?: number,
     public durationInMs?: number,
     public w?: number,
@@ -83,7 +83,7 @@ export class Entity<T> implements IEntity {
    * @param listener - The function to call when a tick occurs.
    * @returns The Entity instance for chaining.
    */
-  onTick<T>(listener: (time: number, count: number,propertyBag?: T) => void): this {
+  onTick<T>(listener: (time: number, count: number, propertyBag?: T) => void): this {
     this.tickListeners!.push(listener as any);
     return this;
   }

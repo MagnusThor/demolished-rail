@@ -1,21 +1,22 @@
-
-import { Entity } from "./Entity";
-import { Sequence } from "./Sequence";
+import { Canvas2DEntity } from './Entity/Canvas2DEntity';
+import {
+  CompositeEntity,
+  ICompositeEntityProps,
+} from './Entity/CompositeEntity';
+import { Sequence } from './Sequence';
 
 export interface ITimelineEvent<T, P> {
     time?: number;        // Time in milliseconds
     beatCount?: number;   // Beat count
     barCount?: number;    // Bar count
-    action: (entity: Entity<T>, eventProps: P, criteriaResult?: boolean) => void;
+    action: (entity: Canvas2DEntity<T> | CompositeEntity<ICompositeEntityProps<T>>, eventProps: P, criteriaResult?: boolean) => void;
     targetEntity: string;   // Key of the entity to target
     criteria?: () => boolean; // Optional criteria function
     props?: any;            // Optional properties for the event
 }
-
 export class Conductor { // Using Conductor as the class name
     private events: ITimelineEvent<any, any>[] = [];
     public currentTime: number = 0;
-
     /**
      * Adds an event to the timeline.
      * @param event - The event to add.
@@ -23,8 +24,6 @@ export class Conductor { // Using Conductor as the class name
     addEvent<T, P>(event: ITimelineEvent<T, P>) { // Add type parameter P
         this.events.push(event);
     }
-
-
     /**
      * Updates the current time of the timeline.
      * @param time - The current time in milliseconds.
@@ -32,8 +31,6 @@ export class Conductor { // Using Conductor as the class name
     updateTime(time: number) {
         this.currentTime = time;
     }
-
-
     triggerEvents(sequence: Sequence) {
         this.events.forEach(event => {
             const { time, beatCount, barCount, action, targetEntity, criteria, props } = event;

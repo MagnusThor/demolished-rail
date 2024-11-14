@@ -1,7 +1,9 @@
-import { IEntity } from './Entity';
-import { Scene } from './Scene';
-import { Sequence } from './Sequence';
-import { GLSLShaderRenderer } from './ShaderRenderers/WebGL/GlslShaderRenderer';
+import { Scene } from '../Scene';
+import { Sequence } from '../Sequence';
+import {
+  GLSLShaderRenderer,
+} from '../ShaderRenderers/WebGL/GlslShaderRenderer';
+import { IEntity } from './Canvas2DEntity';
 
 export type IGLSLCustomUniform<T> = (
     location: WebGLUniformLocation,

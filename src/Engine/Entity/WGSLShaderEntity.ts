@@ -1,15 +1,15 @@
-import { IEntity } from './Entity';
-import { Scene } from './Scene';
-import { Sequence } from './Sequence';
-import { Geometry } from './ShaderRenderers/WebGPU/Geometry';
+import { Scene } from '../Scene';
+import { Sequence } from '../Sequence';
+import { Geometry } from '../ShaderRenderers/WebGPU/Geometry';
 import {
   IMaterialShader,
   Material,
-} from './ShaderRenderers/WebGPU/Material';
-import { IWGSLTextureData } from './ShaderRenderers/WebGPU/TextureLoader';
+} from '../ShaderRenderers/WebGPU/Material';
+import { IWGSLTextureData } from '../ShaderRenderers/WebGPU/TextureLoader';
 import {
   WGSLShaderRenderer,
-} from './ShaderRenderers/WebGPU/WgslShaderRenderer';
+} from '../ShaderRenderers/WebGPU/WgslShaderRenderer';
+import { IEntity } from './Canvas2DEntity';
 
 export interface IWGSLShaderRenderBuffer {
     name: string;

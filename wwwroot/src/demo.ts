@@ -1,6 +1,6 @@
+import { Canvas2DEntity } from '../../src';
 import { DefaultAudioLoader } from '../../src/Engine/Audio/AudioLoader';
-import { Entity } from '../../src/Engine/Entity';
-import { GLSLShaderEntity } from '../../src/Engine/GLSLShaderEntity';
+import { GLSLShaderEntity } from '../../src/Engine/Entity/GLSLShaderEntity';
 import { AssetsHelper } from '../../src/Engine/Helpers/AssetsHelper';
 import { SceneBuilder } from '../../src/Engine/Helpers/SceneBuilder';
 import {
@@ -111,7 +111,7 @@ await demo.sequence.initialize();
 
    
 
-    const strobeEntity = new Entity<IStrobeEffectProps>(
+    const strobeEntity = new Canvas2DEntity<IStrobeEffectProps>(
         "Strobe",
 
         {
@@ -123,7 +123,7 @@ await demo.sequence.initialize();
     );
 
 
-    const imageOverlayEntity = new Entity<IImageOverlayEffectProps>(
+    const imageOverlayEntity = new Canvas2DEntity<IImageOverlayEffectProps>(
         "ImageOverlay",
 
         {
@@ -140,7 +140,7 @@ await demo.sequence.initialize();
         (ts, ctx, props) => imageOverlayEffect(ts, ctx, props, demo.sequence)
     );
 
-    const expandingCircleEntity = new Entity<IExpandingCircleEffectProps>(
+    const expandingCircleEntity = new Canvas2DEntity<IExpandingCircleEffectProps>(
         "ExpandingCircle",
 
         {
@@ -154,7 +154,7 @@ await demo.sequence.initialize();
         (ts, ctx, props) => expandingCircleEffect(ts, ctx, props, demo.sequence) // Pass the sequence instance
     );
 
-    const starburstEntity = new Entity<IStarburstProps>(
+    const starburstEntity = new Canvas2DEntity<IStarburstProps>(
         "Starburst",
 
         {
@@ -172,7 +172,7 @@ await demo.sequence.initialize();
         starburstEffect
     );
 
-    const typeWriterEntity = new Entity<ITypeWriterEffectProps>(
+    const typeWriterEntity = new Canvas2DEntity<ITypeWriterEffectProps>(
         "Typewriter",
 
         {
@@ -189,7 +189,7 @@ await demo.sequence.initialize();
         typeWriterEffect
     );
 
-    const randomSquareEntity = new Entity<IRandomSquareEffectProps>(
+    const randomSquareEntity = new Canvas2DEntity<IRandomSquareEffectProps>(
         "RandomSquare",
 
         {
@@ -199,11 +199,12 @@ await demo.sequence.initialize();
             color: "red",
             lastTick: -1 // Initialize to -1 to add a square on the first bar
         },
-        (ts, ctx, props) => randomSquareEffect(ts, ctx, props, demo.sequence.tickCounter) // Pass currentBar from Sequence
+        (ts:number, ctx:CanvasRenderingContext2D, props:IRandomSquareEffectProps) => 
+                randomSquareEffect(ts, ctx, props, demo.sequence.tickCounter) // Pass currentBar from Sequence
     );
 
 
-    const gridOverlayEntity = new Entity<IGridOverlayEffectProps>(
+    const gridOverlayEntity = new Canvas2DEntity<IGridOverlayEffectProps>(
         "GridOverlay",
 
         {
@@ -212,10 +213,10 @@ await demo.sequence.initialize();
             cellColor: "white",
             activeCells: new Set(),
         },
-        (ts, ctx, props, sequence) => gridOverlayEffect(ts, ctx, props, demo.sequence)
+        (ts:number, ctx:CanvasRenderingContext2D, props:IGridOverlayEffectProps) => gridOverlayEffect(ts, ctx, props, demo.sequence)
     );
 
-    const audioVisualizerEntity = new Entity<IAudioVisualizerProps>(
+    const audioVisualizerEntity = new Canvas2DEntity<IAudioVisualizerProps>(
         "AudioVisualizer",
 
         {
@@ -228,7 +229,7 @@ await demo.sequence.initialize();
             numBars: 100,
             color: "red"
         },
-        (ts, ctx, props, sequence) => audioVisualizerEffect(ts, ctx, props, demo.sequence)
+        (ts:number, ctx:CanvasRenderingContext2D, props:IAudioVisualizerProps): void => audioVisualizerEffect(ts, ctx, props, demo.sequence)
     );
 
     const pseudoKnightyanShaderEntity = new GLSLShaderEntity("ShaderEnriry",
@@ -243,7 +244,7 @@ await demo.sequence.initialize();
                     textures: []
                 }
             ]
-        }, (ts, render, propertybag) => {
+        }, (ts: any, render: any, propertybag: any) => {
         }, demo.targetCanvas.width, demo.targetCanvas.height);
 
     const someKindOfFractalShaderEntity = new GLSLShaderEntity("ShaderEnriry",
@@ -259,11 +260,11 @@ await demo.sequence.initialize();
                     textures: []
                 }
             ]
-        }, (ts, render, propertybag) => {
+        }, (ts: any, render: any, propertybag: any) => {
         }, demo.targetCanvas.width, demo.targetCanvas.height);
 
 
-    const textOverlay = new Entity<ITextEffectProps>(
+    const textOverlay = new Canvas2DEntity<ITextEffectProps>(
         "TextEffect",
 
         {
@@ -274,11 +275,11 @@ await demo.sequence.initialize();
             size: 60,
             duration: 15 // 5 seconds
         },
-        (ts, ctx, props) => textEffect(ts, ctx, props, demo.sequence) // Pass the sequence instance
+        (ts:number, ctx:CanvasRenderingContext2D, props:ITextEffectProps) => textEffect(ts, ctx, props, demo.sequence) // Pass the sequence instance
     );
 
 
-    const textArrayDisplayEntity = new Entity<ITextArrayDisplayProps>(
+    const textArrayDisplayEntity = new Canvas2DEntity<ITextArrayDisplayProps>(
         "TextArrayDisplay",
 
         {
@@ -294,14 +295,14 @@ await demo.sequence.initialize();
             size: 60,
             currentBeat: 0,
         },
-        (ts, ctx, props) => {
+        (ts:number, ctx:CanvasRenderingContext2D, props:ITextArrayDisplayProps) => {
             textArrayDisplayEffect(ts, ctx, props, demo.sequence);
         }
     );
     textArrayDisplayEntity.addPostProcessor(createBeatShakePostProcessor(3));
 
 
-    const typeWriter1EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
+    const typeWriter1EntityForFirstScene = new Canvas2DEntity<ITypeWriterEffectProps>(
         "Typewriter",
 
         {
@@ -318,7 +319,13 @@ await demo.sequence.initialize();
         typeWriterEffect, 1000, 10000
     );
 
-    const typeWriter2EntityForFirstScene = new Entity<ITypeWriterEffectProps>(
+    typeWriter1EntityForFirstScene.onBar<ITypeWriterEffectProps>((ts, count, props) => {
+        console.log(`${ts} bar #${count}.`);
+        // modify props on bar in this case;
+    });
+
+
+    const typeWriter2EntityForFirstScene = new Canvas2DEntity<ITypeWriterEffectProps>(
         "Typewriter",
 
         {
@@ -335,7 +342,9 @@ await demo.sequence.initialize();
         typeWriterEffect, 5000, 10000
     );
 
-    const gridOverlayEffectEntity = new Entity<IGridOverlayEffectProps>("gridOverlayEffets",
+
+    
+    const gridOverlayEffectEntity = new Canvas2DEntity<IGridOverlayEffectProps>("gridOverlayEffets",
         {
             activeCells: new Set<number>(),
             cellColor: "rgba(255,255,0,0.2)",
@@ -350,10 +359,8 @@ await demo.sequence.initialize();
         balls: [],
     };
 
-    const ballEntity = new Entity<IBallEntityProps>(
-
+    const ballEntity = new Canvas2DEntity<IBallEntityProps>(
         "BallEntity",
-
         ballEntityProps,
         (ts, ctx, props, sequence) => ballEffect(ts, ctx, props, sequence!)
     );
@@ -366,14 +373,12 @@ await demo.sequence.initialize();
         lastBeat: -1,
     };
 
-    const stretchingTextEntity = new Entity<IStretchingTextProps>(
+    const stretchingTextEntity = new Canvas2DEntity<IStretchingTextProps>(
         "StretchingText",
-
         stretchingTextProps,
-        (ts, ctx, props, sequence) => stretchingTextEffect(ts, ctx, props, demo.sequence)
+        (ts:number, ctx:CanvasRenderingContext2D, props:IStretchingTextProps) => stretchingTextEffect(ts, ctx, props, demo.sequence)
     );
-
-    // set up an endScene ( credits )
+ 
 
     const creditsText = [
         "FRAMWORK CODE",
@@ -384,7 +389,6 @@ await demo.sequence.initialize();
         "VIRGILL / MANIACS OF NOISE",
         "GRAPHIS",
         "COOKIEDOUGH",
-
         // ... more lines
     ];
 
@@ -395,31 +399,21 @@ await demo.sequence.initialize();
             alpha: 0,
         })),
 
-        lineHeight: 80,
-        scrollSpeed: 40,
+        lineHeight: 80,        scrollSpeed: 40,
         fadeInDuration: 0.5,
         fadeOutDuration: 0.5,
         font: "40px Poppins",
     };
 
-    const creditsEntity = new Entity<ICreditsScrollerProps>(
+    const creditsEntity = new Canvas2DEntity<ICreditsScrollerProps>(
         "CreditsScroller",
-
         creditsScrollerProps,
-        (ts, ctx, props, sequence) => creditsScrollerEffect(ts, ctx, props, demo.sequence)
+        (ts:number, ctx:CanvasRenderingContext2D, props:ICreditsScrollerProps) => creditsScrollerEffect(ts, ctx, props, demo.sequence)
     );
 
     creditsEntity.addPostProcessor(createBeatShakePostProcessor(3));
 
     // Okey, done setup , add the stuff to scens 
-
-
-    typeWriter1EntityForFirstScene.onBar<ITypeWriterEffectProps>((ts, count, props) => {
-        console.log(`${ts} bar #${count}.`);
-        // modify props on bar in this case;
-    });
-
-
     
 
     scenes[1].addEntities(
@@ -434,7 +428,6 @@ await demo.sequence.initialize();
     scenes[6].addEntities(creditsEntity, imageOverlayEntity, ballEntity);
 
     demo.sequence.addSceneArray(scenes)
-
 
 
 });

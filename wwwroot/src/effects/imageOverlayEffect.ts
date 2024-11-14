@@ -1,6 +1,4 @@
-import { Entity, IEntity } from "../../../src/Engine/Entity";
-import { Sequence } from "../../../src/Engine/Sequence";
-
+import { Sequence } from '../../../src/Engine/Sequence';
 
 export enum ImagePosition {
   FILL,

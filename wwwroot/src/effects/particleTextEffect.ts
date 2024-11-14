@@ -1,7 +1,7 @@
 import {
   CompositeEntity,
   ICompositeEntityProps,
-} from '../../../src/Engine/CompositeEntity';
+} from '../../../src/Engine/Entity/CompositeEntity';
 
 export interface IPart {
   x: number;
