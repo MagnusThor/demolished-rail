@@ -34,10 +34,7 @@ export const worldBackgroundEffect = (ts: number, ctx: CanvasRenderingContext2D,
         rectangles.push({ x, y, width: rectWidth, height: rectHeight, color });
         currentX += rectWidth + gap;
       }
-    }
-
-    
-  
+    }  
     rectangles.forEach(rect => {
       ctx.fillStyle = rect.color;
       ctx.fillRect(rect.x, rect.y, rect.width, rect.height);

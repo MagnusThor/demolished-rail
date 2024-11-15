@@ -1,30 +1,21 @@
 import {
   Canvas2DEntity,
   DefaultAudioLoader,
-  defaultMainShader,
-  Geometry,
   GLSLShaderEntity,
   IEntity,
   initWebGPU,
   IWGSLTextureData,
-  Material,
-  rectGeometry,
   Scene,
   Sequence,
   SequenceHelper,
-  WGSLShaderEntity,
   WGSLTextureType,
 } from '../../src';
-import {
-  IWGSLPostProcessorProperties,
-} from '../../src/Engine/Entity/WGSLShaderEntity';
 import {
   earthShader,
   IEarthShader,
 } from '../assets/shaders/earthShader';
 import { mainFragment } from '../assets/shaders/mainFragment';
 import { mainVertex } from '../assets/shaders/mainVertex';
-import { wgslFAXXS } from '../assets/shaders/wglsl/wgslFAXXS';
 import { TextAlignment } from './effects/fadeInOutTextEffect';
 import {
   ISimpleTextEffectProps,
@@ -81,26 +72,7 @@ export class RunShaderScene {
         usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
       })  
     });
-    const postProcessingEntity = new WGSLShaderEntity<IWGSLPostProcessorProperties>(
-      "postProcessingEntity",
-      {
-        canvas: wsglShaderCanvas,
-        device:device,
-        context:context!,
-        textureKey: "myTexture",
-        shader: defaultMainShader,        
-        renderBuffers: [
-          {
-            name:"renderbuffer1",
-            geometry: new Geometry(device,rectGeometry),
-            shader: new Material(device, wgslFAXXS),
-            textures:postProcessingTextures
-          }
-        ]
-      }
-    );
-    scene.addWgslPostProcessor(sequence,device, postProcessingEntity);
-
+    
     this.sequence = sequence
     return sequence;
   }

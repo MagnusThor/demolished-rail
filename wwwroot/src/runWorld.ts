@@ -1,41 +1,40 @@
 import {
+  AssetsHelper,
   CompositeEntity,
   DefaultAudioLoader,
+  EngineLogger,
   ICompositeEntity,
   ICompositeEntityProps,
   IEntity,
+  InputHelper,
   SceneBuilder,
   Sequence,
 } from '../../src';
 import { WorldEntity } from '../../src/Engine/Entity/WorldEntity';
+import {
+  ISpriteBlockProps,
+  Sprite,
+  SpriteAnimationDirection,
+  SpriteSheet,
+} from '../../src/Engine/Helpers/Canvas/SpriteSheet';
 import { CollisionHelper } from '../../src/Engine/Helpers/CollisionHelper';
 import {
   IBackgroundProps,
   worldBackgroundEffect,
 } from './effects/worldBackgroundEffect';
 
-interface IBallBlockProps {
-  x: number;
-  y: number;
-  radius: number;
-  vx: number;
-  vy: number;
-  collidingRectIndex?: number
-}
-
-/**
- * A class to demonstrate the usage of the demolished-rail framework,
- * including GLSL shaders, Canvas2D rendering, transitions, and music synchronization.
- */
 export class RunWorld {
   screenCanvas: HTMLCanvasElement;
   sequence!: Sequence;
+  worldAssets: HTMLImageElement[] | undefined;
+  inputHelper: InputHelper;
   /**
    * Creates a new RunWorld instance.
    * @param target - The canvas element to render to.
    */
   constructor(target: HTMLCanvasElement, public bmp: number) {
     this.screenCanvas = target;
+    this.inputHelper=  new InputHelper(target);
   }
   /**
   * Sets up the Sequence and Scene for the demo.
@@ -56,8 +55,88 @@ export class RunWorld {
     return sequence;
   }
 
-  createWorld(sequence: Sequence): Array<IEntity> {
+  /**
+   * Load the image assets
+   *
+   * @param {string[]} images
+   * @return {*}  {Promise<HTMLImageElement[]>}
+   * @memberof RunWorld
+   */
+  async loadAssets(images:string[]):Promise<HTMLImageElement[]>{
+    const result =  await AssetsHelper.loadImages(images);
+    return result;
+  }
 
+
+
+  private createAstronaut():ICompositeEntity<any>
+  {
+    
+      interface IAstronautEntity extends ISpriteBlockProps
+      {
+        input: InputHelper;
+        radius:number;
+        collidingRectIndex:number;
+      };
+
+      const spriteSheet = new SpriteSheet(this.worldAssets![0], 144, 24);
+
+      const astronautEntity: ICompositeEntity<IAstronautEntity> = {
+        key: "astronautEntity",
+        props: {
+          collidingRectIndex:-1,
+          radius:24,
+          x:0,
+          y:225,
+          input: this.inputHelper,
+          spriteSheet: new SpriteSheet(this.worldAssets![0], 24, 24), // create the spritesheet
+          sprite: new Sprite(spriteSheet.image,{x:0,y:0},{width:24,height:24}, // create the sprite (24x24)
+             {
+              frames: [0, 1, 2,3,4,5],  // animation 
+              speed: 10, // 10 frames per second
+              direction: SpriteAnimationDirection.VERTICAL, // extract sprites VERTICAL in spritesheet
+              loop: true, 
+              currentFrame:0           
+            }        
+          )
+        },
+        update(timeStamp: number, ctx: CanvasRenderingContext2D,entity: ICompositeEntity<IAstronautEntity> ) {
+          const { sprite,input,x,y } = this.props;          
+          if(input.isKeyPressed("ArrowRight")){
+              this.props.x++;            
+          }
+          if(input.isKeyPressed("ArrowLeft")){            
+            this.props.x--            
+          }
+          if(input.isKeyPressed("ArrowDown")){
+              this.props.y++
+              console.log(this.props.y);
+          }
+
+          if(input.isKeyPressed("ArrowUp")){ 
+            this.props.y--;
+            console.log(this.props.y);
+          }
+
+
+             
+           sprite!.update(1 / 60,ctx); 
+           sprite!.draw(ctx,x,y)
+      
+        }
+      };
+    return astronautEntity;
+  }
+
+  /**
+   * Create an example world ( interactive animation )
+   *
+   * @param {Sequence} sequence
+   * @return {*}  {Array<IEntity>}
+   * @memberof RunWorld
+   */
+  createWorld(sequence: Sequence): Array<IEntity> {
+   
     const world = new WorldEntity("our-world", {
       worldHeight: this.screenCanvas.height,
       worldWidth: this.screenCanvas.width * 10 ,// make it 10 x the screen canvas
@@ -71,7 +150,7 @@ export class RunWorld {
     const backgroundProps: IBackgroundProps = {
       rectangles: []
     }
-    const worldBg: ICompositeEntity<IBackgroundProps> = {
+    const worldBackgroud: ICompositeEntity<IBackgroundProps> = {
       key: 'background',
       update: function (timeStamp: number, ctx: CanvasRenderingContext2D,
         entity: CompositeEntity<ICompositeEntityProps<any>>): void {
@@ -80,75 +159,51 @@ export class RunWorld {
       props: backgroundProps
     };
 
-    // Set up a second entity for the World
-    const ballBlock: ICompositeEntity<IBallBlockProps> = {
-      key: "ballBlock",
-      props: {
-        x: 400,
-        y: 225,
-        radius: 20,
-        vx: 5,
-        vy: 3        
-      },      
-      update(timeStamp: number, ctx: CanvasRenderingContext2D, entity: CompositeEntity<any>) {
-        const { x, y, radius, vx, vy } = this.props;
-        // Update ball position for bouncing
-        this.props.x += vx;
-        this.props.y += vy;
-        if (this.props.x + radius > ctx.canvas.width || this.props.x - radius < 0) {
-          this.props.vx = -vx;
-          this.props.vy += (Math.random() - 0.5) * 2; // Add random vertical velocity
-        }
-        if (this.props.y + radius > ctx.canvas.height || this.props.y - radius < 0) {
-          this.props.vy = -vy;
-          this.props.vx += (Math.random() - 0.5) * 2; // Add random horizontal velocity
-        }
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = "red"; // Example color
-        ctx.fill();
-      }
-    };
-
-    // add a collision detector , of the ball is colliding with a rect 
+   
+    // add a collision detector , if the ball is astronautEntity with a rect in the background entity 
     world.addCollisionDetector<
     { x: number, y: number, radius: number,collidingRectIndex?: number },
     { rectangles: { x: number, y: number, width: number, height: number }[] }  >(
-    "ballBlock",
+    "astronautEntity",
     "background",
-    (ball, background) => {
+    (astronautEntity, background) => {
       // Find the index of the colliding rectangle
       const collidingIndex = background.rectangles.findIndex(rect => {
         return CollisionHelper.rectangularDetection(
-          { x: ball.x, y: ball.y, w: ball.radius * 2, h: ball.radius * 2 },
-          { x: rect.x, y: rect.y, w: rect.width, h: rect.height }
+          { x: astronautEntity.x, y: astronautEntity.y, w: astronautEntity.radius * 2, h: astronautEntity.radius * 2 },
+          { x: astronautEntity.x, y: rect.y, w: rect.width, h: rect.height }
         );
       });  
       if (collidingIndex !== -1) {
-        // Store the colliding rectangle's index in the ball's props
-        ball.collidingRectIndex = collidingIndex; 
-        return true; // Collision detected
+     
+        astronautEntity.collidingRectIndex = collidingIndex; 
+        return true; 
       }  
       return false; // No collision
     },
-    (ball, background) => {
-      // Access the colliding rectangle's index from the ball's props , and remove it
-      const collidingIndex = ball.collidingRectIndex; 
+    (astronautEntity, background) => {
+   
+      const collidingIndex = astronautEntity.collidingRectIndex; 
       if (collidingIndex !== undefined) {
-        background.rectangles.splice(collidingIndex, 1); 
+      //  background.rectangles.splice(collidingIndex, 1); 
       }
     }
   );
 
     // add entities to the world's "building blocks"
-    world.addBlocks(worldBg,ballBlock);
+    world.addBlocks(
+      worldBackgroud,
+      this.createAstronaut());
 
-    // just a test how we can sync viewports on frame?
+    // just a test how we can sync viewports on frame
     sequence.onFrame((scene, time) => {
-      const ballX = world.findBlock<{ x: number }>("ballBlock")?.props.x;
-      if (ballX !== undefined) {
+      const astronautEntity = world.findBlock<{ x: number }>("astronautEntity")?.props.x;
+
+  
+
+      if (astronautEntity !== undefined) {
         // Center the viewport on the ball's x position
-        const viewportX = ballX - world.props.viewportWidth / 2;
+        const viewportX =  astronautEntity-(world.props.viewportWidth /2);
         world.setViewportX(viewportX);
       }
     });
@@ -159,6 +214,12 @@ export class RunWorld {
 document.addEventListener("DOMContentLoaded", async () => {
   const canvas = document.querySelector("canvas#main-canvas") as HTMLCanvasElement;
   const runner = new RunWorld(canvas, 110);
+
+ 
+  runner.worldAssets = await runner.loadAssets(["/wwwroot/assets/sprites/astronaut_run_sprite.png"]);
+
+  EngineLogger.log(runner.worldAssets);
+
   const sequence = await runner.setupSequence();
 
 
