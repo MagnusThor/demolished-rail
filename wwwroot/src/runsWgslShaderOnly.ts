@@ -11,7 +11,9 @@ import {
   WGSLTextureLoader,
   WGSLTextureType,
 } from '../../src';
-import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
+import {
+  alienWaterWorld,
+} from '../assets/shaders/wglsl-frag/alien-waterworldShader';
 
 /**
    * A class to demonstrate the usage of WGSL shaders in the demolished-rail framework.
@@ -35,11 +37,11 @@ import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
       const wsglShaderCanvas = document.createElement("canvas");
       wsglShaderCanvas.width = this.screenCanvas.width;
       wsglShaderCanvas.height = this.screenCanvas.height;
-      const webgpu = await initWebGPU(wsglShaderCanvas, { powerPreference: 'high-performance' });
+      const webgpu = await initWebGPU(wsglShaderCanvas,){};
   
       const wsglTextures = await WGSLTextureLoader.loadAll(webgpu.device, {
         key: "NOISE-TEXTURE",
-        source: "assets/images/noise.png",
+        source: "assets/images/noise2.png",
         type: WGSLTextureType.IMAGE,
       });
       
@@ -54,9 +56,9 @@ import { wgslFlamesShader } from '../assets/shaders/wglsl/wgslFlamesShader';
         renderBuffers: [
           {
             name: "buffer1",
-            shader: new Material(webgpu.device, wgslFlamesShader),
+            shader: new Material(webgpu.device, alienWaterWorld),
             geometry: new Geometry(webgpu.device, rectGeometry),
-            textures: wsglTextures
+          //  textures: wsglTextures
           }
         ]
       };

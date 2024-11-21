@@ -13,14 +13,14 @@ import {
 import {
   earthShader,
   IEarthShader,
-} from '../assets/shaders/earthShader';
+} from '../assets/shaders/glsl/earthShader';
 import { mainFragment } from '../assets/shaders/mainFragment';
 import { mainVertex } from '../assets/shaders/mainVertex';
-import { TextAlignment } from './effects/fadeInOutTextEffect';
+import { TextAlignment } from './example/canvas2d/fadeInOutTextEffect';
 import {
   ISimpleTextEffectProps,
   simpleTextEffect,
-} from './effects/simpleTextEffect';
+} from './example/canvas2d/simpleTextEffect';
 
 /**
  * A class to demonstrate the usage of the demolished-rail framework,

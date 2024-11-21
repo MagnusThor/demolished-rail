@@ -8,7 +8,7 @@ import {
   Material,
 } from './Material';
 import {
-  IPass,
+  IRenderPass,
   RenderPass,
   RENDERPASS,
   RenderPassBuilder,
@@ -16,34 +16,58 @@ import {
 import { IWGSLTextureData } from './TextureLoader';
 import { Uniforms } from './Uniforms';
 
+export function getWorkgroupSizeString(limits: any): {x:number,y:number,z:number,
+    workgroup_size:string
+
+} {
+  const x = Math.min(16, largestPowerOf2LessThan(limits.maxComputeWorkgroupSizeX));
+  const y = Math.min(16, largestPowerOf2LessThan(limits.maxComputeWorkgroupSizeY)); 
+  return {
+    x:x,y,z:1,workgroup_size:`@workgroup_size(${x}, ${y}, 1)`
+  }; 
+}
+
+export function largestPowerOf2LessThan(n: number): number {
+  let power = 1;
+  while (power * 2 <= n) {
+    power *= 2;
+  }
+  return power;
+}
+
 export const initWebGPU = async (canvas: HTMLCanvasElement, options?: GPURequestAdapterOptions) => {
-    const adapter = await navigator.gpu?.requestAdapter(options);
-    const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
-    const device = await adapter?.requestDevice({
-        requiredFeatures: hasBGRA8unormStorage
-            ? ['bgra8unorm-storage']
-            : [],
-    });
-    if (!device)
-        throw "need a browser that supports WebGPU";
-    const context = canvas.getContext("webgpu");
-    context?.configure({
-        device,
-        format: hasBGRA8unormStorage
-            ? navigator.gpu.getPreferredCanvasFormat()
-            : 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING |
-            GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    return { device, context };
-};
+        const adapter = await navigator.gpu?.requestAdapter(options);
+        const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
+        const device = await adapter?.requestDevice({
+            requiredFeatures: hasBGRA8unormStorage
+                ? ['bgra8unorm-storage']
+                : [],
+        });
+        if (!device)
+            throw "need a browser that supports WebGPU";
+        const context = canvas.getContext("webgpu");
+        context?.configure({
+            device,
+            format: hasBGRA8unormStorage
+                ? navigator.gpu.getPreferredCanvasFormat()
+                : 'rgba8unorm',
+            usage: GPUTextureUsage.TEXTURE_BINDING |
+                GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
+        });
+
+
+        const workgroupsize = getWorkgroupSizeString(adapter!.limits);
+
+
+        return { device, context,adapter,workgroupsize };
+    };
 
 /**
  * The Renderer class is responsible for managing the WebGPU rendering context, 
  * creating and executing render passes, and handling resources like buffers and textures.
  */
 export class WGSLShaderRenderer {
-    renderPassBacklog: Map<string, IPass>;
+    renderPassBacklog: Map<string, IRenderPass>;
     renderPipleline!: GPURenderPipeline;
     renderPassBuilder!: RenderPassBuilder;
     frameCount: number = 0;
@@ -55,7 +79,7 @@ export class WGSLShaderRenderer {
     uniforms!: Uniforms;
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,
         public context: GPUCanvasContext, geometry?: IGeometry) {
-        this.renderPassBacklog = new Map<string, IPass>();
+        this.renderPassBacklog = new Map<string, IRenderPass>();
         this.textures = new Array<IWGSLTextureData>();
         this.renderPassBuilder = new RenderPassBuilder(device);
         this.geometry = new Geometry(device, geometry || rectGeometry);
@@ -77,7 +101,7 @@ export class WGSLShaderRenderer {
    * @param material - The material to use for the pipeline.
    * @returns The created GPURenderPipeline.
    */
-    creatRenderPipeline(uniformBuffer: GPUBuffer, material: Material): GPURenderPipeline {
+    createRenderPipeline(uniformBuffer: GPUBuffer, material: Material): GPURenderPipeline {
         const bindingGroupEntrys: Array<GPUBindGroupEntry> = [];
         const sampler = this.getDevice().createSampler({
             addressModeU: 'repeat',
@@ -328,18 +352,28 @@ export class WGSLShaderRenderer {
      * @param textures - An optional array of textures to use in the compute pass.
      * @returns The created RenderPass object.
      */
-    async addComputeRenderPass(label: string, computeShaderCode: string, textures: IWGSLTextureData[] = []): Promise<RenderPass> {
+     addComputeRenderPass(label: string, computeShaderCode: string, textures: IWGSLTextureData[] = [],
+        workgroupsize?:{x:number,y:number,z:number,
+            workgroup_size:string        
+        }
+
+    ): RenderPass {
+
         this.textures.push(...textures); // Add textures to the renderer's textures array
+
+        if(workgroupsize?.workgroup_size){
+            computeShaderCode = computeShaderCode.replace("##workgroup_size",workgroupsize.workgroup_size);
+        }
 
         const computeShaderModule = this.getDevice().createShaderModule({ code: computeShaderCode });
         const computePipeline = this.renderPassBuilder.createComputePipeline(computeShaderModule, this.textures);
         const renderTarget = this.createRenderTarget(this.canvas.width, this.canvas.height);
 
         // Create bind group entries for the render target, uniform buffer, sampler, and textures
-        const bindingGroupEntries: Array<GPUBindGroupEntry> = [
-            { binding: 0, resource: renderTarget.bufferView },
-            { binding: 1, resource: { buffer: this.uniforms.uniformBuffer } },
-            { binding: 2, resource: this.getDevice().createSampler() }
+        const bindingGroupEntries: Array<GPUBindGroupEntry> = [         
+            { binding: 0, resource: { buffer: this.uniforms.uniformBuffer } },
+            { binding: 1, resource: this.getDevice().createSampler() },
+            { binding: 2, resource: renderTarget.bufferView }
         ];
 
         let bindingIndex = bindingGroupEntries.length;
@@ -361,7 +395,8 @@ export class WGSLShaderRenderer {
         });
 
         // Create and return the render pass
-        const renderPass = new RenderPass(RENDERPASS.COMPUTESHADER, label, computePipeline, this.uniforms, bindGroup, renderTarget.buffer, renderTarget.bufferView);
+        const renderPass = new RenderPass(RENDERPASS.COMPUTESHADER, 
+            label, computePipeline, this.uniforms, bindGroup, renderTarget.buffer, renderTarget.bufferView);
         this.renderPassBacklog.set(label, renderPass);
         return renderPass;
     }
@@ -377,11 +412,19 @@ export class WGSLShaderRenderer {
         // get the compute shaders from the back log
         arrRenderPasses.filter((pre) => {
             return pre.type == RENDERPASS.COMPUTESHADER
-        }).forEach(pass => {
+        }).forEach(computeRenderPass => {
             const computePass = encoder.beginComputePass();
-            computePass.setPipeline(pass.pipleline as GPUComputePipeline);
-            computePass.setBindGroup(0, pass.bindGroup);
-            computePass.dispatchWorkgroups(Math.floor((this.canvas.width + 7) / 8), Math.floor((this.canvas.height + 7) / 8), 1);
+            computePass.setPipeline(computeRenderPass.pipleline as GPUComputePipeline);
+            computePass.setBindGroup(0, computeRenderPass.bindGroup);
+
+            //computePass.dispatchWorkgroups(Math.floor((this.canvas.width + 7) / 8), Math.floor((this.canvas.height + 7) / 8), 1);
+
+            computePass.dispatchWorkgroups(
+                Math.ceil(this.canvas.width / computeRenderPass.workgroupSize!.x), 
+                Math.ceil(this.canvas.height / computeRenderPass.workgroupSize!.y), 
+                computeRenderPass.workgroupSize!.z 
+              ); 
+            
             computePass.end();
         });
         arrRenderPasses.filter(pre => {

@@ -14,7 +14,7 @@ export enum RENDERPASS{
     FRAGMENTSHADER = 1    
 }
 
-export interface IPass {
+export interface IRenderPass {
     label: string;
     pipleline: GPUComputePipeline | GPURenderPipeline;
     uniforms: Uniforms;
@@ -22,13 +22,23 @@ export interface IPass {
     buffer: GPUTexture;
     bufferView: GPUTextureView;
     type: number
+    workgroupSize?: {x:number,y:number,z:number,
+        workgroup_size:string    
+    }
 }
 
-export class RenderPass implements IPass
+export class RenderPass implements IRenderPass
 {
-    constructor(public type:number,public label:string,public pipleline:GPUComputePipeline | GPURenderPipeline,
+    constructor(public type:RENDERPASS,public label:string,public pipleline:GPUComputePipeline | GPURenderPipeline,
         public uniforms: Uniforms,public bindGroup:GPUBindGroup, public buffer:GPUTexture,
-        public bufferView: GPUTextureView){
+        public bufferView: GPUTextureView,public workgroupSize?:{x:number,y:number,z:number,
+            workgroup_size:string    
+        } ){
+            if(!workgroupSize && type == RENDERPASS.COMPUTESHADER){
+                this.workgroupSize = {
+                    x: 8,y:8,z:1,workgroup_size:"@workgroup_size(8, 8, 1)"
+                } 
+            }
     }
 }
 
@@ -77,6 +87,7 @@ export class RenderPassBuilder implements IPassBuilder {
             binding: 1,
             resource: sampler || defaultSampler
         });
+
         return bindingGroupEntrys;
     }
 
@@ -89,7 +100,7 @@ export class RenderPassBuilder implements IPassBuilder {
   * @returns The created GPURenderPipeline.
   */
     createRenderPipeline(material: Material, geometry: Geometry, textures: Array<IWGSLTextureData>,
-        priorRenderPasses: IPass[]
+        priorRenderPasses: IRenderPass[]
     ): GPURenderPipeline {
         const bindGroupLayoutEntries = new Array<GPUBindGroupLayoutEntry>();
         // add uniforms
@@ -177,7 +188,7 @@ export class RenderPassBuilder implements IPassBuilder {
     createComputePipeline(computeShader: GPUShaderModule, textures: Array<IWGSLTextureData>): GPUComputePipeline {
         const bindGroupLayoutEntries = new Array<GPUBindGroupLayoutEntry>();
         bindGroupLayoutEntries.push({
-            binding: 0,
+            binding: 2,
             visibility: GPUShaderStage.COMPUTE,
             storageTexture: {
                 access: "write-only",
@@ -186,11 +197,29 @@ export class RenderPassBuilder implements IPassBuilder {
             },
         },
             {
-                binding: 1, visibility: GPUShaderStage.COMPUTE,
+                binding: 0, visibility: GPUShaderStage.COMPUTE,
                 buffer: {
                     type: "uniform"
                 }
-            });
+            },
+
+            { 
+                binding: 1,
+                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+                sampler: {
+                    type: "filtering"
+                }
+            }
+            
+        
+        
+        );
+
+        
+
+
+
+
         if (textures.length > 0) {
             for (let i = 0; i < textures.length; i++) { //  1-n texture bindings
                 if (textures[i].type === 0) {

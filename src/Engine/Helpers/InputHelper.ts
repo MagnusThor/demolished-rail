@@ -5,6 +5,11 @@ export class InputHelper {
     private mouseButtons: Set<number> = new Set();
     private keyListeners: { [key: string]: (() => void)[] } = {};
 
+
+    private keyDownTimes: { [key: string]: number } = {}; // Store key down times
+    private mouseButtonDownTimes: { [button: number]: number } = {}; // Store mouse button down times
+
+
     /**
      * Initializes the Input class by attaching event listeners for keyboard and mouse events.
      */
@@ -14,6 +19,31 @@ export class InputHelper {
         parent.addEventListener('mousemove', (e) => this.onMouseMove(e));
         parent.addEventListener('mousedown', (e) => this.onMouseDown(e));
         parent.addEventListener('mouseup', (e) => this.onMouseUp(e));
+    }
+
+
+    /**
+     * Gets the time (in milliseconds) since a specific key was pressed.
+     * @param key - The key to check.
+     * @returns The time since the key was pressed, or 0 if the key is not currently pressed.
+     */
+    getKeyDownTime(key: string): number {
+        if (this.keys.has(key)) {
+            if (!this.keyDownTimes[key]) { // Check if keyDownTime is not set
+                this.keyDownTimes[key] = performance.now(); // If not set, capture the current time
+            }
+            return performance.now() - this.keyDownTimes[key]; // Calculate the difference
+        } else {
+            return 0; // Return 0 if the key is not pressed
+        }
+    }
+    /**
+     * Gets the time (in milliseconds) since a specific mouse button was pressed.
+     * @param button - The mouse button to check (0 for left, 1 for middle, 2 for right).
+     * @returns The time since the mouse button was pressed, or 0 if the button is not currently pressed.
+     */
+    getMouseButtonDownTime(button: number): number {
+        return this.mouseButtons.has(button) ? performance.now() - this.mouseButtonDownTimes[button] : 0;
     }
 
     /**
@@ -69,16 +99,13 @@ export class InputHelper {
     private onKeyDown(event: KeyboardEvent) {
         this.keys.add(event.key);
 
-        // Trigger key listeners
-        if (this.keyListeners[event.key]) {
-            this.keyListeners[event.key].forEach(listener => listener());
-        }
+        // Do not capture key down time here
     }
 
     private onKeyUp(event: KeyboardEvent) {
         this.keys.delete(event.key);
+        this.keyDownTimes[event.key] = 0; // Reset key down time on key up
     }
-
     private onMouseMove(event: MouseEvent) {
         this.mouseX = event.clientX;
         this.mouseY = event.clientY;
@@ -86,9 +113,12 @@ export class InputHelper {
 
     private onMouseDown(event: MouseEvent) {
         this.mouseButtons.add(event.button);
+        this.mouseButtonDownTimes[event.button] = performance.now(); // Capture mouse button down time
+
     }
 
     private onMouseUp(event: MouseEvent) {
         this.mouseButtons.delete(event.button);
+        this.mouseButtonDownTimes[event.button] = 0;
     }
 }

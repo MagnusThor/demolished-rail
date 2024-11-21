@@ -12,19 +12,14 @@ import {
 } from '../../src/Engine/Entity/CompositeEntity';
 import { easeInOutCubic } from '../../src/Engine/Helpers/EntityHelpers';
 import {
-  IParticle,
-  IParticleProps,
-  particleEffect,
-} from './effects/particleEffect';
-import {
   IParticleTextEffectProps,
   particleTextEffect,
-} from './effects/particleTextEffect';
+} from './example/canvas2d/particleTextEffect';
 import {
   ITextEntranceEffectProps,
   ScrollDirection,
   textEntranceEffect,
-} from './effects/textEntranceEffect';
+} from './example/canvas2d/textEntranceEffect';
 
 interface ITextBlockProps {
   text: string;
@@ -161,17 +156,7 @@ export class RunScene {
   createEntities(): Array<IEntity> {
 
 
-    const particles: ICompositeEntity<IParticleProps> = {
-      key: "particles",
-      update: function (timeStamp: number, ctx: CanvasRenderingContext2D, entity: any): void {
-        particleEffect(timeStamp, ctx, this.props!);
-      },
-      props: {
-        particles: Array<IParticle>(),
-        numParticles: 500
-      }
-    };
-
+    
     const textBlock: ICompositeEntity<ITextBlockProps> = {
       key: "textBlock",
       props: {
@@ -210,7 +195,7 @@ export class RunScene {
       "TextBlockEntity",
       800,
       450,
-      { blocks: [particles, textBlock, scrollingTextBlock,] }
+      { blocks: [ textBlock, scrollingTextBlock,] }
     );
 
 
