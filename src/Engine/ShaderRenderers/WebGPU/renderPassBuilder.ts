@@ -9,26 +9,45 @@ export interface IPassBuilder {
     device: GPUDevice;
 }
 
-export enum RENDERPASS{
+export enum RENDERPASS {
     COMPUTESHADER = 0,
-    FRAGMENTSHADER = 1    
+    FRAGMENTSHADER = 1
 }
 
-export interface IPass {
+export interface IRenderPass {
     label: string;
     pipleline: GPUComputePipeline | GPURenderPipeline;
     uniforms: Uniforms;
     bindGroup: GPUBindGroup;
     buffer: GPUTexture;
     bufferView: GPUTextureView;
-    type: number
+    type: RENDERPASS
+    workgroupSize?: {
+        x: number, y: number, z: number,
+        workgroup_size: string
+    },
+ 
 }
 
-export class RenderPass implements IPass
-{
-    constructor(public type:number,public label:string,public pipleline:GPUComputePipeline | GPURenderPipeline,
-        public uniforms: Uniforms,public bindGroup:GPUBindGroup, public buffer:GPUTexture,
-        public bufferView: GPUTextureView){
+export class RenderPass implements IRenderPass {
+
+    constructor(public type: RENDERPASS, public label: string, 
+        public pipleline: GPUComputePipeline | GPURenderPipeline,
+        public uniforms: Uniforms, 
+        public bindGroup: GPUBindGroup, 
+        public buffer: GPUTexture,
+        public bufferView: GPUTextureView, public workgroupSize?: {
+            x: number, y: number, z: number,
+            workgroup_size: string
+        }) {
+        if (!workgroupSize && type == RENDERPASS.COMPUTESHADER) {
+            this.workgroupSize = {
+                x: 8, y: 8, z: 1, workgroup_size: "@workgroup_size(8, 8, 1)"
+            }
+        }
+
+        
+
     }
 }
 
@@ -47,6 +66,12 @@ export class RenderPassBuilder implements IPassBuilder {
   */
     constructor(device: GPUDevice) {
         this.device = device;
+
+    
+
+
+
+
     }
     /**
    * Creates a bind group layout and entries for a render pipeline.
@@ -77,6 +102,7 @@ export class RenderPassBuilder implements IPassBuilder {
             binding: 1,
             resource: sampler || defaultSampler
         });
+
         return bindingGroupEntrys;
     }
 
@@ -89,7 +115,7 @@ export class RenderPassBuilder implements IPassBuilder {
   * @returns The created GPURenderPipeline.
   */
     createRenderPipeline(material: Material, geometry: Geometry, textures: Array<IWGSLTextureData>,
-        priorRenderPasses: IPass[]
+        priorRenderPasses: IRenderPass[]
     ): GPURenderPipeline {
         const bindGroupLayoutEntries = new Array<GPUBindGroupLayoutEntry>();
         // add uniforms
@@ -177,7 +203,7 @@ export class RenderPassBuilder implements IPassBuilder {
     createComputePipeline(computeShader: GPUShaderModule, textures: Array<IWGSLTextureData>): GPUComputePipeline {
         const bindGroupLayoutEntries = new Array<GPUBindGroupLayoutEntry>();
         bindGroupLayoutEntries.push({
-            binding: 0,
+            binding: 2,
             visibility: GPUShaderStage.COMPUTE,
             storageTexture: {
                 access: "write-only",
@@ -186,11 +212,21 @@ export class RenderPassBuilder implements IPassBuilder {
             },
         },
             {
-                binding: 1, visibility: GPUShaderStage.COMPUTE,
+                binding: 0, visibility: GPUShaderStage.COMPUTE,
                 buffer: {
                     type: "uniform"
                 }
-            });
+            },
+
+            {
+                binding: 1,
+                visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+                sampler: {
+                    type: "filtering"
+                }
+            }
+        );
+
         if (textures.length > 0) {
             for (let i = 0; i < textures.length; i++) { //  1-n texture bindings
                 if (textures[i].type === 0) {
@@ -224,5 +260,34 @@ export class RenderPassBuilder implements IPassBuilder {
             },
         });
         return pipeline;
+    }
+}
+
+
+export class WebGPUTiming {
+    supportsTimeStampQuery: boolean;
+    querySet: GPUQuerySet | undefined;
+    resolveBuffer: GPUBuffer | undefined;
+    readBuffer: GPUBuffer | undefined;
+
+    constructor(public device: GPUDevice) {
+        this.supportsTimeStampQuery = device.features.has("timestamp-query");
+
+        if (this.supportsTimeStampQuery) {
+            this.querySet = device.createQuerySet({
+                type: "timestamp",
+                count: 2
+            });
+
+            this.resolveBuffer = device.createBuffer({
+                size: this.querySet.count * 8,
+                usage: GPUBufferUsage.QUERY_RESOLVE | GPUBufferUsage.COPY_SRC,
+            });
+
+            this.readBuffer = device.createBuffer({
+                size: this.querySet.count * 8,
+                usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+            });
+        }
     }
 }

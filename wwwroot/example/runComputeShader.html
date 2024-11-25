@@ -1,0 +1,45 @@
+<html>
+
+<head>
+
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        canvas {
+            width: 100vw;
+            height: calc((9/16)*100vw);
+
+        }
+
+        #info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 0;
+            padding: 0.5em;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+        }
+     
+    </style>
+</head>
+
+<body>
+    <canvas id="main-canvas" width="800" height="450"></canvas>
+    <pre id="info"></pre>
+   <script src="../js/runComputeShader-bundle.js"></script>
+    
+</body>
+
+</html>

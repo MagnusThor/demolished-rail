@@ -33,6 +33,17 @@
   },
   "homepage": "https://github.com/MagnusThor/demolished-rail",
   "devDependencies": {
-    "typedoc": "^0.26.11"
+    "axios": "^1.7.7",
+    "codemirror": "^6.0.1",
+    "typedoc": "^0.26.11",
+    "@codemirror/basic-setup": "^0.20.0",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/lang-python": "^6.1.6",
+    "@codemirror/lang-rust": "^6.0.1",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@types/codemirror": "^5.60.15",
+    "@uiw/codemirror-theme-monokai": "^4.22.2",
+    "cm6-theme-solarized-dark": "^0.2.0"
+
   }
 }
