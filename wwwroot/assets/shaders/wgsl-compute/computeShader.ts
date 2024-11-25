@@ -14,8 +14,11 @@ const AA:i32 = 3;
 //@compute ##workgroup_size ( for auto detect , but seems a bit tricky/fuzzy still in WebGPU)
 @compute @workgroup_size(8, 8, 1)
 fn main(@builtin(global_invocation_id) invocation_id: vec3u) {
+
+
     
     let R: vec2<f32> = uniforms.resolution.xy;
+    
     let fragCoord = vec2<f32>(f32(invocation_id.x), f32(invocation_id.y));
     var col: vec3<f32> = vec3<f32>(0.0);
 

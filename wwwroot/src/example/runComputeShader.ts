@@ -2,8 +2,8 @@ import {
   defaultMainShader,
   initWebGPU,
   WGSLShaderRenderer,
-} from '../../src';
-import { computeShader } from '../assets/shaders/wgsl-compute/computeShader';
+} from '../../../src';
+import { computeShader } from '../../assets/shaders/wgsl-compute/computeShader';
 
 /**
    * A class to demonstrate the usage of WGSL (Compute) shaders in the demolished-rail framework.
@@ -38,8 +38,16 @@ export class RunComputeShader {
 
     renderer.addMainRenderPass(defaultMainShader);
 
-    renderer.start(0, 200, (frame) => {
+    const info = document.querySelector("#info")!;
+    renderer.start(0, 20000, (frame) => {
+      if(renderer.gpuTimer.supportsTimeStampQuery){     
+        info.textContent = `\
+        gpu: ${renderer.gpuAverage!.get().toFixed(1)}µs`;
+      }
     });
+
+    
+    
 
   }
 }

@@ -8,12 +8,10 @@ import {
   rectGeometry,
   WGSLShaderEntity,
   WGSLShaderRenderer,
-  WGSLTextureLoader,
-  WGSLTextureType,
-} from '../../src';
+} from '../../../src';
 import {
   alienWaterWorld,
-} from '../assets/shaders/wglsl-frag/alien-waterworldShader';
+} from '../../assets/shaders/wglsl-frag/alien-waterworldShader';
 
 /**
    * A class to demonstrate the usage of WGSL shaders in the demolished-rail framework.
@@ -37,13 +35,13 @@ import {
       const wsglShaderCanvas = document.createElement("canvas");
       wsglShaderCanvas.width = this.screenCanvas.width;
       wsglShaderCanvas.height = this.screenCanvas.height;
-      const webgpu = await initWebGPU(wsglShaderCanvas,){};
+      const webgpu = await initWebGPU(wsglShaderCanvas);
   
-      const wsglTextures = await WGSLTextureLoader.loadAll(webgpu.device, {
-        key: "NOISE-TEXTURE",
-        source: "assets/images/noise2.png",
-        type: WGSLTextureType.IMAGE,
-      });
+      // const wsglTextures = await WGSLTextureLoader.loadAll(webgpu.device, {
+      //   key: "NOISE-TEXTURE",
+      //   source: "assets/images/noise2.png",
+      //   type: WGSLTextureType.IMAGE,
+      // });
       
   
       const wgslMainShader = defaultMainShader;
@@ -75,13 +73,22 @@ import {
       entityRenderer.addEntity(wgslShaderEntity);
       entityRenderer.start();
   
+      
+
       return wgslShaderEntity;
     }
   }
   
   document.addEventListener("DOMContentLoaded", async () => {
+   
+    
     const canvas = document.querySelector("canvas#main-canvas") as HTMLCanvasElement;
     const runner = new RunWGSLShader(canvas);
     const running = await runner.run();
+
+
+    
     console.log(`Running ${running.name}`);
+
+
   });

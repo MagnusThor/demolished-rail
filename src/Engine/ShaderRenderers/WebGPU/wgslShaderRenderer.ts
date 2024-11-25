@@ -12,61 +12,91 @@ import {
   RenderPass,
   RENDERPASS,
   RenderPassBuilder,
+  WebGPUTiming,
 } from './RenderPassBuilder';
 import { IWGSLTextureData } from './TextureLoader';
 import { Uniforms } from './Uniforms';
 
-export function getWorkgroupSizeString(limits: any): {x:number,y:number,z:number,
-    workgroup_size:string
+export const getWorkgroupSizeString = (limits: any): {
+    x: number, y: number, z: number,
+    workgroup_size: string
 
-} {
-  const x = Math.min(16, largestPowerOf2LessThan(limits.maxComputeWorkgroupSizeX));
-  const y = Math.min(16, largestPowerOf2LessThan(limits.maxComputeWorkgroupSizeY)); 
-  return {
-    x:x,y,z:1,workgroup_size:`@workgroup_size(${x}, ${y}, 1)`
-  }; 
+} => {
+    const x = Math.min(16, largestPowerOf2LessThan(limits.maxComputeWorkgroupSizeX));
+    const y = Math.min(16, largestPowerOf2LessThan(limits.maxComputeWorkgroupSizeY));
+    return {
+        x: x, y, z: 1, workgroup_size: `@workgroup_size(${x}, ${y}, 1)`
+    };
 }
 
-export function largestPowerOf2LessThan(n: number): number {
-  let power = 1;
-  while (power * 2 <= n) {
-    power *= 2;
-  }
-  return power;
+export const largestPowerOf2LessThan = (n: number): number => {
+    let power = 1;
+    while (power * 2 <= n) {
+        power *= 2;
+    }
+    return power;
 }
+
+
+
+export class RollingAverage {
+    total: number = 0;
+    samples: number[] = [];
+    cursor: number = 0;
+
+    constructor(public numSamples: number = 30) {
+    }
+    addSample(v: number) {
+        this.total += v - (this.samples[this.cursor] || 0);
+        this.samples[this.cursor] = v;
+        this.cursor = (this.cursor + 1) % this.numSamples;
+    }
+    get() {
+        return this.total / this.samples.length;
+    }
+}
+
 
 export const initWebGPU = async (canvas: HTMLCanvasElement, options?: GPURequestAdapterOptions) => {
-        const adapter = await navigator.gpu?.requestAdapter(options);
-        const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
-        const device = await adapter?.requestDevice({
-            requiredFeatures: hasBGRA8unormStorage
-                ? ['bgra8unorm-storage']
-                : [],
-        });
-        if (!device)
-            throw "need a browser that supports WebGPU";
-        const context = canvas.getContext("webgpu");
-        context?.configure({
-            device,
-            format: hasBGRA8unormStorage
-                ? navigator.gpu.getPreferredCanvasFormat()
-                : 'rgba8unorm',
-            usage: GPUTextureUsage.TEXTURE_BINDING |
-                GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
-        });
+    const adapter = await navigator.gpu?.requestAdapter(options);
+    const hasBGRA8unormStorage = adapter!.features.has('bgra8unorm-storage');
+    const canTimestamp = adapter!.features.has('timestamp-query');
 
+    const features: GPUFeatureName[] = [];
+    if (hasBGRA8unormStorage) {
+        features.push('bgra8unorm-storage');
+    }
+    if (canTimestamp) {
+        features.push('timestamp-query');
+    }
+    const device = await adapter?.requestDevice({
+        requiredFeatures: features
+    });
 
-        const workgroupsize = getWorkgroupSizeString(adapter!.limits);
+    if (!device)
+        throw "need a browser that supports WebGPU";
+    const context = canvas.getContext("webgpu");
+    context?.configure({
+        device,
+        format: hasBGRA8unormStorage
+            ? navigator.gpu.getPreferredCanvasFormat()
+            : 'rgba8unorm',
+        usage: GPUTextureUsage.TEXTURE_BINDING |
+            GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
 
+    const workgroupsize = getWorkgroupSizeString(adapter!.limits);
 
-        return { device, context,adapter,workgroupsize };
-    };
+    return { device, context, adapter, workgroupsize };
+};
 
 /**
  * The Renderer class is responsible for managing the WebGPU rendering context, 
  * creating and executing render passes, and handling resources like buffers and textures.
  */
 export class WGSLShaderRenderer {
+
+    gpuAverage: RollingAverage | undefined
     renderPassBacklog: Map<string, IRenderPass>;
     renderPipleline!: GPURenderPipeline;
     renderPassBuilder!: RenderPassBuilder;
@@ -75,8 +105,10 @@ export class WGSLShaderRenderer {
     isPaused: any;
     screenBindGroup!: GPUBindGroup;
     geometry!: Geometry;
-    textures: Array<IWGSLTextureData>;   
+    textures: Array<IWGSLTextureData>;
     uniforms!: Uniforms;
+    gpuTimer: WebGPUTiming;
+
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,
         public context: GPUCanvasContext, geometry?: IGeometry) {
         this.renderPassBacklog = new Map<string, IRenderPass>();
@@ -84,6 +116,9 @@ export class WGSLShaderRenderer {
         this.renderPassBuilder = new RenderPassBuilder(device);
         this.geometry = new Geometry(device, geometry || rectGeometry);
         this.uniforms = new Uniforms(this.device, this.canvas);
+        this.gpuAverage = new RollingAverage(30);
+        this.gpuTimer = new WebGPUTiming(this.device);
+
     }
     /**
   * Gets the WebGPU device.
@@ -342,6 +377,7 @@ export class WGSLShaderRenderer {
 
         // Create and return the render pass
         const renderPass = new RenderPass(RENDERPASS.FRAGMENTSHADER, label, renderPipeline, this.uniforms, bindGroup, renderTarget.buffer, renderTarget.bufferView);
+
         this.renderPassBacklog.set(label, renderPass);
         return renderPass;
     }
@@ -352,17 +388,18 @@ export class WGSLShaderRenderer {
      * @param textures - An optional array of textures to use in the compute pass.
      * @returns The created RenderPass object.
      */
-     addComputeRenderPass(label: string, computeShaderCode: string, textures: IWGSLTextureData[] = [],
-        workgroupsize?:{x:number,y:number,z:number,
-            workgroup_size:string        
+    addComputeRenderPass(label: string, computeShaderCode: string, textures: IWGSLTextureData[] = [],
+        workgroupsize?: {
+            x: number, y: number, z: number,
+            workgroup_size: string
         }
 
     ): RenderPass {
 
         this.textures.push(...textures); // Add textures to the renderer's textures array
 
-        if(workgroupsize?.workgroup_size){
-            computeShaderCode = computeShaderCode.replace("##workgroup_size",workgroupsize.workgroup_size);
+        if (workgroupsize?.workgroup_size) {
+            computeShaderCode = computeShaderCode.replace("##workgroup_size", workgroupsize.workgroup_size);
         }
 
         const computeShaderModule = this.getDevice().createShaderModule({ code: computeShaderCode });
@@ -370,7 +407,7 @@ export class WGSLShaderRenderer {
         const renderTarget = this.createRenderTarget(this.canvas.width, this.canvas.height);
 
         // Create bind group entries for the render target, uniform buffer, sampler, and textures
-        const bindingGroupEntries: Array<GPUBindGroupEntry> = [         
+        const bindingGroupEntries: Array<GPUBindGroupEntry> = [
             { binding: 0, resource: { buffer: this.uniforms.uniformBuffer } },
             { binding: 1, resource: this.getDevice().createSampler() },
             { binding: 2, resource: renderTarget.bufferView }
@@ -394,9 +431,13 @@ export class WGSLShaderRenderer {
             label: `${label} computepass`
         });
 
+
+
         // Create and return the render pass
-        const renderPass = new RenderPass(RENDERPASS.COMPUTESHADER, 
+        const renderPass = new RenderPass(RENDERPASS.COMPUTESHADER,
             label, computePipeline, this.uniforms, bindGroup, renderTarget.buffer, renderTarget.bufferView);
+
+
         this.renderPassBacklog.set(label, renderPass);
         return renderPass;
     }
@@ -407,90 +448,172 @@ export class WGSLShaderRenderer {
       * @param time - The current time in seconds.
       */
     update(time: number) {
-        const encoder = this.getDevice().createCommandEncoder();
+        const device = this.getDevice();
+        const commandEncoder = this.getDevice().createCommandEncoder();
         const arrRenderPasses = Array.from(this.renderPassBacklog.values());
         // get the compute shaders from the back log
         arrRenderPasses.filter((pre) => {
             return pre.type == RENDERPASS.COMPUTESHADER
         }).forEach(computeRenderPass => {
-            const computePass = encoder.beginComputePass();
-            computePass.setPipeline(computeRenderPass.pipleline as GPUComputePipeline);
-            computePass.setBindGroup(0, computeRenderPass.bindGroup);
-
+            const computePassEncoder = commandEncoder.beginComputePass();
+            computePassEncoder.setPipeline(computeRenderPass.pipleline as GPUComputePipeline);
+            computePassEncoder.setBindGroup(0, computeRenderPass.bindGroup);
             //computePass.dispatchWorkgroups(Math.floor((this.canvas.width + 7) / 8), Math.floor((this.canvas.height + 7) / 8), 1);
+            computePassEncoder.dispatchWorkgroups(
+                Math.ceil(this.canvas.width / computeRenderPass.workgroupSize!.x),
+                Math.ceil(this.canvas.height / computeRenderPass.workgroupSize!.y),
+                computeRenderPass.workgroupSize!.z
+            );
 
-            computePass.dispatchWorkgroups(
-                Math.ceil(this.canvas.width / computeRenderPass.workgroupSize!.x), 
-                Math.ceil(this.canvas.height / computeRenderPass.workgroupSize!.y), 
-                computeRenderPass.workgroupSize!.z 
-              ); 
-            
-            computePass.end();
+            computePassEncoder.end();
+
+
         });
         arrRenderPasses.filter(pre => {
             return pre.type == RENDERPASS.FRAGMENTSHADER
         }).forEach(pass => {
+
             const renderPassDescriptor: GPURenderPassDescriptor = {
+                label: `${pass.label} GPURenderPassDescriptor`,
                 colorAttachments: [{
                     loadOp: 'clear',
                     storeOp: 'store',
                     view: pass.bufferView,
                     clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-                }]
+                }],
+
             };
-            const renderPass = encoder.beginRenderPass(renderPassDescriptor);
-            renderPass.setPipeline(pass.pipleline as GPURenderPipeline)
-            renderPass.setBindGroup(0, pass.bindGroup);
-            renderPass.setVertexBuffer(0, this.geometry.vertexBuffer);
-            renderPass.setIndexBuffer(this.geometry.indexBuffer, 'uint16');
-            renderPass.drawIndexed(this.geometry.numOfVerticles, 1);
-            renderPass.end();
+
+            const renderPassEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+            renderPassEncoder.setPipeline(pass.pipleline as GPURenderPipeline)
+            renderPassEncoder.setBindGroup(0, pass.bindGroup);
+            renderPassEncoder.setVertexBuffer(0, this.geometry.vertexBuffer);
+            renderPassEncoder.setIndexBuffer(this.geometry.indexBuffer, 'uint16');
+            renderPassEncoder.drawIndexed(this.geometry.numOfVerticles, 1);
+            renderPassEncoder.end();
         });
-        const mainRenderer: GPURenderPassEncoder = encoder.beginRenderPass({
+
+        const supportsTimeStampQuery =  this.gpuTimer.supportsTimeStampQuery;
+        const mainRendererPassEncoder: GPURenderPassEncoder = commandEncoder.beginRenderPass({
             colorAttachments: [{
                 view: this.context!.getCurrentTexture().createView(),
                 clearValue: { r: 0.0, g: 0, b: 0.0, a: 1 },
                 loadOp: "clear",
                 storeOp: "store"
-            }]
+            },
+            ],
+            ...(supportsTimeStampQuery &&  {
+                timestampWrites:{
+                querySet: this.gpuTimer!.querySet!,
+                beginningOfPassWriteIndex: 0,
+                endOfPassWriteIndex: 1,
+            }
+            })
         });
+
         this.uniforms.setUniforms([this.frame], 8);
         this.uniforms.setUniforms([time], 3);
         this.uniforms.updateUniformBuffer();
 
-        mainRenderer.setPipeline(this.renderPipleline);
-        mainRenderer.setVertexBuffer(0, this.geometry.vertexBuffer);
-        mainRenderer.setBindGroup(0, this.screenBindGroup);
-        mainRenderer.draw(6, 1, 0, 0);
-        mainRenderer.end();
-        this.getDevice().queue.submit([encoder.finish()]);
+        mainRendererPassEncoder.setPipeline(this.renderPipleline);
+        mainRendererPassEncoder.setVertexBuffer(0, this.geometry.vertexBuffer);
+        mainRendererPassEncoder.setBindGroup(0, this.screenBindGroup);
+        mainRendererPassEncoder.draw(6, 1, 0, 0);
+        mainRendererPassEncoder.end();
+
+        if (supportsTimeStampQuery) {
+            const timer = this.gpuTimer!;
+
+            commandEncoder.resolveQuerySet( // Use commandEncoder here
+                timer!.querySet!,
+                0,
+                2,
+                timer!.resolveBuffer!,
+                0
+            );
+
+            if (timer!.readBuffer!.mapState === 'unmapped') {
+            commandEncoder.copyBufferToBuffer(
+                timer!.resolveBuffer!,
+                0,
+                timer!.readBuffer!,
+                0,
+                timer!.resolveBuffer!.size
+            );    
+        }
+        }
+
+
+      
+
+        this.device.queue.submit([commandEncoder.finish()]);
+
+
+        this.device.queue.onSubmittedWorkDone().then ( () => {
+
+            if (supportsTimeStampQuery) {
+                const timer = this.gpuTimer!;
+                if(timer!.readBuffer!.mapState === 'unmapped')
+                   timer!.readBuffer!.mapAsync(GPUMapMode.READ).then(() => {
+                  const times = new BigInt64Array(timer!.readBuffer!.getMappedRange());
+                 const  gpuTime = Number(times[1] - times[0]);
+                 this.gpuAverage?.addSample(gpuTime / 1000);
+                 timer!.readBuffer!.unmap();
+                });
+              }
+        });
+
+        
+
+
     }
 
+   
     /**
-   * Starts the rendering loop.
-   * @param t - The initial time.
-   * @param maxFps - The maximum frames per second.
-   * @param onFrame - An optional callback function to be called on each frame.
-   */
-    start(t: number, maxFps: number = 200, onFrame?: (frame: number) => void): void {
-        let startTime: any = null;
-        let frame = -1;
-        const renderLoop = (ts: number) => {
-            if (!startTime) startTime = ts;
-            let segment = Math.floor((ts - startTime) / (1000 / maxFps));
-            if (segment > frame) {
-                frame = segment;
-                this.frame = segment;
-                this.frameCount = frame;
-                if (!this.isPaused) {
-                    this.update(ts / 1000);
-                    if (onFrame) onFrame(frame);
+ * Starts the rendering loop with an FPS counter.
+ * @param t - The initial time.
+ * @param maxFps - The maximum frames per second.
+ * @param onFrame - An optional callback function to be called on each frame.
+ */
+start(t: number, maxFps: number = 200, onFrame?: (frame: number, fps: number) => void): void {
+    let startTime: number | null = null;
+    let frame = -1;
+    let fps = 0; // Current FPS
+    let lastFpsUpdate = 0; // Last time FPS was updated
+    let frameCounter = 0; // Frame count since last FPS update
+
+    const renderLoop = (ts: number) => {
+        if (!startTime) startTime = ts;
+
+        let segment = Math.floor((ts - startTime) / (1000 / maxFps));
+        if (segment > frame) {
+            frame = segment;
+            this.frame = segment;
+            this.frameCount = frame;
+
+            if (!this.isPaused) {
+                this.update(ts / 1000);
+                frameCounter++; // Count this frame
+                const elapsed = ts - lastFpsUpdate;
+
+                // Update FPS every second (or any desired interval)
+                if (elapsed >= 1000) {
+                    fps = Math.round((frameCounter / elapsed) * 1000);
+                    frameCounter = 0; // Reset the counter
+                    lastFpsUpdate = ts;
                 }
+
+                if (onFrame) onFrame(frame, fps);
             }
-            requestAnimationFrame(renderLoop);
-        };
-        renderLoop(t);
-    }
+        }
+
+        requestAnimationFrame(renderLoop);
+    };
+
+    renderLoop(t);
+}
+
+
     pause(): void {
         this.isPaused = !this.isPaused;
     }

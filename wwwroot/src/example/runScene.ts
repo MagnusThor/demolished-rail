@@ -4,22 +4,22 @@ import {
   SceneBuilder,
   Sequence,
   SequenceHelper,
-} from '../../src';
+} from '../../../src';
 import {
   CompositeEntity,
   ICompositeEntity,
   ICompositeEntityProps,
-} from '../../src/Engine/Entity/CompositeEntity';
-import { easeInOutCubic } from '../../src/Engine/Helpers/EntityHelpers';
+} from '../../../src/Engine/Entity/CompositeEntity';
+import { easeInOutCubic } from '../../../src/Engine/Helpers/EntityHelpers';
 import {
   IParticleTextEffectProps,
   particleTextEffect,
-} from './example/canvas2d/particleTextEffect';
+} from './canvas2d/particleTextEffect';
 import {
   ITextEntranceEffectProps,
   ScrollDirection,
   textEntranceEffect,
-} from './example/canvas2d/textEntranceEffect';
+} from './canvas2d/textEntranceEffect';
 
 interface ITextBlockProps {
   text: string;

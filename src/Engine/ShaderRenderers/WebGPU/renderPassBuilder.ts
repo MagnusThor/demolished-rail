@@ -9,9 +9,9 @@ export interface IPassBuilder {
     device: GPUDevice;
 }
 
-export enum RENDERPASS{
+export enum RENDERPASS {
     COMPUTESHADER = 0,
-    FRAGMENTSHADER = 1    
+    FRAGMENTSHADER = 1
 }
 
 export interface IRenderPass {
@@ -21,24 +21,33 @@ export interface IRenderPass {
     bindGroup: GPUBindGroup;
     buffer: GPUTexture;
     bufferView: GPUTextureView;
-    type: number
-    workgroupSize?: {x:number,y:number,z:number,
-        workgroup_size:string    
-    }
+    type: RENDERPASS
+    workgroupSize?: {
+        x: number, y: number, z: number,
+        workgroup_size: string
+    },
+ 
 }
 
-export class RenderPass implements IRenderPass
-{
-    constructor(public type:RENDERPASS,public label:string,public pipleline:GPUComputePipeline | GPURenderPipeline,
-        public uniforms: Uniforms,public bindGroup:GPUBindGroup, public buffer:GPUTexture,
-        public bufferView: GPUTextureView,public workgroupSize?:{x:number,y:number,z:number,
-            workgroup_size:string    
-        } ){
-            if(!workgroupSize && type == RENDERPASS.COMPUTESHADER){
-                this.workgroupSize = {
-                    x: 8,y:8,z:1,workgroup_size:"@workgroup_size(8, 8, 1)"
-                } 
+export class RenderPass implements IRenderPass {
+
+    constructor(public type: RENDERPASS, public label: string, 
+        public pipleline: GPUComputePipeline | GPURenderPipeline,
+        public uniforms: Uniforms, 
+        public bindGroup: GPUBindGroup, 
+        public buffer: GPUTexture,
+        public bufferView: GPUTextureView, public workgroupSize?: {
+            x: number, y: number, z: number,
+            workgroup_size: string
+        }) {
+        if (!workgroupSize && type == RENDERPASS.COMPUTESHADER) {
+            this.workgroupSize = {
+                x: 8, y: 8, z: 1, workgroup_size: "@workgroup_size(8, 8, 1)"
             }
+        }
+
+        
+
     }
 }
 
@@ -57,6 +66,12 @@ export class RenderPassBuilder implements IPassBuilder {
   */
     constructor(device: GPUDevice) {
         this.device = device;
+
+    
+
+
+
+
     }
     /**
    * Creates a bind group layout and entries for a render pipeline.
@@ -203,22 +218,14 @@ export class RenderPassBuilder implements IPassBuilder {
                 }
             },
 
-            { 
+            {
                 binding: 1,
                 visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
                 sampler: {
                     type: "filtering"
                 }
             }
-            
-        
-        
         );
-
-        
-
-
-
 
         if (textures.length > 0) {
             for (let i = 0; i < textures.length; i++) { //  1-n texture bindings
@@ -253,5 +260,34 @@ export class RenderPassBuilder implements IPassBuilder {
             },
         });
         return pipeline;
+    }
+}
+
+
+export class WebGPUTiming {
+    supportsTimeStampQuery: boolean;
+    querySet: GPUQuerySet | undefined;
+    resolveBuffer: GPUBuffer | undefined;
+    readBuffer: GPUBuffer | undefined;
+
+    constructor(public device: GPUDevice) {
+        this.supportsTimeStampQuery = device.features.has("timestamp-query");
+
+        if (this.supportsTimeStampQuery) {
+            this.querySet = device.createQuerySet({
+                type: "timestamp",
+                count: 2
+            });
+
+            this.resolveBuffer = device.createBuffer({
+                size: this.querySet.count * 8,
+                usage: GPUBufferUsage.QUERY_RESOLVE | GPUBufferUsage.COPY_SRC,
+            });
+
+            this.readBuffer = device.createBuffer({
+                size: this.querySet.count * 8,
+                usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+            });
+        }
     }
 }

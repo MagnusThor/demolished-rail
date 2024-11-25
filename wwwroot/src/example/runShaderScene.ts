@@ -9,18 +9,18 @@ import {
   Sequence,
   SequenceHelper,
   WGSLTextureType,
-} from '../../src';
+} from '../../../src';
 import {
   earthShader,
   IEarthShader,
-} from '../assets/shaders/glsl/earthShader';
-import { mainFragment } from '../assets/shaders/mainFragment';
-import { mainVertex } from '../assets/shaders/mainVertex';
-import { TextAlignment } from './example/canvas2d/fadeInOutTextEffect';
+} from '../../assets/shaders/glsl/earthShader';
+import { mainFragment } from '../../assets/shaders/mainFragment';
+import { mainVertex } from '../../assets/shaders/mainVertex';
+import { TextAlignment } from './canvas2d/fadeInOutTextEffect';
 import {
   ISimpleTextEffectProps,
   simpleTextEffect,
-} from './example/canvas2d/simpleTextEffect';
+} from './canvas2d/simpleTextEffect';
 
 /**
  * A class to demonstrate the usage of the demolished-rail framework,
