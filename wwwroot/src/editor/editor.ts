@@ -518,6 +518,15 @@ export class Editor {
         });
     }
 
+    getShaderByUUD():StoredShader | undefined{
+        const urlParams = new URLSearchParams(location.search);
+        if(urlParams.has("shader")){          
+            const shader =  this.storage.findById(urlParams.get("shader")!);
+            return shader;
+        }
+        return undefined;
+    }
+
     constructor() {
         this.setupUI();
         this.initStorage().then(shader => {
@@ -527,17 +536,17 @@ export class Editor {
             }
             this.currentShader = shader;
             this.renderStoredShaders(this.storage.all())
-            this.setupEditor(shader).then(r => {
-                this.setCurrentShader(shader);
+            this.setupEditor(shader).then(r => {              
+                    this.setCurrentShader( this.getShaderByUUD() || shader);
             });
         }).catch(err => {
             this.renderStoredShaders(this.storage.all());
             const shader = this.storage.all()[0];
             this.setupEditor(shader).then(r => {
-                this.setCurrentShader(shader);
+                this.setCurrentShader( this.getShaderByUUD() || shader);
             });
-
         });
+
 
         DOMUtils.on<HTMLInputElement>("change", "#select-source", (ev, el) => {
             this.currentShader.documents[this.sourceIndex].source = this.editorView.state.doc.toString();
