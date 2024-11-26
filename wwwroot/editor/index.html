@@ -159,9 +159,16 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <button class="btn btn-link" id="btn-add-renderpass">
-                                        New renderpass
+                                    <button class="btn btn-link add-renderpass" data-typeofpass="1">
+                                        Add fragment render pass
                                     </button>
+                                </li>
+                                <li>
+                                    <button class="btn btn-link add-renderpass" data-typeofpass="2">
+                                        Add Compute render pass
+                                    </button>
+                                </li>
+
                                 <li>
                                     <button class="btn btn-link" id="btn-remove-renderpass" data-bs-toggle="modal"
                                         data-bs-target="#modal-delete-renderpass">

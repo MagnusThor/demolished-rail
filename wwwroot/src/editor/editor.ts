@@ -30,6 +30,7 @@ import {
   WGSLShaderRenderer,
 } from '../../../src';
 import { computeShader } from '../../assets/shaders/wgsl-compute/computeShader';
+import { defaultComputeShader } from './defaultComputeShader';
 import { DOMUtils } from './DOMUtis';
 import {
   clearAllDecorations,
@@ -48,14 +49,12 @@ import {
   OfflineStorage,
 } from './store/OfflineStorage';
 
-const randomStr = () => (Math.random() + 1).toString(36).substring(7);
-
+const randomStr = () => (Math.random() + 1).toString(36).substring(2);
 
 export interface IError {
     name: string,
     documentIndex: number,
     errors: GPUCompilationInfo,
-
 
 }
 export class Editor {
@@ -350,17 +349,26 @@ export class Editor {
             this.currentShader = clone;
         });
 
-        DOMUtils.on("click", "#btn-add-renderpass", () => {
-            const renderpass: IDocumentData = {
-                type: TypeOfShader.Frag,
-                name: randomStr(),
-                source: plasmaShader.fragment
-            }
-            this.currentShader.documents.push(renderpass);
-            this.renderSourceList(this.currentShader.documents);
-            this.updateCurrentShader();
+        //
+
+        const btnAddRenderPasses = DOMUtils.getAll("button.add-renderpass")
+
+        btnAddRenderPasses.forEach ( btn  => {
+                const el = btn as HTMLButtonElement;
+                el.addEventListener("click",() => {
+                    const shadertype  = parseInt(el.dataset.typeofpass!);
+                    const renderpass: IDocumentData = {
+                        type: shadertype,
+                        name: randomStr(),
+                        source: shadertype === TypeOfShader.Frag ? plasmaShader.fragment : defaultComputeShader
+                    }
+                    this.currentShader.documents.push(renderpass);
+                    this.renderSourceList(this.currentShader.documents);
+                    this.updateCurrentShader();
+                })
         });
 
+      
         DOMUtils.on("click", "#btn-remove-renderpass", () => {
             this.currentShader.documents.splice(this.sourceIndex, 1);
             const transaction = this.editorView.state.update({
