@@ -139,6 +139,9 @@ export class Editor {
             const hasErrors = compileInfo.some(ci => ci.errors.messages.length > 0);
 
             if (hasErrors) {
+
+                this.updateImmediate(`Shader compilation failed.`);
+
                 resultEl.classList.remove("d-none");
                 const firstCorruptShader = compileInfo.filter(pre => {
                     return pre.errors.messages.length > 0
@@ -169,6 +172,7 @@ export class Editor {
             } else {
                 resultEl.classList.add("d-none");
                 DOMUtils.get<HTMLButtonElement>("#btn-run-shader").disabled = false;
+                this.updateImmediate(`Successfully compiled shader.`);
             }
 
         }).catch(err => {          
@@ -238,7 +242,7 @@ export class Editor {
             },
             {
                 key: "Mod-s", run: () => {
-                    this.updateCurrentShader();
+                    this.saveCurrentShader();
                     return true;
                 }
             }
@@ -277,8 +281,24 @@ export class Editor {
         this.isRunning = false;
     }
 
+     updateImmediate(text:string):void {
+        DOMUtils.get("#immediate").textContent = text;
+     }
 
     setupUI(): void {
+
+
+
+        const isSplashShown = localStorage.getItem("showSplash")
+
+        if(!isSplashShown){
+         
+            localStorage.setItem("showSplash",Date.now().toString())
+            
+        }else{
+            DOMUtils.get("#splash").classList.add("d-none");
+        }
+
         DOMUtils.get<HTMLButtonElement>("#btn-run-shader").addEventListener("click", (e) => {
             this.currentShader.documents[this.sourceIndex].source = this.editorView.state.doc.toString();
             DOMUtils.get("#btn-run-shader i").classList.toggle("bi-play-btn-fill")
@@ -295,9 +315,10 @@ export class Editor {
             const gpuStats = DOMUtils.get("#stats-gpu");
             const fpsStats = DOMUtils.get("#stats-fps");
             this.tryAddShaders(this.currentShader.documents).then(p => {
+                this.updateImmediate("Running shader...");
                 this.renderer.start(0, 2000, (frame,fps) => {                   
                     if(this.renderer.gpuTimer.supportsTimeStampQuery){                            
-                        gpuStats.textContent = `${this.renderer.gpuAverage!.get().toFixed(1)}µs`;
+                        gpuStats.textContent = `${this.renderer.gpuAverage!.get().toFixed(0)}µs`;
                       }
                       fpsStats.textContent = `${fps}`
 
@@ -307,7 +328,8 @@ export class Editor {
         });
 
         DOMUtils.on("click", "#btn-save", () => {
-            this.updateCurrentShader();
+        
+            this.saveCurrentShader();
         });
 
         DOMUtils.on("click", "#btn-new", () => {            
@@ -329,9 +351,14 @@ export class Editor {
             this.storage.insert(item);
             this.setCurrentShader(item);
             this.storage.save();
+
+            this.updateImmediate(`Shader ${item.name} created...`)
+
+
         });
 
         DOMUtils.on("click", "#btn-delete", () => {
+            this.updateImmediate(`Shader ${this.currentShader.name} deleted...`)
             this.storage.delete(this.currentShader);
            // get the firstShader from the storage,
             let firstShader = this.storage.all()[0];
@@ -347,6 +374,7 @@ export class Editor {
             clone.documents = this.currentShader.documents;
             this.storage.insert(clone);
             this.currentShader = clone;
+            this.updateImmediate(`Shader forked, new shader is  ${clone.name} `)
         });
 
         //
@@ -364,7 +392,8 @@ export class Editor {
                     }
                     this.currentShader.documents.push(renderpass);
                     this.renderSourceList(this.currentShader.documents);
-                    this.updateCurrentShader();
+                    this.saveCurrentShader();
+                    this.updateImmediate(`New render pass added to the shader... `)
                 })
         });
 
@@ -380,6 +409,7 @@ export class Editor {
             this.editorView.dispatch(transaction);
             this.sourceIndex = 0;
             this.renderSourceList(this.currentShader.documents);
+            this.updateImmediate(`Render pass deleted...`);
         });
 
         DOMUtils.on("click", "#btn-export", () => {
@@ -391,6 +421,8 @@ export class Editor {
             a.download = 'data.json';
             a.click();
             URL.revokeObjectURL(url);
+
+            this.updateImmediate(`Shaders exported...`);
 
         });
 
@@ -417,7 +449,11 @@ export class Editor {
                     const p = DOMUtils.create("p");
                     p.textContent = "Shaders imported.";
                     DOMUtils.get("#export-result").append(p);
+
+                    this.updateImmediate(`Shaders imported...`);
+
                 } catch (e) {
+                    this.updateImmediate(`Shaders could not be imported...`);
                     console.error('Error parsing JSON:', e);
                 }
             };
@@ -441,15 +477,19 @@ export class Editor {
         this.editorView.focus();
         this.sourceIndex = 0;
 
+        this.updateImmediate(`Shader "${shader.name}" loaded...`);
+        DOMUtils.get("#current-shadername").textContent = shader.name
+
     }
 
-    updateCurrentShader() {
+    saveCurrentShader() {
         this.currentShader.documents[this.sourceIndex].source = this.editorView.state.doc.toString();
         this.currentShader.name = DOMUtils.get<HTMLInputElement>("#shader-name").value;
         this.currentShader.description = DOMUtils.get<HTMLInputElement>("#shader-description").value;
         this.storage.update(this.currentShader);
         this.currentShader.thumbnail = this.renderer.canvas.toDataURL();
         this.storage.save();
+        this.updateImmediate(`Shader ${this.currentShader.name} saved...`);
     }
 
     renderStoredShaders(shaders: Array<StoredShader>): void {
