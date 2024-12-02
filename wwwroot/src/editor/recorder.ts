@@ -2,7 +2,7 @@ declare var MediaRecorder: any;
 
 
 export class CanvasRecorder {
-    data: Array<Blob>;
+    data: Array<Blob> | undefined;
     recorder: any;
     mediaStream: MediaStream;
     /**
@@ -30,7 +30,7 @@ export class CanvasRecorder {
         return blob;
     }
     getParts(): Blob {
-        let blob = new Blob([this.data[0]], {
+        let blob = new Blob([this.data![0]], {
             type: 'video/webm'
         });
         return blob;
@@ -50,7 +50,7 @@ export class CanvasRecorder {
                 if (this.ondataavailable) {
                     this.ondataavailable(e.data);
                 } else {
-                    this.data.push(e.data);
+                    this.data!.push(e.data);
                 }
             }
         }
@@ -87,5 +87,5 @@ export class CanvasRecorder {
         this.data = new Array<Blob>();
         this.recorder.start(n)
     }
-    ondataavailable: (data: any) => void;
+    ondataavailable: ((data: any) => void) | undefined;
 }

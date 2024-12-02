@@ -61,8 +61,8 @@
     <nav class="navbar bg-light" data-bs-theme="light">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">
-                <i class="bi bi-braces"></i>
-                WGLSL ShaderEditor 1.0.2
+                <i class="bi bi-body-text"></i>
+                WGLSL ShaderEditor | <span id="current-shadername">..</span>
             </a>
             <div class="d-flex">
                 <button class="btn btn-sm btn-outline-dark" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-menu">
@@ -159,9 +159,16 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <button class="btn btn-link" id="btn-add-renderpass">
-                                        New renderpass
+                                    <button class="btn btn-link add-renderpass" data-typeofpass="1">
+                                        Add fragment render pass
                                     </button>
+                                </li>
+                                <li>
+                                    <button class="btn btn-link add-renderpass" data-typeofpass="2">
+                                        Add Compute render pass
+                                    </button>
+                                </li>
+
                                 <li>
                                     <button class="btn btn-link" id="btn-remove-renderpass" data-bs-toggle="modal"
                                         data-bs-target="#modal-delete-renderpass">
@@ -174,8 +181,16 @@
                 </div>
             </div>
             <div class="col-md-4 mt-2">
-                <div class="d-flex mb-3 mr-3">
-                    <div class="p-1 ms-auto">
+                
+
+                <div class="d-flex mt-1">
+                    <div class="p-1">
+                        <i class="bi bi-info-square ms-2 fs-6 fw-light text-light"></i>
+                        <span class="fw-light fs-6" role="alert" id="immediate">
+                        ..
+                        </span>
+                    </div>
+                    <div class="p-1 ms-auto fw-light fs-6">
                     FPS: 
                     <span id="stats-fps">0</span> GPU:<span id="stats-gpu">0</span>
                     </div>
@@ -185,27 +200,30 @@
 
         <div class="row">
             <div class="col-md-8">
-                <div class="alert alert-info" role="alert" id="compiler-result">
-                    <h4>Hello there..</h4>
+                <div class="alert alert-info fw-light alert-dismissible fade show" role="alert" id="splash">
+                    <h4>Hello there..</h4>  
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>                  
                     <p>
                     Compile using Ctrl-Shift-B (editor focused) or the use the                    
                     <span class="badge text-bg-primary mx-2">COMPILE</span> button.                    
                      Hit <i class="bi bi-play-btn-fill"></i> to run the shader.
                     </p>
-                    <p>
-                        Note. Your shaders will be saved in the localstorage of your brower. 
-                        Can can export then as a JSON file if needed.
-                    </p>
+                    
+                </div>
+
+                <div class="alert alert-info fw-light d-none" role="alert" id="compiler-result">
+                  
+                    
                 </div>
                 <div id="editor" class="mt-1 position-relative">
 
                     <button id="btn-compile" class="btn btn-primary btn-sm position-absolute" style="top: 20px; right: 28px;z-index: 1000;">
                         COMPILE
                     </button>
+
                 </div>
-                <div class="mt-0">
-                    
-                </div>
+              
+             
             </div>
             <div class="col-md-4">
                 <div class="card">
@@ -213,8 +231,7 @@
                         style="background-color: #000;"></canvas>
 
                     <div class="card-body">
-
-                        <div class="d-flex mb-3">
+                        <div class="d-flex">
                             <div class="p-1">
                                 <button class="btn btn-primary bg-primary" id="btn-run-shader" disabled>
                                     <i class="bi bi-play-btn-fill"></i>
@@ -253,22 +270,23 @@
 
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="shader-name">Name</label>
-                    <input class="form-control" type="text" id="shader-name">
+                <div class="my-1">
+                <div class="form-group mb-3">
+                    <label for="shader-name" class="form-label">Name</label>
+                    <input class="form-control" type="text" id="shader-name" required maxlength="35">
                 </div>
-                <div class="form-group">
-                    <label for="shader-description">Description</label>
-                    <textarea class="form-control" id="shader-description" rows="2"></textarea>
+                <div class="form-group mb-3">
+                    <label for="shader-description" class="form-label">Description</label>
+                    <textarea class="form-control" id="shader-description" rows="2" required maxlength="255"></textarea>
                 </div>
-
+                </div>
 
 
             </div>
         </div>
     </div>
 
-
+  
     <script src="../js/editor-bundle.js"></script>
 
 </body>
