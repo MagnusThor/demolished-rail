@@ -501,8 +501,10 @@ export class Editor {
                 <li class="list-group-item d-flex justify-content-between align-items-start">
                    <img src="${image}" style="max-width:80px" class="img-thumbnail mr-3" >
                     <div class="ms-2 me-auto">
-                        <div class="fw-bold">${shader.name}</div>
-                        ${DOMUtils.truncString(shader.description, 80)}
+                        <h6 class="fw-bold">${shader.name}</h6>
+                        <div class="shader-description">
+                        ${DOMUtils.truncString(shader.description, 50)}
+                        </div>
                     </div>
                     <button class="btn btn-sm btn-secondary" data-id=${shader.id}">
                     <i class="bi bi-pencil-square"></i>

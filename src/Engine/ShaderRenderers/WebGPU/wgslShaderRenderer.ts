@@ -108,6 +108,7 @@ export class WGSLShaderRenderer {
     textures: Array<IWGSLTextureData>;
     uniforms!: Uniforms;
     gpuTimer: WebGPUTiming;
+    rafId: number | undefined;
 
     constructor(public canvas: HTMLCanvasElement, public device: GPUDevice,
         public context: GPUCanvasContext, geometry?: IGeometry) {
@@ -607,9 +608,13 @@ start(t: number, maxFps: number = 200, onFrame?: (frame: number, fps: number) =>
             }
         }
 
-        requestAnimationFrame(renderLoop);
+        this.rafId = requestAnimationFrame(renderLoop);
     };
 
+    if(this.rafId) {
+        cancelAnimationFrame(this.rafId)
+        this.rafId = undefined;
+    }
     renderLoop(t);
 }
 

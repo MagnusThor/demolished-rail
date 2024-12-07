@@ -41,3 +41,7 @@ body {
     max-height: 200px;
     overflow: auto;
 }
+
+.shader-description {
+    flex-shrink: 1;
+  }
