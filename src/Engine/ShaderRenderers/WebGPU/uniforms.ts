@@ -4,7 +4,6 @@
 export class Uniforms {
   uniformBufferArray: Float32Array;
   uniformBuffer: GPUBuffer;
-
   /**
    * Initializes a Float32Array with default values for uniforms.
    * @param w - The width of the canvas.
@@ -12,7 +11,7 @@ export class Uniforms {
    * @returns A new Float32Array with initialized values.
    */
   static initialize(w: number, h: number): Float32Array {
-    return new Float32Array([w, h, 0, 1, 0, 0, 0, 0, 0, 0]);
+    return new Float32Array([w, h, 0, 1, 0, 0, 0, 0, 0, 0,0,0,0,0]);
   }
 
   /**

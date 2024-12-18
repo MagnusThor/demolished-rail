@@ -29,6 +29,7 @@ import {
   rectGeometry,
   WGSLShaderRenderer,
 } from '../../../src';
+import { CameraHelper } from '../../../src/Engine/Helpers/CameraHelper';
 import { computeShader } from '../../assets/shaders/wgsl-compute/computeShader';
 import { defaultComputeShader } from './defaultComputeShader';
 import { DOMUtils } from './DOMUtis';
@@ -67,6 +68,7 @@ export class Editor {
     isRunning!: boolean;
 
     sourceIndex: number = 0;
+    cameraState!: CameraHelper;
 
     async tryCompile(sources: IDocumentData[]): Promise<IError[]> {
         const results = await Promise.all(sources.map(async (document, index) => {
@@ -190,39 +192,21 @@ export class Editor {
         }
     }
 
-    async compileSource(view: EditorView){
-        this.onCompile(view).then(result => {
-            // const typeToCompile = this.currentShader.documents[this.sourceIndex].type;
-            // if (typeToCompile == TypeOfShader.Frag) {
-            //     const material = new Material(this.renderer.device, {
-            //         fragment: this.editorView.state.doc.toString(),
-            //         vertex: defaultWglslVertex
-            //     });
-            // } else if (typeToCompile === TypeOfShader.MainFrag) {
-            //     const mainFragSource = this.editorView.state.doc.toString();
-            //     const shader: IMaterialShader = {
-            //         fragment: mainFragSource,
-            //         vertex: defaultMainShader.vertex
-            //     }
-            // }
-
-        }).catch(err => {
-            console.log(err);
-        });
-        return true;
-
-    }
 
     async setupEditor(shader: StoredShader) {    
-        const {device,adapter,context} = await initWebGPU(document.querySelector("canvas")!);
-        this.renderer = new WGSLShaderRenderer(document.querySelector("canvas")!,
+        const canvas = document.querySelector("canvas")!;
+        const {device,adapter,context} = await initWebGPU(canvas);
+        this.renderer = new WGSLShaderRenderer(canvas,
             device,context!);
+
+        this.cameraState = new CameraHelper(canvas)
+
 
 
 
         DOMUtils.on("click","#btn-compile",async () => {
             this.onCompile(this.editorView).then(result => {  
-                console.log(result);                     
+               // do på                      
             }).catch(err => {
                 console.log(err);
             });
@@ -316,12 +300,17 @@ export class Editor {
             const fpsStats = DOMUtils.get("#stats-fps");
             this.tryAddShaders(this.currentShader.documents).then(p => {
                 this.updateImmediate("Running shader...");
-                this.renderer.start(0, 2000, (frame,fps) => {                   
+                this.renderer.start(0, 2000, (frame,fps) => {  
+                    if (document.fullscreenElement === this.renderer.canvas) {
+                        const cameraState = this.cameraState.updateAndGetCameraState();                                      
+                        this.renderer.uniforms.setUniforms(new Float32Array(cameraState.origin),4);
+                        
+                        this.renderer.uniforms.updateUniformBuffer();
+                    }                    
                     if(this.renderer.gpuTimer.supportsTimeStampQuery){                            
                         gpuStats.textContent = `${this.renderer.gpuAverage!.get().toFixed(0)}µs`;
                       }
                       fpsStats.textContent = `${fps}`
-
                 });
             });
             this.isRunning = !this.isRunning;
@@ -430,10 +419,8 @@ export class Editor {
             if (!fileInput || fileInput.files?.length === 0) {
                 return;
             } 
-            const file = fileInput.files![0];
-            
+            const file = fileInput.files![0];            
             const reader = new FileReader();
-
             reader.onload = (event: ProgressEvent<FileReader>) => {
                 const content = event.target?.result as string;
                 try {
@@ -578,6 +565,7 @@ export class Editor {
     }
 
     constructor() {
+      
         this.setupUI();
         this.initStorage().then(shader => {
 
@@ -634,5 +622,9 @@ document.addEventListener("DOMContentLoaded", () => {
         canvas.width = width;
         canvas.height = height;       
     }
+
+   
+       
+
     const editor = new Editor();
 });
