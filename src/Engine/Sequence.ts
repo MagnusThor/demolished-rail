@@ -335,7 +335,7 @@ export class Sequence {
        * Starts the animation sequence.
        * @param maxFps - The maximum frames per second.
        */
-    play(maxFps?: number): void { // Add maxFps parameter
+    play(maxFps?: number,onFrame?:(ts?:number,frame?:number,beat?:number,bar?:number,tick?:number) => void): void { // Add maxFps parameter
         this.isPlaying = true;
         this.currentSceneIndex = 0;
         this.lastBeatTime = 0;
@@ -363,6 +363,9 @@ export class Sequence {
                 const adjustedTimeStamp = ts - this.startTime;
                 this.playCurrentScene(adjustedTimeStamp);
                 frameCount++;
+                if(onFrame) {
+                    onFrame(adjustedTimeStamp,frameCount,this.currentBeat,this.currentBar,this.currentTick);
+                }
                 if (now - lastFpsUpdateTime >= 1000) {
                     const fps = frameCount / ((now - lastFpsUpdateTime) / 1000);
                     frameCount = 0;

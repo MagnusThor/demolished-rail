@@ -119,6 +119,7 @@ export class Canvas2DEntity<T> implements IEntity {
       const elapsed = sequence.currentTime - (this.startTimeinMs || 0);
       // Check if the entity should be rendered based on its lifetime
       if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
+       
         targetCtx.drawImage(this.canvas, 0, 0);
         this.postProcessors.forEach(processor => processor(targetCtx, sequence));
       }
