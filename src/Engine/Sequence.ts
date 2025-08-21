@@ -1,10 +1,9 @@
 import { IAudioLoader } from './Audio/AudioLoader';
-import { Conductor } from './Conductor';
+
 import { Scene } from './Scene';
 
 export class Sequence {
 
-    public conductor?: Conductor
     public durationMs: number = 0;
     public scenes: Scene[] = [];
     public currentSceneIndex: number = 0;
@@ -478,9 +477,7 @@ export class Sequence {
         });
 
         this.currentScene!.entities.forEach(entity => {
-            // Update the conductor's time and trigger events
-            this.conductor?.updateTime(timeStamp);
-            this.conductor?.triggerEvents(this);
+        
             entity.update(timeStamp);
             if (this.target) {
                 entity.copyToCanvas(this.target, this);

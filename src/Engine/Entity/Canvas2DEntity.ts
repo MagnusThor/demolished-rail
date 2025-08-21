@@ -137,7 +137,6 @@ export class Canvas2DEntity<T> implements IEntity {
       const elapsed = timeStamp - sceneStartTime - (this.startTimeinMs || 0);
 
 
-
       if (elapsed >= 0 && elapsed <= (this.durationInMs || Infinity)) {
         this.action(timeStamp, this.ctx, this.props, this.getScene()?.sequence, this
         );
@@ -159,4 +158,6 @@ export class Canvas2DEntity<T> implements IEntity {
   private getSequence(): Sequence | undefined {
     return this.scene?.sequence;
   }
+  
+  
 }

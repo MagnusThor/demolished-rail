@@ -1,3 +1,7 @@
+/**
+ * A helper class to manage keyboard and mouse input.
+ * It provides methods to check the state of keys and mouse buttons.
+ */
 export class InputHelper {
     private keys: Set<string> = new Set();
     private mouseX: number = 0;
@@ -14,6 +18,15 @@ export class InputHelper {
         parent.addEventListener('mousemove', (e) => this.onMouseMove(e));
         parent.addEventListener('mousedown', (e) => this.onMouseDown(e));
         parent.addEventListener('mouseup', (e) => this.onMouseUp(e));
+    }
+
+    /**
+     * Removes the specified key from the set of currently pressed keys.
+     *
+     * @param key - The key to be consumed and removed from the internal tracking set.
+     */
+    consumeKey(key: string): void {
+        this.keys.delete(key);
     }
 
     /**
@@ -68,6 +81,8 @@ export class InputHelper {
 
     private onKeyDown(event: KeyboardEvent) {
         this.keys.add(event.key);
+
+
 
         // Trigger key listeners
         if (this.keyListeners[event.key]) {

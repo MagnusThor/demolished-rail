@@ -3,7 +3,7 @@ export {
   IWGSLShaderRenderBuffer,
   WGSLShaderEntity,
 } from './Engine/Entity/WGSLShaderEntity';
-export { Conductor, ITimelineEvent } from './Engine/Conductor';
+
 export { EngineLogger } from './Engine/EngineLogger';
 export { Canvas2DEntity, IEntity } from './Engine/Entity/Canvas2DEntity';
 export {
@@ -91,4 +91,3 @@ export {
   TextureGeneratorBase,
 } from './Engine/Helpers/TextureHelper';
 
-export { IWorldProps, WorldEntity } from './Engine/Entity/WorldEntity';

@@ -1,6 +1,11 @@
+// helpers/CollisionHelper.ts
+
+/**
+ * A helper class for performing various collision detection checks.
+ */
 export class CollisionHelper {
     /**
-     * Checks for circular collision between two objects.
+     * Checks for a circular collision between two objects.
      * @param a - The first object with properties x, y, and r (radius).
      * @param b - The second object with properties x, y, and r (radius).
      * @returns True if the objects are colliding, false otherwise.
@@ -12,19 +17,26 @@ export class CollisionHelper {
       const radiiSquared = (a.r + b.r) * (a.r + b.r);
       return distanceSquared <= radiiSquared;
     }
-  
+
     /**
-     * Checks for rectangular collision between two objects.
-     * @param a - The first object with properties x, y, w (width), and h (height).
-     * @param b - The second object with properties x, y, w (width), and h (height).
-     * @returns True if the objects are colliding, false otherwise.
+     * Checks for a rectangular collision between two objects using Axis-Aligned Bounding Boxes (AABB).
+     * @param x1 - The x-coordinate of the first rectangle.
+     * @param y1 - The y-coordinate of the first rectangle.
+     * @param w1 - The width of the first rectangle.
+     * @param h1 - The height of the first rectangle.
+     * @param x2 - The x-coordinate of the second rectangle.
+     * @param y2 - The y-coordinate of the second rectangle.
+     * @param w2 - The width of the second rectangle.
+     * @param h2 - The height of the second rectangle.
+     * @returns True if the rectangles are colliding, false otherwise.
      */
-    static rectangularDetection(a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }): boolean {
-      return (
-        a.x < b.x + b.w &&
-        a.x + a.w > b.x &&
-        a.y < b.y + b.h &&
-        a.h + a.y > b.y
-      );
+    static isRectRectColliding(x1: number, y1: number, w1: number, h1: number, x2: number, y2: number, w2: number, h2: number): boolean {
+        // The collision occurs if there is an overlap on both the x and y axes.
+        return (
+            x1 < x2 + w2 &&
+            x1 + w1 > x2 &&
+            y1 < y2 + h2 &&
+            y1 + h1 > y2
+        );
     }
-  }
+}
