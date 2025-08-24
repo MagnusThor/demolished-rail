@@ -1,16 +1,20 @@
-import { IDynamicProps, IGameEntityProp } from "../interface/IGameEntity";
+import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
+import { IHealthProps } from "./IHealthProps";
+import { IGameEntityProp } from "../interface/IGameEntity";
+import { IDynamicProps } from "./IDynamicProps";
+import { IPositioned } from "./IPositioned";
 
 
 
 export interface IBulletProps extends IDynamicProps {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+
+    position: IPositioned; // The position of the bullet in the game world
     velX: number;
     velY: number;
     isAlive: boolean;
     lifeTime: number; // Time in frames before the bullet disappears
-    startPoint: { x: number; y: number }; // The point where the bullet was created
+
+    health: IHealthProps // Health properties for the bullet, if applicable
+    
 
 }

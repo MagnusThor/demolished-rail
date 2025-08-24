@@ -3,17 +3,9 @@ import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "./IBoundingBox";
 
 
+export interface IGameEntityBase  {
 
-export interface IDynamicProps extends IGameEntityProp {
-    isAlive: boolean; // Indicates if the entity should be removed from the game loop
-    lifeTime: number; // The remaining life of the entity in milliseconds
 }
-
-export interface IDynamicEntity<P extends IDynamicProps> extends IGameEntity<P> {
-    onCreated?: (self: IDynamicEntity<P>) => void; // A hook for when the entity is created
-    onDestroy?: (self: IDynamicEntity<P>) => void; // A hook for when the entity is destroyed
-}
-
 
 
 export interface ICollisionResult {
@@ -59,6 +51,6 @@ export interface IGameEntity<P> extends ICompositeEntity<P> {
   onDraw?: (self: IGameEntity<P>, helper: CanvasHelper) => void; // Optional draw function
   name: string; // Optional name for the entity
   key: string; // Unique key for the entity
-   getBoundingBox?: (self: IGameEntity<P>) => IBoundingBox;
+  getBoundingBox?: (self: IGameEntity<P>) => IBoundingBox;
 }
 

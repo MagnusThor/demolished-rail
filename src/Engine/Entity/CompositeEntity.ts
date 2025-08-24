@@ -9,6 +9,8 @@ import { Canvas2DEntity } from "./Canvas2DEntity";
 export interface ICompositeEntity<T> {
     key: string;
     props: T;
+    name: string;
+    uuid: string; // Optional unique identifier for the entity
 }
 
 /**

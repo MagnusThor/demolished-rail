@@ -4,9 +4,11 @@ import { CollisionHelper } from "../../../src/Engine/Helpers/CollisionHelper";
 import { gameState } from "../gameState";
 import { IBoundingBox } from "../interface/IBoundingBox";
 import { IBulletProps } from "../interface/IBulletProps";
-import { IGameEntity, ICollisionResult, CollisionAxis, IDynamicEntity } from "../interface/IGameEntity";
+import { IGameEntity, ICollisionResult, CollisionAxis } from "../interface/IGameEntity";
+import { IDynamicEntity } from "../interface/IDynamicEntity";
 import { ITileProps } from "../interface/ITileProps";
-import { isSolidTile } from "./tileBlockHelpers";
+import { isSolidTile } from "../utils/tileBlockHelpers";
+import { Positioned } from "../interface/IPositioned";
 
 const BULLET_SPEED = 10;
 
@@ -18,29 +20,23 @@ const BULLET_SPEED = 10;
  */
 export const bulletBlock = (startX: number, startY: number, direction: "left" | "right"): IDynamicEntity<IBulletProps> => {
     return {
+        uuid: crypto.randomUUID(), // Generate a unique identifier for the bullet
         key: "bulletBlock",
         name: "bulletBlock",
         props: {
-            x: startX,
-            y: startY,
-            width: 8,
-            height: 8,
+           health: {
+                health: 100, // Default health value for the bullet
+                damage: 10 // Damage dealt by the bullet
+            },
+            position: new Positioned(startX, startY, 8, 8),
             velX: direction === "right" ? BULLET_SPEED : -BULLET_SPEED,
             velY: 0,
             isAlive: true,
-            lifeTime: 1000,
-            startPoint: {
-                x: startX,
-                y: startY
-            }
+            lifeTime: 2000,
+           
         },
         getBoundingBox: (self): IBoundingBox => {
-            return {
-                x: self.props.x,
-                y: self.props.y,
-                width: self.props.width,
-                height: self.props.height,
-            };
+           return self.props.position.getBoundingBox!();
         },
         collisionDetectors: [
             {
@@ -49,23 +45,29 @@ export const bulletBlock = (startX: number, startY: number, direction: "left" | 
                 
                     const tileProps = tileEntity.props;
                     const collisionResults = new Array<ICollisionResult>();
-                
-                    const bulletTileX = Math.floor(bulletProps.x / tileProps.tileWidth);
-                    const bulletTileY = Math.floor(bulletProps.y / tileProps.tileHeight);
-                    const checkRadius = 1;
-                
+                    const bulletBBox = bulletProps.position.getBoundingBox!();                
+                    // Check a radius around the bullet to reduce collision checks
+                    const bulletTileX = Math.floor(bulletProps.position.x / tileProps.tileWidth);
+                    const bulletTileY = Math.floor(bulletProps.position.y / tileProps.tileHeight);
+                    const checkRadius = 1; 
+
                     for (let row = bulletTileY - checkRadius; row <= bulletTileY + checkRadius; row++) {
                         for (let col = bulletTileX - checkRadius; col <= bulletTileX + checkRadius; col++) {
                             if (row >= 0 && row < tileProps.tileMap.length && col >= 0 && col < tileProps.tileMap[0].length) {
                                 const tileType = tileProps.tileMap[row][col];
                                 if (isSolidTile(tileType)) {
                                     const tileX = col * tileProps.tileWidth;
-                                    const tileY = row * tileProps.tileHeight;
-                                    
-                                    if (CollisionHelper.isRectRectColliding(
-                                        bulletProps.x, bulletProps.y, bulletProps.width, bulletProps.height,
-                                        tileX, tileY, tileProps.tileWidth, tileProps.tileHeight
-                                    )) {
+                                    const tileY = row * tileProps.tileHeight;                                    
+                              
+                                    const tileBBox: IBoundingBox = {
+                                        x: tileX,
+                                        y: tileY,
+                                        width: tileProps.tileWidth,
+                                        height: tileProps.tileHeight
+                                    };
+                                    // Check for collision between the bullet and the tile    
+                                    // Use the AABBColliding helper
+                                    if (CollisionHelper.AABBColliding(bulletBBox, tileBBox)) {
                                         collisionResults.push({
                                             x: tileX, y: tileY, width: tileProps.tileWidth, height: tileProps.tileHeight, axis: CollisionAxis.X,
                                             targetEntity: tileEntity,
@@ -78,13 +80,18 @@ export const bulletBlock = (startX: number, startY: number, direction: "left" | 
                     return collisionResults;
                 
                 },
-                onCollision: (bulletProps: IBulletProps, collisionData: ICollisionResult) => {                
+                onCollision: (bulletProps: IBulletProps, collisionData: ICollisionResult) => {                 
                     bulletProps.isAlive = false;
                 }
             }
         ],
         onUpdate: (self, timeStamp) => {
-            self.props.x += self.props.velX;
+            self.props.position.x += self.props.velX;
+            // The bullet's lifetime decreases over time. When it reaches 0 or less, it's marked for removal.
+            self.props.lifeTime -= timeStamp;
+            if (self.props.lifeTime <= 0) {
+                self.props.isAlive = false;
+            }
         },
         onDraw: (self, helper) => {
             if (!self.props.isAlive) {
@@ -92,14 +99,13 @@ export const bulletBlock = (startX: number, startY: number, direction: "left" | 
             }
             const props = self.props;
             const ctx = helper.ctx;
-            const viewportX = gameState.viewport.x;
-            const viewportY = gameState.viewport.y;
+    
             ctx.fillStyle = "#FFC107";
             ctx.fillRect(
-                props.x - viewportX,
-                props.y - viewportY,
-                props.width,
-                props.height,
+                props.position.x ,
+                props.position.y,
+                props.position.width,
+                props.position.height,
             );
         },
         onInit: () => { },

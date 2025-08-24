@@ -1,5 +1,7 @@
 // helpers/CollisionHelper.ts
 
+import { IBoundingBox } from "../../../wwwroot/src/interface/IBoundingBox";
+
 /**
  * A helper class for performing various collision detection checks.
  */
@@ -38,5 +40,23 @@ export class CollisionHelper {
             y1 < y2 + h2 &&
             y1 + h1 > y2
         );
+    
     }
+
+    /**
+     * Checks for a rectangular collision between two objects using IBoundingBox objects.
+     * @param a - The first object, an IBoundingBox.
+     * @param b - The second object, an IBoundingBox.
+     * @returns True if the objects are colliding, false otherwise.
+     */
+    static AABBColliding(a: IBoundingBox, b: IBoundingBox): boolean {
+        return (
+            a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y
+        );
+    }
+
+
 }

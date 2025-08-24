@@ -5,12 +5,14 @@ import { ITileProps } from "../interface/ITileProps";
 import { isEntityInView } from "../utils/visibilityHelpers";
 import { collectibleBlock } from "./collectibleBlock";
 import { platformBlock } from "./platformBlock";
-import { getTilesByType } from "./tileBlockHelpers";
+import { determineVisibleTiles, getTilesByType } from "../utils/tileBlockHelpers";
+import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 
 
 export const tileBlock: IGameEntity<ITileProps> = {
     key: "tileBlock",
     name: "tileBlock",
+    uuid: crypto.randomUUID(), // Unique identifier for the tile block
     props: {
         tileMap: [],
         tileWidth: 0,
@@ -20,7 +22,6 @@ export const tileBlock: IGameEntity<ITileProps> = {
     },
     onInit: (self) => {
         const props = self.props;
-
         props.collectibles = getTilesByType(props.tileMap, 4).map(tile => {
             return {
                 ...collectibleBlock(tile, props.tileWidth, props.tileHeight),
@@ -38,11 +39,10 @@ export const tileBlock: IGameEntity<ITileProps> = {
     onUpdate: (self, timeStamp) => {
         const viewport = gameState.viewport;
         const screenWidth = viewport.viewportWidth;
-        const screenHeight = viewport.viewportHeight;
-        
-        // This is the centralized collision detection loop.
-        // It iterates through the player and checks for collisions with relevant objects.
+        const screenHeight = viewport.viewportHeight;        
+       
         const player = gameState.findEntities("playerBlock")[0];
+
         if (player) {
             // Check for collisions with platforms
             self.props.platforms?.forEach(platform => {
@@ -65,7 +65,6 @@ export const tileBlock: IGameEntity<ITileProps> = {
                     }
                 }
             });
-
             // Check for collisions with collectibles
             self.props.collectibles?.forEach(collectible => {
                 // Perform frustum culling before collision check
@@ -85,7 +84,6 @@ export const tileBlock: IGameEntity<ITileProps> = {
                 }
             });
         }
-
         // Update collectibles and platforms that are in view.
         self.props.collectibles?.forEach(collectible => {
             if (isEntityInView(collectible, viewport, screenWidth, screenHeight)) {
@@ -100,67 +98,65 @@ export const tileBlock: IGameEntity<ITileProps> = {
         });
     },
     onDraw: (self, helper) => {
-        const props = self.props;
-        const ctx = helper.ctx;
-        const viewport = gameState.viewport;
-        const screenWidth = viewport.viewportWidth;
-        const screenHeight = viewport.viewportHeight;
+ const props = self.props;
+    const ctx = helper.ctx;
+    const viewport = gameState.viewport;
+    const screenWidth = viewport.viewportWidth;
+    const screenHeight = viewport.viewportHeight;
 
-        // Draw solid tiles (type 1) using frustum culling
-        const solidTiles = getTilesByType(props.tileMap, 1);
-        solidTiles.forEach(tile => {
+    
+
+    // Draw solid tiles (type 1)
+    const solidTiles = getTilesByType(props.tileMap, 1);
+    solidTiles.forEach(tile => {
+        if (determineVisibleTiles(props,tile,viewport,screenWidth,screenHeight)) {
             const tileX = tile.x * props.tileWidth;
             const tileY = tile.y * props.tileHeight;
-            if (
-                tileX < viewport.x + screenWidth &&
-                tileX + props.tileWidth > viewport.x &&
-                tileY < viewport.y + screenHeight &&
-                tileY + props.tileHeight > viewport.y
-            ) {
-                ctx.fillStyle = "#666";
-                ctx.fillRect(
-                    tileX - viewport.x,
-                    tileY - viewport.y,
-                    props.tileWidth,
-                    props.tileHeight
-                );
-            }
-        });
+            ctx.fillStyle = "#666";
+            
+            // FIX: Draw at the absolute world coordinates. No more "- viewport.x".
+            ctx.fillRect(
+                tileX,
+                tileY,
+                props.tileWidth,
+                props.tileHeight
+            );
+        }
+    });
 
-        // Draw non-solid tiles (type 2) using frustum culling
-        const nonSolidTiles = getTilesByType(props.tileMap, 2);
-        nonSolidTiles.forEach(tile => {
+    // Draw non-solid tiles (type 2)
+    const nonSolidTiles = getTilesByType(props.tileMap, 2);
+    nonSolidTiles.forEach(tile => {
+        if (determineVisibleTiles(props, tile, viewport, screenWidth, screenHeight)) {
             const tileX = tile.x * props.tileWidth;
             const tileY = tile.y * props.tileHeight;
-            if (
-                tileX < viewport.x + screenWidth &&
-                tileX + props.tileWidth > viewport.x &&
-                tileY < viewport.y + screenHeight &&
-                tileY + props.tileHeight > viewport.y
-            ) {
-                ctx.fillStyle = "#ccc";
-                ctx.fillRect(
-                    tileX - viewport.x,
-                    tileY - viewport.y,
-                    props.tileWidth,
-                    props.tileHeight
-                );
-            }
-        });
+            ctx.fillStyle = "#ccc";
 
-        // Draw platforms only if they are in view
-        props.platforms?.forEach(platform => {
-            if (isEntityInView(platform, viewport, screenWidth, screenHeight, 0)) {
-                platform.onDraw!(platform, helper);
-            }
-        });
+            // FIX: Draw at the absolute world coordinates here as well.
+            ctx.fillRect(
+                tileX,
+                tileY,
+                props.tileWidth,
+                props.tileHeight
+            );
+        }
+    });
 
-        // Draw collectibles only if they are in view
-        props.collectibles?.forEach(collectible => {
-            if (isEntityInView(collectible, viewport, screenWidth, screenHeight, 0)) {
-                collectible.onDraw!(collectible, helper);
-            }
-        });
+    // IMPORTANT: You must also fix the onDraw methods for platforms and collectibles!
+    // They are also being called from here and will have the same issue.
+    props.platforms?.forEach(platform => {
+        if (isEntityInView(platform, viewport, screenWidth, screenHeight, 0)) {
+            platform.onDraw!(platform, helper); // Make sure this function draws at absolute coords.
+        }
+    });
+
+    props.collectibles?.forEach(collectible => {
+        if (isEntityInView(collectible, viewport, screenWidth, screenHeight, 0)) {
+            collectible.onDraw!(collectible, helper); // Make sure this function draws at absolute coords.
+        }
+    });
+
+
     },
     getBoundingBox: (self): IBoundingBox => {
         const width = self.props.tileMap[0].length * self.props.tileWidth;

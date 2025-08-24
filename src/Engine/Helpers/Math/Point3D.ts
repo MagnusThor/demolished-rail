@@ -1,6 +1,12 @@
-import { Point2D } from './Point2D';
+import { IPoint2D, Point2D } from './Point2D';
 
-export class Point3D extends Point2D {
+export interface IPoint3D extends IPoint2D {
+    z: number;
+    u?: number; // Texture coordinate U
+    v?: number; // Texture coordinate V  
+}
+
+export class Point3D extends Point2D implements IPoint3D {
     constructor(x: number, y: number, public z: number, public u: number, public v: number) {
         super(x, y); // Call the superclass constructor
     }

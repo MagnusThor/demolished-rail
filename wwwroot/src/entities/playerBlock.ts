@@ -4,42 +4,21 @@ import { CollisionHelper } from "../../../src/Engine/Helpers/CollisionHelper";
 import { KeyCode } from "../enums/KeyCode";
 import { gameState } from "../gameState";
 import { IBoundingBox } from "../interface/IBoundingBox";
-import { CollisionAxis, ICollisionResult, IGameEntity, IGameEntityProp } from "../interface/IGameEntity";
+import { CollisionAxis, ICollisionResult, IGameEntity } from "../interface/IGameEntity";
 import { ITileProps } from "../interface/ITileProps";
 import { bulletBlock } from "./bulletBlock";
-import { isSolidTile } from "./tileBlockHelpers";
+import { isSolidTile } from "../utils/tileBlockHelpers";
+import { IPlayerProps } from "../interface/IPlayerProps";
+import { Positioned } from "../interface/IPositioned";
 
-export interface IPlayerProps extends IGameEntityProp {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    velX: number;
-    velY: number;
-    gravity: number;
-    isJumping: boolean;
-    isGrounded: boolean;
-    isMovingLeft: boolean;
-    isMovingRight: boolean;
-    lastDirection: "left" | "right";
-    tileMap: number[][];
-    tileWidth: number;
-    tileHeight: number;
-    input: InputHelper;
-    worldWidth: number;
-    isInitialized: boolean;
-    
-    
-}
 
-export const playerEntity: IGameEntity<IPlayerProps> = {
+export const playerBlock: IGameEntity<IPlayerProps> = {
     key: "playerBlock",
     name: "playerBlock",
+    uuid: crypto.randomUUID(), // Unique identifier for the player block
+    
     props: {
-        x: 0,
-        y: 0,
-        width: 32,
-        height: 32,
+        position: new Positioned(0, 0, 32, 32   ),
         velX: 0,
         velY: 0,
         gravity: 0.25,
@@ -54,14 +33,14 @@ export const playerEntity: IGameEntity<IPlayerProps> = {
         input: new InputHelper(document.createElement('canvas')),
         worldWidth: 0,
         isInitialized: false,
+        health: {
+            health: 100, 
+            damage: 0 
+        }
+       
     },
     getBoundingBox: (self): IBoundingBox => {
-        return {
-            x: self.props.x,
-            y: self.props.y,
-            width: self.props.width,
-            height: self.props.height
-        };
+        return self.props.position.getBoundingBox!();
     },
     collisionDetectors: [
         {
@@ -69,8 +48,8 @@ export const playerEntity: IGameEntity<IPlayerProps> = {
             detectorFn: (playerProps: IPlayerProps, tileEntity: IGameEntity<ITileProps>) => {
                          const tileProps = tileEntity.props;
                     const collisionResults = new Array<ICollisionResult>();
-                    const playerTileX = Math.floor(playerProps.x / tileProps.tileWidth);
-                    const playerTileY = Math.floor(playerProps.y / tileProps.tileHeight);
+                    const playerTileX = Math.floor(playerProps.position.x / tileProps.tileWidth);
+                    const playerTileY = Math.floor(playerProps.position.y / tileProps.tileHeight);
                     const checkRadius = 2;
                     for (let row = playerTileY - checkRadius; row <= playerTileY + checkRadius; row++) {
                         for (let col = playerTileX - checkRadius; col <= playerTileX + checkRadius; col++) {
@@ -80,7 +59,8 @@ export const playerEntity: IGameEntity<IPlayerProps> = {
                                     const tileX = col * tileProps.tileWidth;
                                     const tileY = row * tileProps.tileHeight;                                    
                                     if (CollisionHelper.isRectRectColliding(
-                                        playerProps.x, playerProps.y, playerProps.width, playerProps.height,
+                                        playerProps.position.x, playerProps.position.y, playerProps.position.width, 
+                                        playerProps.position.height,
                                         tileX, tileY, tileProps.tileWidth, tileProps.tileHeight
                                     )) {
                                         collisionResults.push({
@@ -105,17 +85,17 @@ export const playerEntity: IGameEntity<IPlayerProps> = {
                 const tileHeight = collisionData.height;
                 if (axis === 'x') {
                     if (playerProps.velX > 0) {
-                        playerProps.x = tileX - playerProps.width;
+                        playerProps.position.x = tileX - playerProps.position.width;
                     } else if (playerProps.velX < 0) {
-                        playerProps.x = tileX + tileWidth;
+                        playerProps.position.x = tileX + tileWidth;
                     }
                     playerProps.velX = 0;
                 } else if (axis === 'y') {
                     if (playerProps.velY > 0) {
-                        playerProps.y = tileY - playerProps.height;
+                        playerProps.position.y = tileY - playerProps.position.height;
                         playerProps.isGrounded = true;
                     } else if (playerProps.velY < 0) {
-                        playerProps.y = tileY + tileHeight;
+                        playerProps.position.y = tileY + tileHeight;
                     }
                     playerProps.velY = 0;
                 }
@@ -141,11 +121,11 @@ export const playerEntity: IGameEntity<IPlayerProps> = {
             props.velX = MOVE_SPEED;
             props.lastDirection = "right";
         }
-        props.x += props.velX;     
+        props.position.x += props.velX;     
         if (input.isKeyPressed(KeyCode.Space)) {
             const newBullet = bulletBlock(
-                props.x + (props.lastDirection === "right" ? props.width : -props.width), 
-                props.y + props.height / 2, 
+                props.position.x + (props.lastDirection === "right" ? props.position.width : -props.position.width), 
+                props.position.y + props.position.height / 2, 
                 props.lastDirection
             );
             gameState.dynamicEntities.push(newBullet);
@@ -153,8 +133,8 @@ export const playerEntity: IGameEntity<IPlayerProps> = {
             input.consumeKey(KeyCode.Space);
         }
         const tileBlock = gameState.findEntities("tileBlock")[0];
-        if (tileBlock && playerEntity.collisionDetectors) {
-            const detector = playerEntity.collisionDetectors.find(d => d.targetName === "tileBlock");
+        if (tileBlock && playerBlock.collisionDetectors) {
+            const detector = playerBlock.collisionDetectors.find(d => d.targetName === "tileBlock");
             if (detector) {
                 const collisionResults = detector.detectorFn(props, tileBlock);
                 if (Array.isArray(collisionResults)) {
@@ -173,11 +153,11 @@ export const playerEntity: IGameEntity<IPlayerProps> = {
         if (props.velY < 10) {
             props.velY += props.gravity;
         }
-        props.y += props.velY;
+        props.position.y += props.velY;
         props.isGrounded = false;
         
-        if (tileBlock && playerEntity.collisionDetectors) {
-            const detector = playerEntity.collisionDetectors.find(d => d.targetName === "tileBlock");
+        if (tileBlock && playerBlock.collisionDetectors) {
+            const detector = playerBlock.collisionDetectors.find(d => d.targetName === "tileBlock");
             if (detector) {
                 const collisionResults = detector.detectorFn(props, tileBlock);
                 if (Array.isArray(collisionResults)) {
@@ -188,20 +168,21 @@ export const playerEntity: IGameEntity<IPlayerProps> = {
                 }
             }
         }
-        gameState.viewport.x = props.x - gameState.viewport.viewportWidth / 2;
-        gameState.viewport.y = props.y - gameState.viewport.viewportHeight / 2;
+
+        
+
+
     },
     onDraw: (self, helper) => {
         const props = self.props;
         const ctx = helper.ctx;
-        const viewportX = gameState.viewport.x;
-        const viewportY = gameState.viewport.y;
+    
         ctx.fillStyle = "red";
         ctx.fillRect(
-            props.x - viewportX,
-            props.y - viewportY,
-            props.width,
-            props.height,
+            props.position.x, 
+            props.position.y,
+            props.position.width,
+            props.position.height,
         );
     }
 };

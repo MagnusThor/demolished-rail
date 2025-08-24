@@ -4,10 +4,10 @@ import { ICompositeEntity } from '../../../src/Engine/Entity/CompositeEntity';
 import { CanvasHelper } from '../../../src/Engine/Helpers/CanvasHelper';
 import { gameState } from '../gameState';
 import { IGameEntity } from '../interface/IGameEntity';
+import { IPlayerProps } from '../interface/IPlayerProps';
 
 /**
  * Interface for the properties of a WorldEntity.
- * It now includes a dedicated list for dynamic entities like bullets.
  */
 export interface IWorldProps {
     worldWidth: number;
@@ -16,31 +16,30 @@ export interface IWorldProps {
     viewportY: number;
     viewportWidth: number;
     viewportHeight: number;
-    blocks: IGameEntity<any>[]; // For static entities like tiles and the player
+    blocks: IGameEntity<any>[];
 }
 
 /**
  * WorldEntity represents a scrollable world with a viewport.
- * It now uses a dedicated ICompositeEntity to render the background tiles.
+ * It manages all game entities and controls the camera.
  */
 export class WorldEntity extends Canvas2DEntity<IWorldProps> {
-    private worldCanvas: HTMLCanvasElement;
-    private worldCtx: CanvasRenderingContext2D;
-    collisionDetectors: any[]; // Changed to an array for proper use
-    canvasHelper: CanvasHelper;
-    private followTarget?: IGameEntity<any>; // New property to store the entity to follow
+    // CHANGE: Removed worldCanvas, worldCtx, and canvasHelper as they are no longer needed.
+    private followTarget?: IGameEntity<any>;
 
+    // A getter for a key if your engine requires it.
     get key() {
         return 'world';
     }
+    set key(value: string) { /* No-op */ }
 
-    set key(value: string) {
-        // No-op, WorldEntity does not have a key
-    }
+    uuid: string = crypto.randomUUID();
 
     constructor(
         public name: string,
-        public props: IWorldProps
+        public props: IWorldProps,
+        public screenWidth: number,
+        public screenHeight: number,
     ) {
         super(
             name,
@@ -48,25 +47,23 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
             (ts, ctx) => this.worldEntityRenderer(ts, ctx),
             undefined,
             undefined,
-            props.viewportWidth,
-            props.viewportHeight
+            screenWidth,
+            screenHeight
         );
 
-        this.worldCanvas = document.createElement("canvas");
-        this.worldCanvas.width = props.worldWidth;
-        this.worldCanvas.height = props.worldHeight;
-        this.worldCtx = this.worldCanvas.getContext("2d")!;
-
-        this.canvasHelper = new CanvasHelper(this.worldCtx);
-
-        this.collisionDetectors = [];
+        gameState.worldWidth = props.worldWidth;
+        gameState.worldHeight = props.worldHeight;
+        
+        // Rounding viewport dimensions is a good practice to prevent floating point issues.
+        this.props.viewportWidth = Math.round(this.props.viewportWidth);
+        this.props.viewportHeight = Math.round(this.props.viewportHeight);
     }
     
     /**
      * Set the entity for the camera to follow.
      * @param target The entity to follow.
      */
-    follow(target: IGameEntity<any>) {
+    follow(target: IGameEntity<any>): void {
         this.followTarget = target;
     }
 
@@ -74,91 +71,146 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
      * The main update loop for the world and its entities.
      * @param ts The timestamp.
      */
-    updateBlocks(ts: number) {
-        // Update all the static blocks within the world
+    updateBlocks(ts: number): void {
+        // Combine static and dynamic entities for collision processing.
+        const allEntities = [...this.props.blocks, ...gameState.dynamicEntities];
+
+        // Update all dynamic entities and filter out the ones that are no longer alive.
+        gameState.dynamicEntities = gameState.dynamicEntities.filter(entity => {
+            if (entity.props.isAlive === false && entity.onDestroy) {
+                entity.onDestroy(entity);
+            }
+            entity.onUpdate!(entity, ts);
+
+            if (entity.processCollisions) {
+                entity.processCollisions(entity, allEntities);
+            }
+            return entity.props.isAlive;
+        });
+
+        // Update all the static blocks within the world.
         this.props.blocks.forEach(block => {
             block.onUpdate!(block, ts);
         });
 
-        // Update and filter the bullets from the global gameState
-        gameState.dynamicEntities = gameState.dynamicEntities.filter(bullet => {
-            bullet.onUpdate!(bullet, ts);
-            // Check for collisions with tiles
-            const tileBlock = this.findBlock('tileBlock');
-            if (tileBlock && bullet.collisionDetectors) {
-                const detector = bullet.collisionDetectors.find(d => d.targetName === "tileBlock");
-                if (detector) {
-                    const collisionResults = detector.detectorFn(bullet.props, tileBlock);
-                    if (Array.isArray(collisionResults) && collisionResults.length > 0) {
-                        detector.onCollision!(bullet.props, collisionResults[0]);
-                    }
-                }
-            }
-            // Return true if the bullet is still alive
-            return bullet.props.isAlive;
-        });
-
-        // Update the viewport to follow the target if it exists
+        // Update the viewport to smoothly follow the target.
         if (this.followTarget) {
-            const targetProps = this.followTarget.props;
-            const newViewportX = targetProps.x - this.props.viewportWidth / 2;
-            const newViewportY = targetProps.y - this.props.viewportHeight / 2;
-            this.setViewportX(newViewportX);
-            this.setViewportY(newViewportY);
+            const targetProps = this.followTarget.props as IPlayerProps;
+            
+            // Calculate the desired viewport position to center the target.
+            const targetCenterX = targetProps.position.x + targetProps.position.width / 2;
+            const targetCenterY = targetProps.position.y + targetProps.position.height / 2;
+            const desiredViewportX = targetCenterX - this.props.viewportWidth / 2;
+            const desiredViewportY = targetCenterY - this.props.viewportHeight / 2;
+            
+            // Clamp the desired position to the world boundaries. This logic remains the same.
+            const clampedX = Math.max(0, Math.min(desiredViewportX, this.props.worldWidth - this.props.viewportWidth));
+            const clampedY = Math.max(0, Math.min(desiredViewportY, this.props.worldHeight - this.props.viewportHeight));
+
+            // CHANGE: Use lerp for smooth camera movement.
+            const smoothing = 0.1; // Adjust this value: 0.05 is slower, 0.2 is faster.
+            const smoothedX = this.lerp(this.props.viewportX, clampedX, smoothing);
+            const smoothedY = this.lerp(this.props.viewportY, clampedY, smoothing);
+
+            this.setViewportX(smoothedX);
+            this.setViewportY(smoothedY);
         }
     }
 
-    findBlock<P>(key: string): IGameEntity<P> | undefined {
-        return this.props.blocks.find(block => block.key === key) as IGameEntity<P> | undefined;
+    /**
+     * Linear interpolation function to smooth movement.
+     */
+    private lerp(start: number, end: number, t: number): number {
+        return start * (1 - t) + end * t;
     }
 
-    setViewportX(x: number) {
-        this.props.viewportX = Math.max(0, Math.min(x, this.props.worldWidth - this.props.viewportWidth));
-        gameState.viewport.x = this.props.viewportX; // Update the game state viewport
+    setViewportX(x: number): void {
+        this.props.viewportX = x;
+        gameState.viewport.x = this.props.viewportX;
     }
 
-    setViewportY(y: number) {
-        this.props.viewportY = Math.max(0, Math.min(y, this.props.worldHeight - this.props.viewportHeight));
-        gameState.viewport.y = this.props.viewportY; // Update the game state viewport 
+    setViewportY(y: number): void {
+        this.props.viewportY = y;
+        gameState.viewport.y = this.props.viewportY;
     }
 
     addBlock(block: IGameEntity<any>): this {
         if (block.onInit) {
-            block.onInit(block); // Initialize the block
+            block.onInit(block);
         }
-        block.props.isInitialized = true; // Mark the block as initialized
+        block.props.isInitialized = true;
         this.props.blocks.push(block);
         return this;
     }
 
-    addBlocks(...blocks: IGameEntity<any>[]): this {
-        blocks.forEach(block => this.addBlock(block));
-        return this;
-    }
-
+    // CHANGE: The main renderer is now much simpler and more performant.
     private worldEntityRenderer = (
         ts: number,
         ctx: CanvasRenderingContext2D
     ) => {
-        // Clear the off-screen world canvas
-        this.worldCtx.clearRect(0, 0, this.props.worldWidth, this.props.worldHeight);
+        const canvasHelper = new CanvasHelper(ctx)
 
-        // Draw the background blocks
+        // Save the clean, untransformed state of the main canvas.
+        ctx.save();
+
+        // Translate the canvas's coordinate system by the viewport's offset.
+        // This effectively moves the camera.
+        ctx.translate(-this.props.viewportX, -this.props.viewportY);
+
+        // Draw all entities. They will be drawn relative to the translated world origin.
+        // For better performance, you could add logic here to only draw entities
+        // that are currently within the viewport's bounds.
         this.props.blocks.forEach(block => {
-            block.onDraw!(block, this.canvasHelper);
+            block.onDraw!(block, canvasHelper);
+        });
+        gameState.dynamicEntities.forEach(entity => {
+            entity.onDraw!(entity, canvasHelper);
         });
 
-        // Draw the bullets from the global gameState
-        gameState.dynamicEntities.forEach(bullet => {
-            bullet.onDraw!(bullet, this.canvasHelper);
-        });
+        // Restore the canvas to its original state (removes the translation).
+        // This is crucial for drawing UI elements that should not move with the world.
+        ctx.restore();
 
-        // Draw the portion of the world canvas that is within the viewport
-        ctx.drawImage(
-            this.worldCanvas,
-            this.props.viewportX, this.props.viewportY, 
-            this.props.viewportWidth, this.props.viewportHeight,
-            0, 0, this.props.viewportWidth, this.props.viewportHeight
-        );
+        // --- DEBUG INFO ---
+        // This code now runs after ctx.restore(), so it draws directly onto the
+        // screen and is not affected by the camera's position.
+        this.drawDebugInfo(ctx);
     };
+
+    private drawDebugInfo(ctx: CanvasRenderingContext2D): void {
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, this.props.viewportWidth, this.props.viewportHeight);
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(10, 10, 280, 150);
+
+        ctx.fillStyle = 'white';
+        ctx.font = '14px Arial';
+        let y = 30;
+        const x = 20;
+        const line = 20;
+
+        ctx.fillText(`Viewport Pos: (${Math.round(this.props.viewportX)}, ${Math.round(this.props.viewportY)})`, x, y);
+        y += line;
+        ctx.fillText(`Dynamic Entities: ${gameState.dynamicEntities.length}`, x, y);
+        y += line;
+        
+        if (this.followTarget) {
+            const p = this.followTarget.props.position;
+            ctx.fillText(`Player Pos: (${p.x.toFixed(0)}, ${p.y.toFixed(0)})`, x, y);
+            y += line;
+
+            const maxVpX = this.props.worldWidth - this.props.viewportWidth;
+            const maxVpY = this.props.worldHeight - this.props.viewportHeight;
+            const isClampedX = this.props.viewportX <= 0 || this.props.viewportX >= maxVpX;
+            const isClampedY = this.props.viewportY <= 0 || this.props.viewportY >= maxVpY;
+            ctx.fillText(`Viewport Clamped: X=${isClampedX}, Y=${isClampedY}`, x, y);
+            y += line;
+        }
+        
+        ctx.fillText(`Viewport Size: ${this.props.viewportWidth} x ${this.props.viewportHeight}`, x, y);
+        y += line;
+        ctx.fillText(`Canvas Size: ${this.canvas.width} x ${this.canvas.height}`, x, y);
+    }
 }

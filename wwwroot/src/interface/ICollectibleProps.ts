@@ -1,8 +1,8 @@
+import { IPositioned } from "./IPositioned";
 
 
 export interface ICollectibleProps {
-    x: number;
-    y: number;
+    position: IPositioned; // Use IPositioned for position details
     radius: number;
     color: string;
     uuid: string; // Unique identifier for the collectible

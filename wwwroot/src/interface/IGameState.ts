@@ -7,17 +7,25 @@
 import { IEntity } from "../../../src";
 import { IBulletProps } from "./IBulletProps";
 
-import { IDynamicEntity, IGameEntity } from "./IGameEntity";
+import { IGameEntity } from "./IGameEntity";
+import { IDynamicEntity } from "./IDynamicEntity";
 import { IViewport } from "./IViewport";
+import { IPlayerProps } from "./IPlayerProps";
 
 export interface IGameState {
     // The game's viewport, controlling what part of the world is visible on screen
     viewport: IViewport;
 
+    player?: IGameEntity<IPlayerProps>; // The player entity in the game
+    
+    worldWidth: number; // The width of the game world
+    worldHeight: number; // The height of the game world
+
     // An array to hold all the game entities, like the player, tiles, and enemies.
     // This allows for a generic update and draw loop.
     entities: IGameEntity<any>[];
     dynamicEntities: IDynamicEntity<any>[]; // New dedicated list for bullets
-
+    removeDynamicEntity: (entity: IDynamicEntity<any>) => void; // Method to remove a dynamic entity by its UUID
     findEntities(key: string): IEntity[] | IGameEntity<any>[]; // A method to find entities by their key or name
+    removeEntityByUUID: (uuid:string) => void; // Optional method to remove an entity by its UUID
 }
