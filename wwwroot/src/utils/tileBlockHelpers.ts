@@ -29,8 +29,7 @@ export const getTilesByType = (tileMap: number[][], type: number): IPoint2D[] =>
  * @param direction The direction to search ("up" or "down").
  * @returns The coordinates of the closest solid tile, or null if none is found.
  */
-export const findClosestSolidTile = (tileMap: number[][], startX: number, startY: number, direction: "up" | "down"): 
-{ x: number, y: number } | null  =>{
+export const findClosestSolidTile = (tileMap: number[][], startX: number, startY: number, direction: "up" | "down"): { x: number, y: number } | null => {
     if (direction === "up") {
         for (let y = startY - 1; y >= 0; y--) {
             if (tileMap[y] && tileMap[y][startX] === 1) {
@@ -54,7 +53,7 @@ export const findClosestSolidTile = (tileMap: number[][], startX: number, startY
  * @param tileType - The numeric identifier of the tile type to check.
  * @returns `true` if the tile type is solid (i.e., type 1 or 2), otherwise `false`.
  */
-export const  isSolidTile = (tileType: number): boolean => {
+export const isSolidTile = (tileType: number): boolean => {
     return tileType === 1 || tileType === 2;
 }
 
@@ -70,7 +69,7 @@ export const  isSolidTile = (tileType: number): boolean => {
  * @param tileHeight - The height (in pixels) of a single tile.
  * @returns `true` if the rectangle overlaps any non-empty (solid) tiles; otherwise, `false`.
  */
-export const isTileCollision =(
+export const isTileCollision = (
     x: number,
     y: number,
     width: number,
@@ -110,30 +109,30 @@ export const isTileCollision =(
  * @param height - The height of a single tile in pixels. Defaults to 32.
  * @returns An `IPoint2D` representing the pixel coordinates of the top-left corner of the tile.
  */
-   export const getTileXy = (row: number, col: number,width:number = 32,height:number=32):IPoint2D => {
-        return new Point2D(col * width, row * height);
-    }
-    
+export const getTileXy = (row: number, col: number, width: number = 32, height: number = 32): IPoint2D => {
+    return new Point2D(col * width, row * height);
+}
 
-export   const determineVisibleTiles = (props:ITileProps, tile: IPoint2D,
-        viewport: { x: number; y: number },
-        screenWidth: number,
-        screenHeight: number
-    ): boolean => {
-            const tileX = tile.x * props.tileWidth;
-            const tileY = tile.y * props.tileHeight;
-            return isEntityInView(
-                {
-                    getBoundingBox: () => ({
-                        x: tileX,
-                        y: tileY,
-                        width: props.tileWidth,
-                        height: props.tileHeight
-                    })
-                } as unknown as IGameEntity<any>,
-                viewport,
-                screenWidth,
-                screenHeight,
-                0 // No additional buffer needed here
-            );
-        };
+
+export const determineVisibleTiles = (props: ITileProps, tile: IPoint2D,
+    viewport: { x: number; y: number },
+    screenWidth: number,
+    screenHeight: number
+): boolean => {
+    const tileX = tile.x * props.tileWidth;
+    const tileY = tile.y * props.tileHeight;
+    return isEntityInView(
+        {
+            getBoundingBox: () => ({
+                x: tileX,
+                y: tileY,
+                width: props.tileWidth,
+                height: props.tileHeight
+            })
+        } as unknown as IGameEntity<any>,
+        viewport,
+        screenWidth,
+        screenHeight,
+        0 // No additional buffer needed here
+    );
+};

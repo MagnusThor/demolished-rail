@@ -1,7 +1,8 @@
-import { IEntity, ICompositeEntity } from "../../src";
+import { IEntity, ICompositeEntity, InputHelper } from "../../src";
 import { IDynamicEntity } from "./interface/IDynamicEntity";
 import { IGameEntity } from "./interface/IGameEntity";
 import { IGameState } from "./interface/IGameState";
+import { GameAssetsManager } from "./utils/GameAssets";
 
 /**
  * The global game state object.
@@ -9,6 +10,7 @@ import { IGameState } from "./interface/IGameState";
  */
 
 export const gameState: IGameState = {
+    input:undefined,
     viewport: {
         x: 0,
         y: 0,
@@ -56,3 +58,4 @@ export const gameState: IGameState = {
         return find(gameState.entities, name);
     }
 };
+export const gameAssets = new GameAssetsManager();

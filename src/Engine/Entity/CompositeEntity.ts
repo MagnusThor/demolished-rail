@@ -1,4 +1,4 @@
-import { ICollisionDetector } from "../../../wwwroot/src/interface/IGameEntity";
+import { ICollisionDetector } from "../../../wwwroot/src/interface/ICollisionDetector";
 import { CanvasHelper } from "../Helpers/CanvasHelper";
 import { Canvas2DEntity } from "./Canvas2DEntity";
 

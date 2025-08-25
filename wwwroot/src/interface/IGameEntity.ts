@@ -1,36 +1,11 @@
 import { IEntity, ICompositeEntity } from "../../../src";
 import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "./IBoundingBox";
+import { ICollisionDetector } from "./ICollisionDetector";
 
 
 export interface IGameEntityBase  {
 
-}
-
-
-export interface ICollisionResult {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    axis: CollisionAxis
-    targetEntity?: IGameEntity<any>; // Optional reference to the target entity
-}
-
-
-
-export enum CollisionAxis {
-    X = "x",
-    Y = "y",
-    XY = "xy",
-    YX = "yx",
-    NONE = "none",
-} 
-
-export interface ICollisionDetector {
-    targetName: string;
-    detectorFn: (a: any, b: any) => boolean | ICollisionResult | ICollisionResult[];
-    onCollision: (a: any , collisionData: ICollisionResult) => void;
 }
 
 

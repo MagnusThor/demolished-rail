@@ -4,7 +4,7 @@
  * This is the central repository for all game-wide data.
  */
 
-import { IEntity } from "../../../src";
+import { IEntity, InputHelper } from "../../../src";
 import { IBulletProps } from "./IBulletProps";
 
 import { IGameEntity } from "./IGameEntity";
@@ -15,6 +15,10 @@ import { IPlayerProps } from "./IPlayerProps";
 export interface IGameState {
     // The game's viewport, controlling what part of the world is visible on screen
     viewport: IViewport;
+
+    input: InputHelper | undefined
+
+    gameCanvas?: HTMLCanvasElement
 
     player?: IGameEntity<IPlayerProps>; // The player entity in the game
     

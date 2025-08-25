@@ -1,7 +1,9 @@
 import { CollisionHelper } from "../../../src/Engine/Helpers/CollisionHelper";
 import { gameState } from "../gameState";
 import { IBoundingBox } from "../interface/IBoundingBox";
-import { CollisionAxis, ICollisionResult, IGameEntity } from "../interface/IGameEntity";
+import { IGameEntity } from "../interface/IGameEntity";
+import { CollisionAxis } from "../enums/CollisionAxis";
+import { ICollisionResult } from "../interface/ICollisionResult";
 import { IPlatformProps } from "../interface/IPlatformProps";
 import { IPlayerProps } from "../interface/IPlayerProps";
 import { Positioned } from "../interface/IPositioned";

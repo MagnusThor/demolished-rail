@@ -2,10 +2,11 @@ import { InputHelper } from "../../../src";
 import { IHealthProps } from "./IHealthProps";
 import { IGameEntityProp } from "../interface/IGameEntity";
 import { IPositioned } from "./IPositioned";
+import { IGameSpriteProps } from "./IGameSprite";
 
 
 
-export interface IPlayerProps extends IGameEntityProp {
+export interface IPlayerProps extends IGameSpriteProps {
     // x: number;
     // y: number;
     // width: number;
@@ -24,8 +25,6 @@ export interface IPlayerProps extends IGameEntityProp {
     tileMap: number[][];
     tileWidth: number;
     tileHeight: number;
-    input: InputHelper;
-    worldWidth: number;
     isInitialized: boolean;
     health: IHealthProps;
 }

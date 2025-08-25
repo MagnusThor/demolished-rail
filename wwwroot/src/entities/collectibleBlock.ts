@@ -1,5 +1,7 @@
 // collectibleBlock.ts
-import { IGameEntity, ICollisionResult, CollisionAxis } from "../interface/IGameEntity";
+import { IGameEntity } from "../interface/IGameEntity";
+import { CollisionAxis } from "../enums/CollisionAxis";
+import { ICollisionResult } from "../interface/ICollisionResult";
 import { ICollectibleProps } from "../interface/ICollectibleProps";
 import { gameState } from "../gameState";
 import { IBoundingBox } from "../interface/IBoundingBox";

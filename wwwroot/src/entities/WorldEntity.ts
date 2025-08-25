@@ -174,7 +174,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         // --- DEBUG INFO ---
         // This code now runs after ctx.restore(), so it draws directly onto the
         // screen and is not affected by the camera's position.
-        this.drawDebugInfo(ctx);
+        //this.drawDebugInfo(ctx);
     };
 
     private drawDebugInfo(ctx: CanvasRenderingContext2D): void {
