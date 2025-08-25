@@ -1,6 +1,6 @@
 // RunWorld.ts
 import { Sequence, InputHelper, DefaultAudioLoader, SceneBuilder, IEntity, ICompositeEntity } from "../../src";
-import { playerEntity } from "./entities/playerBlock";
+
 import { tileBlock } from "./entities/tileBlock";
 import { WorldEntity } from "./entities/WorldEntity";
 import { gameAssets, gameState } from "./gameState";
@@ -14,40 +14,13 @@ import { IDynamicEntity } from "./interface/IDynamicEntity";
 import { IPlayerProps } from "./interface/IPlayerProps";
 import { Positioned } from "./interface/IPositioned";
 import { GameAssetsManager } from "./utils/GameAssets";
+import { PlayerEntity } from "./entities/player/playerEntity";
+import { playerAnimations } from "./entities/player/animations/playerAnimations";
+import { CURRENT_LEVEL_TILE_MAP, TILE_HEIGHT, TILE_WIDTH } from "./CURRENT_LEVEL_TILE_MAP";
 
 
-
-    export const TILE_WIDTH = 32;
-    export const TILE_HEIGHT = 32;
-    
-    export const CURRENT_LEVEL_TILE_MAP = [
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 1, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 50, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 50, 1, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 50, 0, 0, 1],
-        [1, 0, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,1 ,1,1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 2, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 99, 0, 0, 0, 0, 0, 3, 0, 0, 0, 1, 1, 0, 0, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 1, 0, 0, 0, 1.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 1],
-        [1, 1, 0, 0, 0, 4, 4, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 1],
-        [1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 50, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    ];
 
     
-
-
-
 export class RunWorld {
     screenCanvas: HTMLCanvasElement;
     sequence!: Sequence;
@@ -120,8 +93,35 @@ export class RunWorld {
 
         // Find initial player and enemy positions from the tile map
 
+        // find the start tile 99
+
    
-        let player = playerEntity();
+        let player = new PlayerEntity({
+            position: new Positioned(32, 32, 32, 32),
+
+            velX: 0,
+            velY: 0,
+
+            gravity: 0.25,
+            isJumping: false,
+            isGrounded: false,
+            isMovingLeft: false,
+            isMovingRight: false,
+            lastDirection: "right",
+
+            tileMap: CURRENT_LEVEL_TILE_MAP,
+            tileWidth: TILE_WIDTH,
+            tileHeight: TILE_HEIGHT,
+
+
+            isInitialized: false,
+
+            health: {
+                health: 100,
+                damage: 0
+            },
+            animations:  playerAnimations(),          
+        })
 
         gameState.player = player;
         gameState.input =  new InputHelper(this.screenCanvas);
@@ -143,7 +143,11 @@ export class RunWorld {
                 }
                 // Create a player at position 99
                 if (tileType === 99) {
-                    // Create the player entity instance, configuring its props.
+                      player.props.position =  new Positioned(x,y,TILE_WIDTH,TILE_HEIGHT); 
+                      // just locate the start possition in the level. 
+
+
+                  
 
                 }
                 if (tileType === 4) {

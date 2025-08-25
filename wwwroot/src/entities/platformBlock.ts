@@ -71,6 +71,9 @@ export const platformBlock = (tile: any, props: ITileProps): IGameEntity<IPlatfo
                 self.props.velY *= -1;
             }
         },
+        onInit(self) {
+            
+        },
         onDraw: (self, helper) => {
             const ctx = helper.ctx;
     

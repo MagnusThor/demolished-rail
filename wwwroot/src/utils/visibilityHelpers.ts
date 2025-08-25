@@ -21,8 +21,7 @@ export const isEntityInView = (
     if(!entity.getBoundingBox) {
         console.warn(`Entity ${entity.name} does not have a getBoundingBox method.`);
         return false;
-    }
-       
+    }       
     const box: IBoundingBox = entity.getBoundingBox!(entity);
 
     // Perform the standard AABB intersection test

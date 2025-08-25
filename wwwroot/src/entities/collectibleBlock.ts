@@ -78,6 +78,9 @@ export const collectibleBlock = (tile: any, width: number, height: number): IGam
                 Math.PI * 2
             );
             ctx.fill();
+        },
+        onInit:(self) =>{
+
         }
     };
 };

@@ -287,10 +287,9 @@ export const enemyBlock = (
             return self.props.position.getBoundingBox!();
         },
         onCreated: (self) => {
-            console.log(`Enemy created `, self.props);
+         
         },
         onDestroy: (self) => {
-            console.log(`Enemy destroyed: ${self.props.position.x}, ${self.props.position.y}`);
         },
         onUpdate: (self, timeStamp) => {
             const props = self.props;

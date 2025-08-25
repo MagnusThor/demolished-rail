@@ -22,7 +22,7 @@ export interface IGameEntityProp {
 export interface IGameEntity<P> extends ICompositeEntity<P> {
   collisionDetectors?: ICollisionDetector[];
   onInit?: (self: IGameEntity<P>) => void; // Optional initialization function
-  onUpdate?: (self: IGameEntity<P>, timeStamp: number) => void; // Optional update function
+  onUpdate?: (self: IGameEntity<P>, timeStamp: number) => void // Optional update function
   onDraw?: (self: IGameEntity<P>, helper: CanvasHelper) => void; // Optional draw function
   name: string; // Optional name for the entity
   key: string; // Unique key for the entity

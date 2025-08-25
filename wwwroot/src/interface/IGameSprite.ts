@@ -18,5 +18,5 @@ export interface ISpriteAnimation {
 // MODIFIED: The sprite sheet data now lives here, as a single source of truth
 export interface IGameSpriteProps {
      animations: { [key: string]: ISpriteAnimation }; 
-    currentAnimation: ISpriteAnimation;
+    currentAnimation?: ISpriteAnimation;
 }
