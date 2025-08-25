@@ -22,14 +22,14 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
         onUpdate? = (self: IGameEntity<IPlayerProps>, timeStamp: number) => {
                  playerUpdate(self, timeStamp)
         }
-        onDraw = (self: IGameEntity<IPlayerProps>, helper: CanvasHelper) => {
-             const props = self.props;
-            helper.drawAnimatedSprite(
-                props.currentAnimation!,
-                props.position.x,
-                props.position.y,
-                performance.now()
-        );
+        onDraw = (self: IGameEntity<IPlayerProps>, helper: CanvasHelper) => {            
+             const props = self.props              
+             helper.drawAnimatedSprite(
+                    props.currentAnimation!,
+                    props.position.x,
+                    props.position.y,
+                    performance.now()
+            );
         }
 } 
 

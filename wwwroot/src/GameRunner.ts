@@ -16,7 +16,7 @@ import { Positioned } from "./interface/IPositioned";
 import { GameAssetsManager } from "./utils/GameAssets";
 import { PlayerEntity } from "./entities/player/playerEntity";
 import { playerAnimations } from "./entities/player/animations/playerAnimations";
-import { CURRENT_LEVEL_TILE_MAP, TILE_HEIGHT, TILE_WIDTH } from "./CURRENT_LEVEL_TILE_MAP";
+import { LEVEL_SAMPLE, TILE_HEIGHT, TILE_WIDTH } from "./LEVEL_SAMPLE";
 
 
 
@@ -86,8 +86,8 @@ export class RunWorld {
     }
 
     createWorld(sequence: Sequence): Array<IEntity> {
-        const worldWidth = CURRENT_LEVEL_TILE_MAP[0].length * TILE_WIDTH;
-        const worldHeight = CURRENT_LEVEL_TILE_MAP.length * TILE_HEIGHT;
+        const worldWidth = LEVEL_SAMPLE[0].length * TILE_WIDTH;
+        const worldHeight = LEVEL_SAMPLE.length * TILE_HEIGHT;
 
         console.log(`World dimensions: ${worldWidth}x${worldHeight}`);
 
@@ -109,7 +109,7 @@ export class RunWorld {
             isMovingRight: false,
             lastDirection: "right",
 
-            tileMap: CURRENT_LEVEL_TILE_MAP,
+            tileMap: LEVEL_SAMPLE,
             tileWidth: TILE_WIDTH,
             tileHeight: TILE_HEIGHT,
 
@@ -130,13 +130,13 @@ export class RunWorld {
         const collectibles: IGameEntity<any>[] = [];
 
         // Loop through the tile map to create entities
-        for (let row = 0; row < CURRENT_LEVEL_TILE_MAP.length; row++) {
-            for (let col = 0; col < CURRENT_LEVEL_TILE_MAP[row].length; col++) {
-                const tileType = CURRENT_LEVEL_TILE_MAP[row][col];
+        for (let row = 0; row < LEVEL_SAMPLE.length; row++) {
+            for (let col = 0; col < LEVEL_SAMPLE[row].length; col++) {
+                const tileType = LEVEL_SAMPLE[row][col];
                 const { x, y } = getTileXy(row, col);
                 // Create enemies at position 50
                 if (tileType === 50) {
-                    const enemy = enemyBlock(x, y, CURRENT_LEVEL_TILE_MAP, TILE_WIDTH, TILE_HEIGHT);
+                    const enemy = enemyBlock(x, y, LEVEL_SAMPLE, TILE_WIDTH, TILE_HEIGHT);
 
                     enemy.onCreated!(enemy);
                     enemies.push(enemy);
@@ -160,7 +160,7 @@ export class RunWorld {
         const tiles: ICompositeEntity<ITileProps> = {
             ...tileBlock,
             props: {
-                tileMap: CURRENT_LEVEL_TILE_MAP,
+                tileMap: LEVEL_SAMPLE,
                 tileWidth: TILE_WIDTH,
                 tileHeight: TILE_HEIGHT,
                 platforms: [],

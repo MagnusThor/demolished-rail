@@ -14,12 +14,6 @@ import { Positioned } from "../interface/IPositioned";
 
 const BULLET_SPEED = 10;
 
-/**
- * Creates and returns a new bullet entity.
- * @param startX The starting X position.
- * @param startY The starting Y position.
- * @param direction "left" or "right" to determine the bullet's trajectory.
- */
 export const bulletBlock = (startX: number, startY: number, direction: "left" | "right"): IDynamicEntity<IBulletProps> => {
     return {
         uuid: crypto.randomUUID(), // Generate a unique identifier for the bullet

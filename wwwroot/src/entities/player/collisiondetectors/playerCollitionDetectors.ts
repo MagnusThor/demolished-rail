@@ -5,7 +5,6 @@ import { IGameEntity } from "../../../interface/IGameEntity";
 import { IPlayerProps } from "../../../interface/IPlayerProps";
 import { ITileProps } from "../../../interface/ITileProps";
 import { isSolidTile } from "../../../utils/tileBlockHelpers";
-
  
  export const playerCollisionDetectors =
  [
