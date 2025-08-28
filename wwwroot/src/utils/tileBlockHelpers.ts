@@ -1,16 +1,12 @@
 import { Point2D } from "../../../src";
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { IGameEntity } from "../interface/IGameEntity";
-import { ITileProps } from "../interface/ITileProps";
+import { ILevelProps, ITileProps } from "../interface/ILevelProps";
+import { TILE_TYPES } from "../LEVEL_SAMPLE";
 import { isEntityInView } from "./visibilityHelpers";
 
-/**
- * Helper function to get the coordinates of all tiles of a specific type.
- * @param tileMap The 2D array representing the tile map.
- * @param type The type of tile to filter for.
- * @returns An array of objects with x and y coordinates.
- */
 export const getTilesByType = (tileMap: number[][], type: number): IPoint2D[] => {
+    // This function is fine as it returns grid indices, used for object placement.
     return tileMap.flatMap((row, rowIndex) =>
         row.map((tileType, colIndex) => {
             if (tileType === type) {
@@ -109,12 +105,43 @@ export const isTileCollision = (
  * @param height - The height of a single tile in pixels. Defaults to 32.
  * @returns An `IPoint2D` representing the pixel coordinates of the top-left corner of the tile.
  */
-export const getTileXy = (row: number, col: number, width: number = 32, height: number = 32): IPoint2D => {
-    return new Point2D(col * width, row * height);
-}
+export const getTileXy = (tileMap: number[][], row: number, col: number): IPoint2D => {
+    let x = 0;
+    let y = 0;
 
+    // Calculate the Y coordinate by summing the heights of all rows above the current one.
+    // The height of each row is determined by the maximum height of any tile in that row.
+    for (let i = 0; i < row; i++) {
+        let maxRowHeight = 0;
+        const currentRow = tileMap[i];
+        if (currentRow) {
+            for (const tileId of currentRow) {
+                const props = TILE_TYPES[tileId as keyof typeof TILE_TYPES];
+                if (props && props.height > maxRowHeight) {
+                    maxRowHeight = props.height;
+                }
+            }
+        }
+        y += maxRowHeight;
+    }
 
-export const determineVisibleTiles = (props: ITileProps, tile: IPoint2D,
+    // Calculate the X coordinate by summing the widths of all tiles to the left in the current row.
+    const currentRow = tileMap[row];
+    if (currentRow) {
+        for (let j = 0; j < col; j++) {
+            const tileId = currentRow[j];
+            const props = TILE_TYPES[tileId as keyof typeof TILE_TYPES];
+            if (props) {
+                x += props.width;
+            }
+        }
+    }
+
+    return { x, y };
+};
+
+/*
+export const determineVisibleTiles = (props: ILevelProps, tile: IPoint2D,
     viewport: { x: number; y: number },
     screenWidth: number,
     screenHeight: number
@@ -136,3 +163,130 @@ export const determineVisibleTiles = (props: ITileProps, tile: IPoint2D,
         0 // No additional buffer needed here
     );
 };
+
+*/
+  
+export const determineVisibleTiles = (
+    props: ILevelProps,
+    tile: IIndexedTile, // This should be the absolute world coordinates
+    viewport: { x: number; y: number },
+    screenWidth: number,
+    screenHeight: number
+): boolean => {
+    // We can now directly use the provided tile's x and y
+    const tileX = tile.x;
+    const tileY = tile.y;
+
+    // We still need to get the tile's dimensions from its type
+    const tileProperties = getTileProperties(tile.type); // Assuming 'tile' object now has a 'type' property
+
+    if (!tileProperties) {
+        return false;
+    }
+
+    return isEntityInView(
+        {
+            getBoundingBox: () => ({
+                x: tileX,
+                y: tileY,
+                width: tileProperties.width,
+                height: tileProperties.height,
+            }),
+        } as unknown as IGameEntity<any>,
+        viewport,
+        screenWidth,
+        screenHeight,
+        0
+    );
+};
+
+
+
+export const getTileProperties = (tileId: keyof typeof TILE_TYPES | number):ITileProps |  null=> {
+    if (TILE_TYPES.hasOwnProperty(tileId)) {
+        return TILE_TYPES[tileId as keyof typeof TILE_TYPES];
+    }
+ 
+    return null; 
+}
+
+
+
+
+export const calculateWorldDimensions = (tileMap: number[][]): { width: number; height: number } => {
+    let maxWidth = 0;
+    let totalHeight = 0;
+
+    // Calculate max width of the widest row
+    for (const row of tileMap) {
+        let rowWidth = 0;
+        for (const tileId of row) {
+            const props = getTileProperties(tileId as keyof typeof TILE_TYPES);
+            if (props) {
+                rowWidth += props.width;
+            }
+        }
+        if (rowWidth > maxWidth) {
+            maxWidth = rowWidth;
+        }
+    }
+
+    // Calculate total height
+    // This assumes each row has the same height based on its tallest tile.
+    // A more complex approach might be needed for different heights per column.
+    // Here we'll just sum the maximum height of any tile in each row.
+    for (const row of tileMap) {
+        let maxHeightInRow = 0;
+        for (const tileId of row) {
+            const props = getTileProperties(tileId as keyof typeof TILE_TYPES);
+            if (props && props.height > maxHeightInRow) {
+                maxHeightInRow = props.height;
+            }
+        }
+        totalHeight += maxHeightInRow;
+    }
+
+    return { width: maxWidth, height: totalHeight };
+};
+
+
+export interface IIndexedTile extends IPoint2D {
+    col: number; // Grid column index
+    row: number; // Grid row index
+    type: number; // Tile type ID
+}
+
+
+export const calculateTileCoordinates = (tileMap: number[][]): IIndexedTile[] => {
+    const indexedTiles: IIndexedTile[] = [];
+    let currentY = 0;
+
+    tileMap.forEach((row, rowIndex) => {
+        let currentX = 0;
+        let maxRowHeight = 0;
+
+        row.forEach((tileId, colIndex) => {
+            const tileProperties = getTileProperties(tileId);
+
+            if (tileProperties) {
+                if (tileProperties.height > maxRowHeight) {
+                    maxRowHeight = tileProperties.height;
+                }
+
+                indexedTiles.push({
+                    x: currentX,
+                    y: currentY,
+                    col: colIndex,
+                    row: rowIndex,
+                    type: tileId,
+                });
+
+                currentX += tileProperties.width;
+            }
+        });
+        currentY += maxRowHeight;
+    });
+
+    return indexedTiles;
+};
+

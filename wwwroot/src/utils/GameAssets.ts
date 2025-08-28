@@ -1,33 +1,9 @@
 
-/**
- * Represents a game asset with its associated image source and unique key.
- *
- * @property src - The HTMLImageElement representing the visual asset.
- * @property key - A unique string identifier for the asset.
- */
-export interface IGameAsset {
-    src: HTMLImageElement;
-    key: string;
-}
-
-/**
- * Represents a sprite sheet asset used in the game.
- * Extends the base `IGameAsset` interface with properties specific to sprite sheets.
- *
- * @property frameWidth - The width of each individual frame in the sprite sheet, in pixels.
- * @property frameHeight - The height of each individual frame in the sprite sheet, in pixels.
- * @property columns - The number of columns in the sprite sheet grid.
- * @property rows - The number of rows in the sprite sheet grid.
- * @property frameCount - The total number of frames in the sprite sheet.
- */
-export interface ISpriteSheetAsset extends IGameAsset {
-    frameWidth: number;
-    frameHeight: number;
-    columns: number;
-    rows: number;
-    frameCount: number;
-}
-
+import { gameAssets } from "../gameState";
+import { IGameAsset } from "../interface/IGameAsset";
+import { ITexture } from "../interface/ITexture";
+import { ISpriteSheetAsset } from "./ISpriteSheetAsset";
+import { createTexture } from "./TextureManager";
 
 /**
  * Manages loading, storing, and retrieving game assets such as images and sprite sheets.
@@ -52,7 +28,6 @@ export interface ISpriteSheetAsset extends IGameAsset {
 export class GameAssetsManager {
 
     public assets = new Map<string, IGameAsset>();
-
 
     /**
      * Retrieves a game asset by its key.
@@ -103,6 +78,33 @@ export class GameAssetsManager {
         return Promise.all(imagePromises);
     }
 
+
+    createTexture(
+        assetKey: string,
+        srcX: number,
+        srcY: number,
+        srcWidth: number,
+        srcHeight: number,
+    ): ITexture | undefined {
+        const asset = this.getAsset(assetKey);
+
+        if (!asset) {
+            console.error(`Asset with key "${assetKey}" not found.`);
+            return undefined;
+        }
+
+        const textureKey = `${assetKey}_${srcX}_${srcY}_${srcWidth}_${srcHeight}`;
+
+        return {
+            texture: asset,
+            key: textureKey,
+            x: srcX,
+            y: srcY,
+            width: srcWidth,
+            height: srcHeight,
+        };
+    }
+
     public getSpriteSheet(
         key: string,
         frameWidth: number,
@@ -131,7 +133,7 @@ export class GameAssetsManager {
 
         this.assets.set(key, spriteSheetAsset);
 
-   
+
         return spriteSheetAsset;
     }
 }

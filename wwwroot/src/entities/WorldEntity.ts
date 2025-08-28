@@ -19,6 +19,7 @@ export interface IWorldProps {
     blocks: IGameEntity<any>[];
 }
 
+
 /**
  * WorldEntity represents a scrollable world with a viewport.
  * It manages all game entities and controls the camera.
@@ -53,12 +54,12 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
 
         gameState.worldWidth = props.worldWidth;
         gameState.worldHeight = props.worldHeight;
-        
+
         // Rounding viewport dimensions is a good practice to prevent floating point issues.
         this.props.viewportWidth = Math.round(this.props.viewportWidth);
         this.props.viewportHeight = Math.round(this.props.viewportHeight);
     }
-    
+
     /**
      * Set the entity for the camera to follow.
      * @param target The entity to follow.
@@ -96,13 +97,13 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         // Update the viewport to smoothly follow the target.
         if (this.followTarget) {
             const targetProps = this.followTarget.props as IPlayerProps;
-            
+
             // Calculate the desired viewport position to center the target.
             const targetCenterX = targetProps.position.x + targetProps.position.width / 2;
             const targetCenterY = targetProps.position.y + targetProps.position.height / 2;
             const desiredViewportX = targetCenterX - this.props.viewportWidth / 2;
             const desiredViewportY = targetCenterY - this.props.viewportHeight / 2;
-            
+
             // Clamp the desired position to the world boundaries. This logic remains the same.
             const clampedX = Math.max(0, Math.min(desiredViewportX, this.props.worldWidth - this.props.viewportWidth));
             const clampedY = Math.max(0, Math.min(desiredViewportY, this.props.worldHeight - this.props.viewportHeight));
@@ -143,7 +144,6 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         return this;
     }
 
-    // CHANGE: The main renderer is now much simpler and more performant.
     private worldEntityRenderer = (
         ts: number,
         ctx: CanvasRenderingContext2D
@@ -181,7 +181,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         ctx.strokeStyle = 'red';
         ctx.lineWidth = 2;
         ctx.strokeRect(0, 0, this.props.viewportWidth, this.props.viewportHeight);
-        
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(10, 10, 280, 150);
 
@@ -195,7 +195,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         y += line;
         ctx.fillText(`Dynamic Entities: ${gameState.dynamicEntities.length}`, x, y);
         y += line;
-        
+
         if (this.followTarget) {
             const p = this.followTarget.props.position;
             ctx.fillText(`Player Pos: (${p.x.toFixed(0)}, ${p.y.toFixed(0)})`, x, y);
@@ -208,7 +208,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
             ctx.fillText(`Viewport Clamped: X=${isClampedX}, Y=${isClampedY}`, x, y);
             y += line;
         }
-        
+
         ctx.fillText(`Viewport Size: ${this.props.viewportWidth} x ${this.props.viewportHeight}`, x, y);
         y += line;
         ctx.fillText(`Canvas Size: ${this.canvas.width} x ${this.canvas.height}`, x, y);

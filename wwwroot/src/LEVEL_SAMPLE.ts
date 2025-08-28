@@ -2,6 +2,58 @@
 export const TILE_WIDTH = 32;
 export const TILE_HEIGHT = 32;
 
+export const TILE_TYPES = {
+    // Empty space, no collision
+    0: {
+        width: 32,
+        height: 32
+    }
+    ,
+    // Solid wall or block, collidable
+    1: {
+        width: 32,
+        height: 32,
+        texture: "solid"
+    }
+    ,
+    // Water tile
+    2: {
+        width: 32,
+        height: 32,
+        texture: "solid"
+    },
+    // Enemy tile
+    3: {
+        width: 32,
+        height: 32,
+        texture: "solid"
+    },
+    // Crate tile, can be destroyed
+    4: {
+        width: 32,
+        height: 32,
+        texture: "solid"
+    },
+    // Collectible item or coin
+    50: {
+        width: 32,
+        height: 32,
+        texture: "solid"
+    },
+    // Player spawn point
+    99: {
+        width:32,
+        height: 32,
+        texture: "solid"
+    },
+    128:{
+        width:112,
+        height:224,
+        texture: "salt"
+    }
+};
+
+
 
 export const LEVEL_SAMPLE = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -22,6 +74,6 @@ export const LEVEL_SAMPLE = [
     [1, 0, 0, 0, 4, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 4, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 50, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 4, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 3, 4, 4, 4,4, 2, 0, 0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 3, 4, 4, 4, 4, 2, 0, 0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-];
+];  

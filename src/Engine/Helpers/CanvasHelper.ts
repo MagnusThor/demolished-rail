@@ -1,5 +1,5 @@
-import { ISpriteAnimation } from "../../../wwwroot/src/interface/IGameSprite";
-import { ISpriteSheetAsset } from "../../../wwwroot/src/utils/GameAssets";
+import { ISpriteAnimation } from "../../../wwwroot/src/interface/ISpriteAnimation";
+import { ISpriteSheetAsset } from "../../../wwwroot/src/utils/ISpriteSheetAsset";
 
 export class CanvasHelper {
     constructor(public ctx: CanvasRenderingContext2D) {

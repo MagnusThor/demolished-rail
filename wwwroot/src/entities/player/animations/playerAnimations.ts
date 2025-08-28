@@ -1,5 +1,5 @@
 import { gameAssets } from "../../../gameState";
-import { ISpriteAnimation } from "../../../interface/IGameSprite";
+import { ISpriteAnimation } from "../../../interface/ISpriteAnimation";
 
 export const playerAnimations = (): { [key: string]: ISpriteAnimation; } => {
     const animations: { [key: string]: ISpriteAnimation; } = {

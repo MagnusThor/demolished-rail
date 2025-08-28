@@ -2,7 +2,7 @@ import { InputHelper } from "../../../src";
 import { IHealthProps } from "./IHealthProps";
 import { IGameEntityProp } from "../interface/IGameEntity";
 import { IPositioned } from "./IPositioned";
-import { IGameSpriteProps } from "./IGameSprite";
+import { IGameSpriteProps } from "./IGameSpriteProps";
 
 
 

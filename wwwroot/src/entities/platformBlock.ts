@@ -7,10 +7,10 @@ import { ICollisionResult } from "../interface/ICollisionResult";
 import { IPlatformProps } from "../interface/IPlatformProps";
 import { IPlayerProps } from "../interface/IPlayerProps";
 import { Positioned } from "../interface/IPositioned";
-import { ITileProps } from "../interface/ITileProps";
+import { ILevelProps } from "../interface/ILevelProps";
 import { findClosestSolidTile } from "../utils/tileBlockHelpers";
 
-export const platformBlock = (tile: any, props: ITileProps): IGameEntity<IPlatformProps> => {
+export const platformBlock = (tile: any, props: ILevelProps): IGameEntity<IPlatformProps> => {
     const closestTopTile = findClosestSolidTile(props.tileMap, tile.x, tile.y, "up");
     const closestBottomTile = findClosestSolidTile(props.tileMap, tile.x, tile.y, "down");
     const minY = closestTopTile ? closestTopTile.y * props.tileHeight + props.tileHeight : tile.y * props.tileHeight;

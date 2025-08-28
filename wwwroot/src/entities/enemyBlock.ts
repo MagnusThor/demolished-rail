@@ -11,53 +11,26 @@ import { IBoundingBox } from "../interface/IBoundingBox";
 import { IPlayerProps } from "../interface/IPlayerProps";
 import { Positioned } from "../interface/IPositioned";
 import { IHealthProps } from "../interface/IHealthProps";
-import { ITileProps } from "../interface/ITileProps";
-import { isSolidTile } from "../utils/tileBlockHelpers";
+import { ILevelProps } from "../interface/ILevelProps";
+import { isSolidTile, getTileProperties, IIndexedTile } from "../utils/tileBlockHelpers";
+import { TILE_TYPES } from "../LEVEL_SAMPLE";
+import { IEnemyBehavior, IEnemyProps } from "../interface/IEnemyProps";
 
 const ENEMY_SPEED = 2;
 
-/**
- * Interface for enemy behavior, to be implemented for different enemy types.
- * Each behavior can have its own update and draw logic.
- */
-export interface IEnemyBehavior {
-    name: string;
-    onUpdate?: (enemy: IDynamicEntity<IEnemyProps>) => void;
-}
-
-/**
- * Interface for the properties of an enemy entity.
- * It extends IDynamicProps and now includes an optional behavior array.
- */
-export interface IEnemyProps {
-    position: Positioned;
-    health: IHealthProps;
-    isAlive: boolean;
-    lifeTime: number;
-    velX: number; // Added for movement
-    velY: number; // Added for movement
-    gravity: number; // Added gravity
-    isGrounded: boolean; // Indicates if the enemy is on a solid surface
-    tileMap: number[][]; // A reference to the tile map for collisions
-    tileWidth: number; // The width of a tile
-    tileHeight: number; // The height of a tile
-    behavior?: IEnemyBehavior[];
-    direction: number; // Added to control patrol direction
-}
+// The rest of the code is unchanged up to PatrollingBehavior
+// ...
 
 /**
  * Patrolling behavior: moves the enemy back and forth.
- * The logic to check for a wall and reverse direction is now fully self-contained here.
+ * This behavior must now receive a reference to the indexedTiles for accurate collision checks.
  */
-const PatrollingBehavior = (): IEnemyBehavior => {
+const PatrollingBehavior = (indexedTiles: IIndexedTile[]): IEnemyBehavior => {
     return {
         name: "patrolling",
         onUpdate: (enemy) => {
             const props = enemy.props;
-            const tileMap = props.tileMap;
-            const tileWidth = props.tileWidth;
-            const tileHeight = props.tileHeight;
-
+            
             // Create a temporary bounding box for the next frame's position
             const nextBbox: IBoundingBox = {
                 x: props.position.x + (props.direction * ENEMY_SPEED),
@@ -67,41 +40,29 @@ const PatrollingBehavior = (): IEnemyBehavior => {
             };
 
             // Check for collision with tiles in the simulated next position
-            const startCol = Math.floor(nextBbox.x / tileWidth);
-            const endCol = Math.ceil((nextBbox.x + nextBbox.width) / tileWidth);
-            const startRow = Math.floor(nextBbox.y / tileHeight);
-            const endRow = Math.ceil((nextBbox.y + nextBbox.height) / tileHeight);
-
             let willCollide = false;
-            for (let y = startRow; y < endRow; y++) {
-                for (let x = startCol; x < endCol; x++) {
-                    if (y >= 0 && y < tileMap.length && x >= 0 && x < tileMap[0].length) {
-                        const tileType = tileMap[y][x];
-                        if (isSolidTile(tileType)) {
-                            const tileBbox = {
-                                x: x * tileWidth,
-                                y: y * tileHeight,
-                                width: tileWidth,
-                                height: tileHeight
-                            };
-                            if (CollisionHelper.AABBColliding(nextBbox, tileBbox)) {
-                                willCollide = true;
-                                break; // Exit inner loop
-                            }
+            for (const tile of indexedTiles) {
+                if (isSolidTile(tile.type)) {
+                    const tileProperties = getTileProperties(tile.type as keyof typeof TILE_TYPES);
+                    if (tileProperties) {
+                        const tileBbox: IBoundingBox = {
+                            x: tile.x,
+                            y: tile.y,
+                            width: tileProperties.width,
+                            height: tileProperties.height
+                        };
+                        if (CollisionHelper.AABBColliding(nextBbox, tileBbox)) {
+                            willCollide = true;
+                            break; 
                         }
                     }
                 }
-                if (willCollide) {
-                    break; // Exit outer loop
-                }
             }
             
-            // If a collision is detected in the next frame, reverse the direction.
             if (willCollide) {
                 props.direction *= -1;
             }
             
-            // Set the horizontal velocity based on the current direction.
             props.velX = props.direction * ENEMY_SPEED;
         },
     };
@@ -109,53 +70,46 @@ const PatrollingBehavior = (): IEnemyBehavior => {
 
 /**
  * Creates and returns a new enemy entity.
- * @param startX The starting X position.
- * @param startY The starting Y position.
- * @param tileMap The 2D array representing the tile map for collisions.
- * @param tileWidth The width of a single tile.
- * @param tileHeight The height of a single tile.
+ * It now accepts the pre-calculated world coordinates and the indexed tile list.
  */
 export const enemyBlock = (
     startX: number,
     startY: number,
-    tileMap: number[][],
-    tileWidth: number,
-    tileHeight: number
+    indexedTiles: IIndexedTile[]
 ): IDynamicEntity<IEnemyProps> => {
 
     let assignedBehavior: IEnemyBehavior[] = [];
-    
-    // The logic to decide enemy behavior goes here.
-    assignedBehavior.push(PatrollingBehavior()); // Add patrolling behavior
+    assignedBehavior.push(PatrollingBehavior(indexedTiles));
 
     return {
-        uuid: crypto.randomUUID(), // Unique identifier for the entity
+        uuid: crypto.randomUUID(),
         key: 'enemyBlock',
         name: 'enemyBlock',
         props: {
+            // The position is now set directly with world coordinates
             position: new Positioned(startX, startY, 32, 32),
             isAlive: true,
-            lifeTime: -1, // -1 means infinite lifetime for this entity
+            lifeTime: -1,
             health: {
                 health: 100,
                 damage: 10
             },
             velX: 0,
             velY: 0,
-            gravity: 0.35, // Added gravity
+            gravity: 0.35,
             isGrounded: false,
-            tileMap: tileMap,
-            tileWidth: tileWidth,
-            tileHeight: tileHeight,
+            // These properties are no longer used for collision logic but might be needed elsewhere.
+            tileMap: [], 
+            tileWidth: 0,
+            tileHeight: 0,
             behavior: assignedBehavior,
-            direction: 1, // Start moving right
+            direction: 1,
         },
         collisionDetectors: [
             {
                 targetName: "bulletBlock",
                 detectorFn: (enemyProps: IEnemyProps, bullet: IGameEntity<IBulletProps>) => {
                     const collisionResults = new Array<ICollisionResult>();
-                    
                     if (CollisionHelper.AABBColliding(enemyProps.position.getBoundingBox!(), bullet.getBoundingBox!(bullet))) {
                         collisionResults.push({
                             x: bullet.props.position.x,
@@ -180,7 +134,6 @@ export const enemyBlock = (
                 targetName: "playerBlock",
                 detectorFn: (enemyProps: IEnemyProps, player: IGameEntity<IPlayerProps>) => {
                     const collisionResults = new Array<ICollisionResult>();
-                    
                     if (CollisionHelper.AABBColliding(enemyProps.position.getBoundingBox!(), player.getBoundingBox!(player))) {
                         collisionResults.push({
                             x: player.props.position.x,
@@ -198,32 +151,24 @@ export const enemyBlock = (
                     player.props.health.health -= selfProps.health.damage;
                 }
             },
-            // Collision detector for solid tiles
             {
                 targetName: "tileBlock",
-                detectorFn: (enemyProps: IEnemyProps, tileEntity: IGameEntity<ITileProps>) => {
+                detectorFn: (enemyProps: IEnemyProps, tileEntity: IGameEntity<ILevelProps>) => {
                     const collisionResults = new Array<ICollisionResult>();
-                    const tileMap = tileEntity.props.tileMap;
-                    const tileWidth = tileEntity.props.tileWidth;
-                    const tileHeight = tileEntity.props.tileHeight;
-
-                    // Check for collision with tiles in the enemy's vicinity
                     const enemyBbox = enemyProps.position.getBoundingBox!();
-                    const startCol = Math.floor(enemyBbox.x / tileWidth);
-                    const endCol = Math.ceil((enemyBbox.x + enemyBbox.width) / tileWidth);
-                    const startRow = Math.floor(enemyBbox.y / tileHeight);
-                    const endRow = Math.ceil((enemyBbox.y + enemyBbox.height) / tileHeight);
 
-                    for (let y = startRow; y < endRow; y++) {
-                        for (let x = startCol; x < endCol; x++) {
-                            if (y >= 0 && y < tileMap.length && x >= 0 && x < tileMap[0].length) {
-                                const tileType = tileMap[y][x];
-                                if (isSolidTile(tileType)) {
+                    // This is the correct way to check for tile collisions using indexed tiles.
+                    const indexedTiles = tileEntity.props.indexedTiles;
+                    if (indexedTiles) {
+                        for (const tile of indexedTiles) {
+                            if (isSolidTile(tile.type)) {
+                                const tileProperties = getTileProperties(tile.type as keyof typeof TILE_TYPES);
+                                if (tileProperties) {
                                     const tileBbox = {
-                                        x: x * tileWidth,
-                                        y: y * tileHeight,
-                                        width: tileWidth,
-                                        height: tileHeight
+                                        x: tile.x,
+                                        y: tile.y,
+                                        width: tileProperties.width,
+                                        height: tileProperties.height
                                     };
                                     if (CollisionHelper.AABBColliding(enemyBbox, tileBbox)) {
                                         collisionResults.push({
@@ -231,7 +176,7 @@ export const enemyBlock = (
                                             y: tileBbox.y,
                                             width: tileBbox.width,
                                             height: tileBbox.height,
-                                            axis: CollisionAxis.Y, // We handle collision resolution based on axis
+                                            axis: CollisionAxis.Y,
                                             targetEntity: tileEntity
                                         });
                                     }
@@ -242,14 +187,12 @@ export const enemyBlock = (
                     return collisionResults;
                 },
                 onCollision: (selfProps: IEnemyProps, collisionData: ICollisionResult) => {
-                    // This function is now responsible for setting the new velocity and position after collision
                     const tileBbox: IBoundingBox = {
                         x: collisionData.x,
                         y: collisionData.y,
                         width: collisionData.width,
                         height: collisionData.height
                     };
-                    
                     const dx = (selfProps.position.x + selfProps.position.width / 2) - (tileBbox.x + tileBbox.width / 2);
                     const dy = (selfProps.position.y + selfProps.position.height / 2) - (tileBbox.y + tileBbox.height / 2);
                     const width = (selfProps.position.width + tileBbox.width) / 2;
@@ -259,21 +202,17 @@ export const enemyBlock = (
 
                     if (crossWidth > crossHeight) {
                         if (crossWidth > -crossHeight) {
-                            // Bottom collision
                             selfProps.position.y = tileBbox.y + tileBbox.height;
                             selfProps.velY = 0;
                         } else {
-                            // Left collision: We only handle clipping here. Direction change is in onUpdate.
                             selfProps.position.x = tileBbox.x - selfProps.position.width;
                             selfProps.velX = 0;
                         }
                     } else {
                         if (crossWidth > -crossHeight) {
-                            // Right collision: We only handle clipping here. Direction change is in onUpdate.
                             selfProps.position.x = tileBbox.x + tileBbox.width;
                             selfProps.velX = 0;
                         } else {
-                            // Top collision (landing on a platform)
                             selfProps.position.y = tileBbox.y - selfProps.position.height;
                             selfProps.velY = 0;
                             selfProps.isGrounded = true;
@@ -286,31 +225,22 @@ export const enemyBlock = (
         getBoundingBox: (self): IBoundingBox => {
             return self.props.position.getBoundingBox!();
         },
-        onCreated: (self) => {
-         
-        },
-        onDestroy: (self) => {
-        },
+        onCreated: (self) => { },
+        onDestroy: (self) => { },
         onUpdate: (self, timeStamp) => {
             const props = self.props;
             
-            // Execute the current behavior's update logic
-            // This is where the behavior will set the velocity for the frame
             if (props.behavior && props.behavior.length > 0) {
                 props.behavior[0].onUpdate!(self);
             }
             
-            // Apply gravity
             props.velY += props.gravity;
-
-            // Apply velocity to position
             props.position.x += props.velX;
             props.position.y += props.velY;
-            
-            // Clear ground state
             props.isGrounded = false;
         },
         processCollisions: (self: IDynamicEntity<IEnemyProps>, entities) => {
+            // This method is fine as it is. It correctly processes collisions with other entities.
             const selfProps = self.props;
             for (const detector of self.collisionDetectors!) {
                 for (const entity of entities) {
@@ -336,7 +266,6 @@ export const enemyBlock = (
             }
             const props = self.props;
             const ctx = helper.ctx;
-    
             
             ctx.fillStyle = "#DC3545";
             ctx.fillRect(
@@ -346,12 +275,11 @@ export const enemyBlock = (
                 props.position.height,
             );
 
-            // Draw health bar
             const healthBarHeight = 8;
             const healthBarWidth = props.position.width * (props.health.health / 100);
             ctx.fillStyle = "rgba(6, 78, 23, 1)";
             ctx.fillRect(
-                props.position.x ,
+                props.position.x,
                 props.position.y - healthBarHeight - 2,
                 healthBarWidth,
                 healthBarHeight,

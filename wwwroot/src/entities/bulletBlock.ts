@@ -8,7 +8,7 @@ import { IGameEntity } from "../interface/IGameEntity";
 import { CollisionAxis } from "../enums/CollisionAxis";
 import { ICollisionResult } from "../interface/ICollisionResult";
 import { IDynamicEntity } from "../interface/IDynamicEntity";
-import { ITileProps } from "../interface/ITileProps";
+import { ILevelProps } from "../interface/ILevelProps";
 import { isSolidTile } from "../utils/tileBlockHelpers";
 import { Positioned } from "../interface/IPositioned";
 
@@ -37,7 +37,7 @@ export const bulletBlock = (startX: number, startY: number, direction: "left" | 
         collisionDetectors: [
             {
                 targetName: "tileBlock",
-                detectorFn: (bulletProps: IBulletProps, tileEntity: IGameEntity<ITileProps>) => {
+                detectorFn: (bulletProps: IBulletProps, tileEntity: IGameEntity<ILevelProps>) => {
                 
                     const tileProps = tileEntity.props;
                     const collisionResults = new Array<ICollisionResult>();

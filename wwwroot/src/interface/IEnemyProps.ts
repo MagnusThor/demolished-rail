@@ -13,9 +13,18 @@ export interface IEnemyBehavior {
     onDraw?: (enemy: IDynamicEntity<IEnemyProps>, helper: CanvasHelper) => void;
 }
 
-export interface IEnemyProps extends IDynamicProps {
-    position: IPositioned; // The position of the enemy in the game world
-    health: IHealthProps
-    behavior?: IEnemyBehavior[]
+export interface IEnemyProps {
+    position: IPositioned;
+    health: IHealthProps;
+    isAlive: boolean;
+    lifeTime: number;
+    velX: number; // Added for movement
+    velY: number; // Added for movement
+    gravity: number; // Added gravity
+    isGrounded: boolean; // Indicates if the enemy is on a solid surface
+    tileMap: number[][]; // A reference to the tile map for collisions
+    tileWidth: number; // The width of a tile
+    tileHeight: number; // The height of a tile
+    behavior?: IEnemyBehavior[];
+    direction: number; // Added to control patrol direction
 }
-

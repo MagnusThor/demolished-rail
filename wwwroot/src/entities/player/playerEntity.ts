@@ -13,7 +13,7 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
             super("playerBlock", props);
             this.collisionDetectors =playerCollisionDetectors;
             this.props.currentAnimation = this.props.animations["idle"];        }
-        getBoundingBox= (self:IGameEntity<IPlayerProps>): IBoundingBox => {  
+        getBoundingBox = (self:IGameEntity<IPlayerProps>): IBoundingBox => {  
             return self.props.position.getBoundingBox!();
         }
         onInit = (self: IGameEntity<IPlayerProps>) => {

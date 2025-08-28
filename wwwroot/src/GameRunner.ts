@@ -1,15 +1,15 @@
 // RunWorld.ts
 import { Sequence, InputHelper, DefaultAudioLoader, SceneBuilder, IEntity, ICompositeEntity } from "../../src";
 
-import { tileBlock } from "./entities/tileBlock";
 import { WorldEntity } from "./entities/WorldEntity";
+import { BackgroundEntity } from './entities/BackgroundEntity';
 import { gameAssets, gameState } from "./gameState";
 import { IGameEntity } from "./interface/IGameEntity";
-import { ITileProps } from "./interface/ITileProps";
+import { ILevelProps } from "./interface/ILevelProps";
 import { enemyBlock } from "./entities/enemyBlock";
 
 import { collectibleBlock } from "./entities/collectibleBlock";
-import { getTileXy } from "./utils/tileBlockHelpers";
+import { calculateTileCoordinates, calculateWorldDimensions, getTileProperties, getTileXy } from "./utils/tileBlockHelpers";
 import { IDynamicEntity } from "./interface/IDynamicEntity";
 import { IPlayerProps } from "./interface/IPlayerProps";
 import { Positioned } from "./interface/IPositioned";
@@ -17,10 +17,11 @@ import { GameAssetsManager } from "./utils/GameAssets";
 import { PlayerEntity } from "./entities/player/playerEntity";
 import { playerAnimations } from "./entities/player/animations/playerAnimations";
 import { LEVEL_SAMPLE, TILE_HEIGHT, TILE_WIDTH } from "./LEVEL_SAMPLE";
+import { TileEntity } from "./entities/tiles/tileEntity";
 
 
 
-    
+
 export class RunWorld {
     screenCanvas: HTMLCanvasElement;
     sequence!: Sequence;
@@ -72,30 +73,37 @@ export class RunWorld {
         const instance = new Sequence(this.screenCanvas, this.bmp, 4, 4, new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
         const sequence = await instance.initialize();
 
-        // set the gameState viewport to match the screen canvas size
+        // Set the gameState viewport to match the screen canvas size
         gameState.viewport.viewportWidth = this.screenCanvas.width;
         gameState.viewport.viewportHeight = this.screenCanvas.height;
 
-
         const sb = new SceneBuilder(sequence.audioBuffer.duration * 1000);
         sb.durationUntilEndInMs("scene0");
+
+        const gameBackground = new BackgroundEntity("background", {}, this.screenCanvas.width, this.screenCanvas.height);
+        (sb.getScenes())[0]!.addEntity(gameBackground);
         (sb.getScenes())[0]!.addEntities(...this.createWorld(sequence));
+
         sequence.addScenes(...sb.getScenes());
+
         this.sequence = sequence;
         return sequence;
     }
 
     createWorld(sequence: Sequence): Array<IEntity> {
+        /*
         const worldWidth = LEVEL_SAMPLE[0].length * TILE_WIDTH;
         const worldHeight = LEVEL_SAMPLE.length * TILE_HEIGHT;
+        */
+
+        const { width: worldWidth, height: worldHeight } = calculateWorldDimensions(LEVEL_SAMPLE);
 
         console.log(`World dimensions: ${worldWidth}x${worldHeight}`);
 
-        // Find initial player and enemy positions from the tile map
+        const indexedTiles = calculateTileCoordinates(LEVEL_SAMPLE);
 
-        // find the start tile 99
 
-   
+
         let player = new PlayerEntity({
             position: new Positioned(32, 32, 32, 32),
 
@@ -120,53 +128,63 @@ export class RunWorld {
                 health: 100,
                 damage: 0
             },
-            animations:  playerAnimations(),          
+            animations: playerAnimations(),
         })
 
         gameState.player = player;
-        gameState.input =  new InputHelper(this.screenCanvas);
+        gameState.input = new InputHelper(this.screenCanvas);
 
         const enemies: IDynamicEntity<any>[] = [];
         const collectibles: IGameEntity<any>[] = [];
 
-        // Loop through the tile map to create entities
-        for (let row = 0; row < LEVEL_SAMPLE.length; row++) {
-            for (let col = 0; col < LEVEL_SAMPLE[row].length; col++) {
-                const tileType = LEVEL_SAMPLE[row][col];
-                const { x, y } = getTileXy(row, col);
-                // Create enemies at position 50
-                if (tileType === 50) {
-                    const enemy = enemyBlock(x, y, LEVEL_SAMPLE, TILE_WIDTH, TILE_HEIGHT);
+       
+         // Loop through the tile map to create entities
+    let currentY = 0;
+    for (let row = 0; row < LEVEL_SAMPLE.length; row++) {
+        let currentX = 0;
+        let maxRowHeight = 0;
+        for (let col = 0; col < LEVEL_SAMPLE[row].length; col++) {
+            const tileType = LEVEL_SAMPLE[row][col];
+            const tileProps = getTileProperties(tileType);
+            
+            if (tileProps) {
+                // Determine the maximum height of the current row for the next row's starting Y.
+                if (tileProps.height > maxRowHeight) {
+                    maxRowHeight = tileProps.height;
+                }
 
+                // Correctly place entities based on the current tile's absolute position.
+                if (tileType === 50) { // Enemy
+                    const enemy = enemyBlock(currentX, currentY,indexedTiles);
                     enemy.onCreated!(enemy);
                     enemies.push(enemy);
+                } else if (tileType === 99) { // Player
+                    player.props.position = new Positioned(currentX, currentY, tileProps.width, tileProps.height);
+                } else if (tileType === 4) { // Collectible
+                    collectibles.push(collectibleBlock(col,row));
                 }
-                // Create a player at position 99
-                if (tileType === 99) {
-                      player.props.position =  new Positioned(x,y,TILE_WIDTH,TILE_HEIGHT); 
-                      // just locate the start possition in the level. 
 
-
-                  
-
-                }
-                if (tileType === 4) {
-                    collectibles.push(collectibleBlock({ x: col, y: row }, TILE_WIDTH, TILE_HEIGHT));
-                }
+                // Increment the X position for the next tile in the row.
+                currentX += tileProps.width;
             }
         }
+        // Increment the Y position for the next row based on the tallest tile in the current row.
+        currentY += maxRowHeight;
+    }
 
-        // Create the tile entity instance, passing the tile map to its props.
-        const tiles: ICompositeEntity<ITileProps> = {
-            ...tileBlock,
-            props: {
+
+     
+
+        const level = new TileEntity({
                 tileMap: LEVEL_SAMPLE,
                 tileWidth: TILE_WIDTH,
                 tileHeight: TILE_HEIGHT,
                 platforms: [],
-                collectibles: collectibles // Pass the collectibles array to the tile block
-            }
-        };
+                collectibles: collectibles, // Pass the collectibles array to the tile block
+                textures: [],
+                indexedTiles:indexedTiles,
+                isInitialized:false
+            })
 
         const world = new WorldEntity("our-world", {
             worldHeight: worldHeight,
@@ -180,7 +198,8 @@ export class RunWorld {
         }, this.screenCanvas.width, this.screenCanvas.height);
 
         // Add the tile, player, and enemy entities to the world.
-        world.addBlock(tiles as IGameEntity<any>);
+
+        world.addBlock(level as IGameEntity<any>);
         if (player) {
             world.addBlock(player as IGameEntity<IPlayerProps>);
             world.follow(player as IGameEntity<IPlayerProps>);
@@ -203,6 +222,8 @@ export class RunWorld {
             world.updateBlocks(ts);
         });
 
+
+
         return [world];
     }
 }
@@ -215,13 +236,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const assetsToLoad = [
         { key: "player_walk", url: "/wwwroot/assets/images/sprites/spritesheet_player_walk.png" },
         { key: "player_jump", url: "/wwwroot/assets/images/sprites/spritesheet_player_jump.png" },
+        { key: "tileset_1", url: "/wwwroot/assets/images/tilesets/1_Industrial_Tileset_1.png" }
     ];
 
     await gameAssets.loadImages(assetsToLoad);
 
     // try get a sprite from the gameAssets
 
-   
+
 
     const sequence = await runner.initializeGame();
 

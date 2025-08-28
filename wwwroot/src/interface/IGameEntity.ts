@@ -5,15 +5,10 @@ import { ICollisionDetector } from "./ICollisionDetector";
 
 
 export interface IGameEntityBase  {
-
 }
-
-
 export interface IGameEntityProp {
   isAlive?: boolean; // Optional property to indicate if the entity is alive
 }
-
-
 /**
  * A GameEntity is a composite entity with the added functionality of
  * collision detection. It can define its own collision detectors
