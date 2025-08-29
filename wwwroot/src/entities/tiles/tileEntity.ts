@@ -5,21 +5,23 @@ import { IBoundingBox } from "../../interface/IBoundingBox";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { ILevelProps } from "../../interface/ILevelProps";
 import { isEntityInView } from "../../utils/visibilityHelpers";
-import { collectibleBlock } from "../collectibleBlock";
-import { platformBlock } from "../platformBlock";
+
 import { determineVisibleTiles, getTileProperties, getTilesByType, getTileXy, calculateTileCoordinates, IIndexedTile, isSolidTile } from "../../utils/tileBlockHelpers";
 import { TILE_TYPES } from "../../LEVEL_SAMPLE";
 import { Positioned } from "../../interface/IPositioned";
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { ICollisionDetector } from "../../interface/ICollisionDetector";
 import { GameEntity } from "../GameEntity";
+import { IPoint2D } from "../../../../src/Engine/Helpers/Math/Point2D";
+import { PlatformEntity } from "../platform/PlatformEntity";
+import { CollectibleEntity } from "../collectible/CollectibleEntity";
 
 
 export class TileEntity  extends GameEntity<ILevelProps> implements IGameEntity<ILevelProps>{
     collisionDetectors?: ICollisionDetector[] | undefined;
     private tileSpatialGrid: Map<string, IIndexedTile[]> = new Map();
 
-    private logicalCollisionMap: boolean[][] = [];
+    public logicalCollisionMap: boolean[][] = [];
    
     constructor(props:ILevelProps){
         super("tileBlock",props);
@@ -63,9 +65,9 @@ export class TileEntity  extends GameEntity<ILevelProps> implements IGameEntity<
             const { x, y } = getTileXy(props.tileMap, tile.y, tile.x);            
             // This now returns an entity with a position already set to the correct world coordinates
             return {
-                ...collectibleBlock(tile.x,tile.y), // The width/height are now ignored in the factory
+                ...new CollectibleEntity(tile.x,tile.y), // The width/height are now ignored in the factory
                 props: {
-                    ...collectibleBlock(tile.x, tile.y).props,
+                    ...new CollectibleEntity(tile.x, tile.y).props,
                     // The factory sets a temporary 0,0 position.
                     // This is where you should overwrite it with the correct world coordinates.
                     position: new Positioned(x, y, 16, 16) // Use correct dimensions for collectibles
@@ -73,7 +75,7 @@ export class TileEntity  extends GameEntity<ILevelProps> implements IGameEntity<
             };
         });
         props.platforms = getTilesByType(props.tileMap, 3).map(tile => {
-            return platformBlock(tile, props);
+            return new PlatformEntity(tile, props);
         });
     }
     onUpdate? = (self: IGameEntity<ILevelProps>, timeStamp: number) => {
@@ -172,4 +174,5 @@ export class TileEntity  extends GameEntity<ILevelProps> implements IGameEntity<
     }
 
 }
+
 

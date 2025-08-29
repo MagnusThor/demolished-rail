@@ -5,6 +5,7 @@ import { ICollisionDetector } from "./ICollisionDetector";
 
 
 export interface IGameEntityBase  {
+  isInitialized: boolean
 }
 export interface IGameEntityProp {
   isAlive?: boolean; // Optional property to indicate if the entity is alive

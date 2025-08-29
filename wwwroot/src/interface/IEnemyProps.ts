@@ -6,6 +6,7 @@ import { IDynamicProps } from "./IDynamicProps";
 import { IPositioned } from "./IPositioned";
 import { IDynamicEntity } from "./IDynamicEntity";
 import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
+import { IGameEntityBase } from "./IGameEntity";
 
 export interface IEnemyBehavior {
     name: string;
@@ -13,7 +14,7 @@ export interface IEnemyBehavior {
     onDraw?: (enemy: IDynamicEntity<IEnemyProps>, helper: CanvasHelper) => void;
 }
 
-export interface IEnemyProps {
+export interface IEnemyProps extends IGameEntityBase{
     position: IPositioned;
     health: IHealthProps;
     isAlive: boolean;

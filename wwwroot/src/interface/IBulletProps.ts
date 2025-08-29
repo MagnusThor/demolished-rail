@@ -1,6 +1,6 @@
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { IHealthProps } from "./IHealthProps";
-import { IGameEntityProp } from "../interface/IGameEntity";
+import { IGameEntityBase, IGameEntityProp } from "../interface/IGameEntity";
 import { IDynamicProps } from "./IDynamicProps";
 import { IPositioned } from "./IPositioned";
 
@@ -16,5 +16,6 @@ export interface IBulletProps extends IDynamicProps {
 
     health: IHealthProps // Health properties for the bullet, if applicable
     
+    isInitialized: boolean;
 
 }

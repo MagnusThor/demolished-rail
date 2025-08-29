@@ -135,7 +135,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         gameState.viewport.y = this.props.viewportY;
     }
 
-    addBlock(block: IGameEntity<any>): this {
+    async addBlock(block: IGameEntity<any>) {
         if (block.onInit) {
             block.onInit(block);
         }

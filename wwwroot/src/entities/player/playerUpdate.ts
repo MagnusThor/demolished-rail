@@ -3,7 +3,8 @@ import { KeyCode } from "../../enums/KeyCode";
 import { gameState } from "../../gameState";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { IPlayerProps } from "../../interface/IPlayerProps";
-import { bulletBlock } from "../bulletBlock";
+import { BulletEntity } from "../bullet/BulletEntity";
+
 
 export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number): void => {
 
@@ -27,13 +28,13 @@ export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number)
     props.position.x += props.velX;
     
     if (input.isKeyPressed(KeyCode.Space)) {
-        const newBullet = bulletBlock(
+        const newBullet = new BulletEntity(
             props.position.x + (props.lastDirection === "right" ? props.position.width : -props.position.width),
             props.position.y + props.position.height / 2,
             props.lastDirection
         );
         gameState.dynamicEntities.push(newBullet);
-        newBullet.onCreated?.(newBullet);
+    
         input.consumeKey(KeyCode.Space);
     }
 

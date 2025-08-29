@@ -54,7 +54,7 @@ export class CollisionHelper {
 
   
     static isPixelPerfectColliding(
-        playerBox: IBoundingBox,
+        boundigBox: IBoundingBox,
         tile: IIndexedTile,
         textureData: ImageData
     ): boolean {
@@ -63,8 +63,8 @@ export class CollisionHelper {
 
         // Define points to check on the player's bounding box
         const checkPoints = [
-            { x: playerBox.x, y: playerBox.y + playerBox.height }, // Bottom-left
-            { x: playerBox.x + playerBox.width, y: playerBox.y + playerBox.height }, // Bottom-right
+            { x: boundigBox.x, y: boundigBox.y + boundigBox.height }, // Bottom-left
+            { x: boundigBox.x + boundigBox.width, y: boundigBox.y + boundigBox.height }, // Bottom-right
         ];
 
         for (const point of checkPoints) {

@@ -6,9 +6,9 @@ import { BackgroundEntity } from './entities/BackgroundEntity';
 import { gameAssets, gameState } from "./gameState";
 import { IGameEntity } from "./interface/IGameEntity";
 import { ILevelProps } from "./interface/ILevelProps";
-import { enemyBlock } from "./entities/enemyBlock";
 
-import { collectibleBlock } from "./entities/collectibleBlock";
+
+
 import { calculateTileCoordinates, calculateWorldDimensions, getTileProperties, getTileXy } from "./utils/tileBlockHelpers";
 import { IDynamicEntity } from "./interface/IDynamicEntity";
 import { IPlayerProps } from "./interface/IPlayerProps";
@@ -18,6 +18,10 @@ import { PlayerEntity } from "./entities/player/playerEntity";
 import { playerAnimations } from "./entities/player/animations/playerAnimations";
 import { LEVEL_SAMPLE, TILE_HEIGHT, TILE_WIDTH } from "./LEVEL_SAMPLE";
 import { TileEntity } from "./entities/tiles/tileEntity";
+import { CollectibleEntity } from "./entities/collectible/CollectibleEntity";
+import { EnemyEntity } from "./entities/enemy/enemyEntity";
+
+
 
 
 
@@ -82,7 +86,7 @@ export class RunWorld {
 
         const gameBackground = new BackgroundEntity("background", {}, this.screenCanvas.width, this.screenCanvas.height);
         (sb.getScenes())[0]!.addEntity(gameBackground);
-        (sb.getScenes())[0]!.addEntities(...this.createWorld(sequence));
+        (sb.getScenes())[0]!.addEntities(...await this.createLevel(sequence));
 
         sequence.addScenes(...sb.getScenes());
 
@@ -90,33 +94,21 @@ export class RunWorld {
         return sequence;
     }
 
-    createWorld(sequence: Sequence): Array<IEntity> {
-        /*
-        const worldWidth = LEVEL_SAMPLE[0].length * TILE_WIDTH;
-        const worldHeight = LEVEL_SAMPLE.length * TILE_HEIGHT;
-        */
-
+    async createLevel(sequence: Sequence): Promise<Array<IEntity>> {
+      
         const { width: worldWidth, height: worldHeight } = calculateWorldDimensions(LEVEL_SAMPLE);
-
-        console.log(`World dimensions: ${worldWidth}x${worldHeight}`);
-
         const indexedTiles = calculateTileCoordinates(LEVEL_SAMPLE);
-
-
 
         let player = new PlayerEntity({
             position: new Positioned(32, 32, 32, 32),
-
             velX: 0,
             velY: 0,
-
             gravity: 0.25,
             isJumping: false,
             isGrounded: false,
             isMovingLeft: false,
             isMovingRight: false,
             lastDirection: "right",
-
             tileMap: LEVEL_SAMPLE,
             tileWidth: TILE_WIDTH,
             tileHeight: TILE_HEIGHT,
@@ -155,13 +147,13 @@ export class RunWorld {
 
                 // Correctly place entities based on the current tile's absolute position.
                 if (tileType === 50) { // Enemy
-                    const enemy = enemyBlock(currentX, currentY,indexedTiles);
-                    enemy.onCreated!(enemy);
+                    const enemy =  new EnemyEntity(currentX, currentY,indexedTiles);
+                 
                     enemies.push(enemy);
                 } else if (tileType === 99) { // Player
                     player.props.position = new Positioned(currentX, currentY, tileProps.width, tileProps.height);
                 } else if (tileType === 4) { // Collectible
-                    collectibles.push(collectibleBlock(col,row));
+                    collectibles.push(new CollectibleEntity(col,row));
                 }
 
                 // Increment the X position for the next tile in the row.
@@ -201,7 +193,7 @@ export class RunWorld {
 
         world.addBlock(level as IGameEntity<any>);
         if (player) {
-            world.addBlock(player as IGameEntity<IPlayerProps>);
+            await world.addBlock(player as IGameEntity<IPlayerProps>);
             world.follow(player as IGameEntity<IPlayerProps>);
         } else {
             console.error("Player start position not found!");

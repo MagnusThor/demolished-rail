@@ -11,15 +11,16 @@ export interface ILevelProps {
     tileHeight: number;
     platforms: IGameEntity<any>[];
     collectibles: IGameEntity<ICollectibleProps>[];
-    textures:ITexture[]
+    textures: ITexture[]
     indexedTiles: IIndexedTile[],
-     isInitialized: boolean;
-     
+    isInitialized: boolean;
+    logicalCollisionMap?: boolean[][];
+
 }
 
 
-export interface ITileProps{
+export interface ITileProps {
     width: number
     height: number
-    texture?:string
+    texture?: string
 }
