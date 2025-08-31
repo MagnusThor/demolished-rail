@@ -1,178 +1,140 @@
-// entities/tileBlock.ts
-
+import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
+import { CollisionAxis } from "../../enums/CollisionAxis";
 import { gameAssets, gameState } from "../../gameState";
 import { IBoundingBox } from "../../interface/IBoundingBox";
-import { IGameEntity } from "../../interface/IGameEntity";
-import { ILevelProps } from "../../interface/ILevelProps";
-import { isEntityInView } from "../../utils/visibilityHelpers";
-
-import { determineVisibleTiles, getTileProperties, getTilesByType, getTileXy, calculateTileCoordinates, IIndexedTile, isSolidTile } from "../../utils/tileBlockHelpers";
-import { TILE_TYPES } from "../../LEVEL_SAMPLE";
-import { Positioned } from "../../interface/IPositioned";
-import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { ICollisionDetector } from "../../interface/ICollisionDetector";
-import { GameEntity } from "../GameEntity";
-import { IPoint2D } from "../../../../src/Engine/Helpers/Math/Point2D";
-import { PlatformEntity } from "../platform/PlatformEntity";
+import { ICollisionResult } from "../../interface/ICollisionResult";
+import { IGameEntity } from "../../interface/IGameEntity";
+import { IIndexedTile } from "../../interface/IIndexedTile";
+import { ILevelProps } from "../../interface/ILevelProps";
+import { IPlayerProps } from "../../interface/IPlayerProps";
+import { Positioned } from "../../interface/IPositioned";
+import { TILE_TYPES } from "../../LEVEL_SAMPLE";
+import { isSolidTile, calculateTileCoordinates, getTilesByType, getTileXy, getTileAtPosition, getTileProperties, determineVisibleTiles, getSurroundingTiles } from "../../utils/tileBlockHelpers";
+import { isEntityInView } from "../../utils/collitionHelpers";
 import { CollectibleEntity } from "../collectible/CollectibleEntity";
+import { GameEntity } from "../GameEntity";
+import { PlatformEntity } from "../platform/PlatformEntity";
 
-
-export class TileEntity  extends GameEntity<ILevelProps> implements IGameEntity<ILevelProps>{
-    collisionDetectors?: ICollisionDetector[] | undefined;
+export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<ILevelProps>{
+    collisionDetectors?: ICollisionDetector[];
     private tileSpatialGrid: Map<string, IIndexedTile[]> = new Map();
 
     public logicalCollisionMap: boolean[][] = [];
-   
+    
     constructor(props:ILevelProps){
         super("tileBlock",props);
         
+      
     }
 
-    private buildSpatialGrid(indexedTiles: IIndexedTile[],grid_size:number) {
-    for (const tile of indexedTiles) {
-        const gridX = Math.floor(tile.x / grid_size);
-        const gridY = Math.floor(tile.y / grid_size);
-        const key = `${gridX}_${gridY}`;
-        if (!this.tileSpatialGrid.has(key)) {
-            this.tileSpatialGrid.set(key, []);
+    private buildSpatialGrid(indexedTiles: IIndexedTile[], grid_size:number) {
+        for (const tile of indexedTiles) {
+            const gridX = Math.floor(tile.x / grid_size);
+            const gridY = Math.floor(tile.y / grid_size);
+            const key = `${gridX}_${gridY}`;
+            if (!this.tileSpatialGrid.has(key)) {
+                this.tileSpatialGrid.set(key, []);
+            }
+            this.tileSpatialGrid.get(key)!.push(tile);
         }
-        this.tileSpatialGrid.get(key)!.push(tile);
     }
-}
+
+    public getTilesInArea(x: number, y: number, width: number, height: number, gridSize: number): IIndexedTile[] {
+        const tilesInArea: IIndexedTile[] = [];
+        const startX = Math.floor(x / gridSize);
+        const startY = Math.floor(y / gridSize);
+        const endX = Math.floor((x + width) / gridSize);
+        const endY = Math.floor((y + height) / gridSize);
+        
+        for (let gridX = startX; gridX <= endX; gridX++) {
+            for (let gridY = startY; gridY <= endY; gridY++) {
+                const key = `${gridX}_${gridY}`;
+                const tiles = this.tileSpatialGrid.get(key);
+                if (tiles) {
+                    tilesInArea.push(...tiles);
+                }
+            }
+        }
+        return tilesInArea;
+    }
 
     onInit? = (self: IGameEntity<ILevelProps>) => {
-
-        this.buildSpatialGrid(self.props.indexedTiles,100);
-
-        self.props.textures.push(gameAssets.createTexture("tileset_1", 0, 0, 16, 32)!);
-
-
-          self.props.tileMap.forEach((row, rowIndex) => {
+        // Recalculate indexed tiles to be safe.
+        self.props.indexedTiles = calculateTileCoordinates(self.props.tileMap);
+        // Build spatial grid with tile width for optimal performance.
+        this.buildSpatialGrid(self.props.indexedTiles, self.props.tileWidth);
+        
+        // Build a logical collision map for quick lookups
+        self.props.tileMap.forEach((row, rowIndex) => {
             this.logicalCollisionMap[rowIndex] = [];
             row.forEach((tileType, colIndex) => {
-                // Check if the tile type is considered solid
                 this.logicalCollisionMap[rowIndex][colIndex] = isSolidTile(tileType);
             });
         });
-
-        console.log("logicalCollisionMap",this.logicalCollisionMap);
-
-        const props = self.props;
-        // Use the new helper to pre-calculate all tile coordinates
-        self.props.indexedTiles = calculateTileCoordinates(props.tileMap);
-        // ... (rest of onInit remains the same, as getTilesByType returns grid indices)
-       props.collectibles = getTilesByType(props.tileMap, 4).map(tile => {
-            const { x, y } = getTileXy(props.tileMap, tile.y, tile.x);            
-            // This now returns an entity with a position already set to the correct world coordinates
-            return {
-                ...new CollectibleEntity(tile.x,tile.y), // The width/height are now ignored in the factory
-                props: {
-                    ...new CollectibleEntity(tile.x, tile.y).props,
-                    // The factory sets a temporary 0,0 position.
-                    // This is where you should overwrite it with the correct world coordinates.
-                    position: new Positioned(x, y, 16, 16) // Use correct dimensions for collectibles
-                }
-            };
-        });
-        props.platforms = getTilesByType(props.tileMap, 3).map(tile => {
-            return new PlatformEntity(tile, props);
-        });
     }
-    onUpdate? = (self: IGameEntity<ILevelProps>, timeStamp: number) => {
+
     
+
+    onUpdate? = (self: IGameEntity<ILevelProps>, timeStamp: number) => {
         const viewport = gameState.viewport;
-        const screenWidth = viewport.viewportWidth;
-        const screenHeight = viewport.viewportHeight;
-        const player = gameState.findEntities("playerBlock")[0];
-        if (player) {
-
-            self.props.platforms?.forEach(platform => {
-                if (isEntityInView(platform, viewport, screenWidth, screenHeight)) {
-                    const detector = platform.collisionDetectors?.find(d => d.targetName === "playerBlock");
-                    if (detector) {
-                        const collisionResults = detector.detectorFn(platform.props, player);
-                        if (collisionResults) {
-                            if (Array.isArray(collisionResults)) {
-                                collisionResults.forEach(result => detector.onCollision(platform.props, result));
-                            } else {
-                                if (collisionResults !== true) {
-                                    detector.onCollision(platform.props, collisionResults);
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            self.props.collectibles?.forEach(collectible => {
-                if (isEntityInView(collectible, viewport, screenWidth, screenHeight)) {
-                    const detector = collectible.collisionDetectors?.find(d => d.targetName === "playerBlock");
-                    if (detector) {
-                        const collisionResults = detector.detectorFn(collectible.props, player);
-                        if (collisionResults) {
-                            if (Array.isArray(collisionResults)) {
-                                collisionResults.forEach(result => detector.onCollision(collectible.props, result));
-                            } else if (collisionResults && collisionResults !== true) {
-                                detector.onCollision(collectible.props, collisionResults);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        self.props.collectibles?.forEach(collectible => {
-            if (isEntityInView(collectible, viewport, screenWidth, screenHeight)) {
-                collectible.onUpdate!(collectible, timeStamp);
-            }
-        });
-        self.props.platforms?.forEach(platform => {
-            if (isEntityInView(platform, viewport, screenWidth, screenHeight)) {
-                platform.onUpdate!(platform, timeStamp);
-            }
-        });
-
     };
+
     onDraw? = (self: IGameEntity<ILevelProps>, helper: CanvasHelper) => {
         const props = self.props;
         const ctx = helper.ctx;
         const viewport = gameState.viewport;
         const screenWidth = viewport.viewportWidth;
         const screenHeight = viewport.viewportHeight;
+
+        
         // Iterate over the pre-calculated tiles. This is much faster.
         self.props.indexedTiles.forEach(tile => {
             const tileProperties = getTileProperties(tile.type as keyof typeof TILE_TYPES)!;
-            // Check if the tile is visible using its pre-calculated world coordinates.
-            const isVisible = determineVisibleTiles(props, tile, viewport, screenWidth, screenHeight);        
+            const isVisible = determineVisibleTiles(props, tile, viewport, screenWidth, screenHeight); 
+            
             if (isVisible) {
                 if (tile.type === 1) {
-                
-                    ctx.drawImage(self.props.textures[0].texture.src, tile.x, tile.y, tileProperties.width, tileProperties.height);
+                    const tileTexture = self.props.textures!["solid"] 
+                    // Use the full drawImage signature to specify source and destination rectangles
+                    ctx.drawImage(
+                        tileTexture.texture.src, // Source image
+                        tileTexture.x,          // Source x
+                        tileTexture.y,          // Source y
+                        tileTexture.width,      // Source width
+                        tileTexture.height,      // Source height
+                        tile.x,          // Destination x
+                        tile.y,          // Destination y
+                        tileProperties.width,    // Destination width
+                        tileProperties.height     // Destination height
+                    );
                 } else if (tile.type === 2) {
-                    ctx.fillStyle = "#ccc";
+                    ctx.fillStyle = "#8B4513";
                     ctx.fillRect(tile.x, tile.y, tileProperties.width, tileProperties.height);
+                } else if (tile.type === 5) {
+                    const tileTexture = self.props.textures!["pilar"];
+                    ctx.drawImage(
+                        tileTexture.texture.src,
+                        tileTexture.x,
+                        tileTexture.y,
+                        tileTexture.width,
+                        tileTexture.height,
+                        tile.x,
+                        tile.y,
+                        tileProperties.width,
+                        tileProperties.height
+                    );
                 }
             }
         });
-        // The drawing logic for platforms and collectibles remains the same.
-        props.platforms?.forEach(platform => {
-            if (isEntityInView(platform, viewport, screenWidth, screenHeight, 0)) {
-                platform.onDraw!(platform, helper);
-            }
-        });
 
-        props.collectibles?.forEach(collectible => {
-            if (isEntityInView(collectible, viewport, screenWidth, screenHeight, 0)) {
-                collectible.onDraw!(collectible, helper);
-            }
-        });
+    
     };
-   
-    getBoundingBox = (self:IGameEntity<ILevelProps>): IBoundingBox => {  
-            const width = self.props.tileMap[0].reduce((sum, tileId) => sum + getTileProperties(tileId as keyof typeof TILE_TYPES)!.width, 0);
-            const height = self.props.tileMap.reduce((sum, row) => sum + Math.max(...row.map(tileId => getTileProperties(tileId as keyof typeof TILE_TYPES)!.height)), 0);
-            return { x: 0, y: 0, width, height };
+    
+    getBoundingBox = (self:IGameEntity<ILevelProps>): IBoundingBox => { 
+        // Correctly calculate the level's bounding box
+        const width = self.props.tileMap[0].length * self.props.tileWidth;
+        const height = self.props.tileMap.length * self.props.tileHeight;
+        return { x: 0, y: 0, width, height };
     }
-
 }
-
-

@@ -26,7 +26,7 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> implements 
         super(
             "collectibleBlock",
             {
-                position: new Positioned(x, y, CollectibleEntity.COLLECTIBLE_WIDTH, CollectibleEntity.COLLECTIBLE_HEIGHT),
+                positioned: new Positioned(x, y, CollectibleEntity.COLLECTIBLE_WIDTH, CollectibleEntity.COLLECTIBLE_HEIGHT),
                 radius: CollectibleEntity.COLLECTIBLE_RADIUS,
                 color: "gold",
                 uuid: crypto.randomUUID(),
@@ -44,8 +44,8 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> implements 
 
     getBoundingBox = (self: IGameEntity<ICollectibleProps>): IBoundingBox => {
         return {
-            x: self.props.position.x - self.props.radius,
-            y: self.props.position.y - self.props.radius,
+            x: self.props.positioned.x - self.props.radius,
+            y: self.props.positioned.y - self.props.radius,
             width: self.props.radius * 2,
             height: self.props.radius * 2,
         };
@@ -60,12 +60,13 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> implements 
     }
 
     onDraw? = (self: IGameEntity<ICollectibleProps>, helper: CanvasHelper): void => {
+       
         const ctx = helper.ctx;
         ctx.fillStyle = self.props.color;
         ctx.beginPath();
         ctx.arc(
-            self.props.position.x,
-            self.props.position.y,
+            self.props.positioned.x,
+            self.props.positioned.y,
             self.props.radius,
             0,
             Math.PI * 2
@@ -73,14 +74,17 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> implements 
         ctx.fill();
     }
 
-    private detectPlayerCollision(selfProps: ICollectibleProps, targetEntity: IGameEntity<IPlayerProps>): ICollisionResult | false {
+    public detectPlayerCollision(selfProps: ICollectibleProps, targetEntity: IGameEntity<IPlayerProps>): ICollisionResult | false {
         const playerProps = targetEntity.props;
-        if (CollisionHelper.AABBColliding(selfProps.position.getBoundingBox!(), playerProps.position.getBoundingBox!())) {
+
+      
+        if (CollisionHelper.AABBColliding(selfProps.positioned.getBoundingBox!(), playerProps.positioned.getBoundingBox!())) {
+            
             return {
                 axis: CollisionAxis.Y,
                 targetEntity: targetEntity,
-                x: selfProps.position.x,
-                y: selfProps.position.y,
+                x: selfProps.positioned.x,
+                y: selfProps.positioned.y,
                 width: selfProps.radius * 2,
                 height: selfProps.radius * 2,
             };
@@ -88,13 +92,7 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> implements 
         return false;
     }
 
-    private handlePlayerCollision(selfProps: ICollectibleProps, collisionData: ICollisionResult): void {
-        const tileEntity = gameState.findEntities("tileBlock")[0];
-        if (tileEntity) {
-            const tileProps = tileEntity.props as ILevelProps;
-            tileProps.collectibles = tileProps.collectibles.filter(
-                (c: IGameEntity<ICollectibleProps>) => c.props.uuid !== selfProps.uuid
-            );
-        }
+    public handlePlayerCollision(selfProps: ICollectibleProps, collisionData: ICollisionResult): void {
+       
     }
 }

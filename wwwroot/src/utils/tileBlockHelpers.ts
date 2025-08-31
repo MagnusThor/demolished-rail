@@ -1,24 +1,23 @@
-import { Point2D } from "../../../src";
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
+import { IBoundingBox } from "../interface/IBoundingBox";
 import { IGameEntity } from "../interface/IGameEntity";
+import { IIndexedTile } from "../interface/IIndexedTile";
 import { ILevelProps, ITileProps } from "../interface/ILevelProps";
 import { TILE_TYPES } from "../LEVEL_SAMPLE";
-import { isEntityInView } from "./visibilityHelpers";
+import { isEntityInView } from "./collitionHelpers";
 
-export const getTilesByType = (tileMap: number[][], type: number): IPoint2D[] => {
-    // This function is fine as it returns grid indices, used for object placement.
-    return tileMap.flatMap((row, rowIndex) =>
-        row.map((tileType, colIndex) => {
-            if (tileType === type) {
-                return { x: colIndex, y: rowIndex };
-            }
-            return null;
-        }).filter(tile => tile !== null)
-    ) as { x: number, y: number }[];
-};
 
 /**
- * Helper function to find the closest solid tile in a specific direction.
+ * Checks if a tile is considered solid based on its type.
+ * @param tileType The type of the tile.
+ * @returns True if the tile is solid, false otherwise.
+ */
+export const isSolidTile = (tileType: number): boolean => {
+    return tileType === 1 || tileType === 2 || tileType == 5 
+}
+
+/**
+ * Finds the closest solid tile in a specific direction.
  * @param tileMap The 2D array representing the tile map.
  * @param startX The starting X coordinate.
  * @param startY The starting Y coordinate.
@@ -42,27 +41,15 @@ export const findClosestSolidTile = (tileMap: number[][], startX: number, startY
     return null;
 }
 
-
-/**
- * Determines whether a given tile type is considered solid.
- *
- * @param tileType - The numeric identifier of the tile type to check.
- * @returns `true` if the tile type is solid (i.e., type 1 or 2), otherwise `false`.
- */
-export const isSolidTile = (tileType: number): boolean => {
-    return tileType === 1 || tileType === 2;
-}
-
 /**
  * Determines whether a rectangle collides with any non-empty tiles in a tile map.
- *
- * @param x - The x-coordinate (in pixels) of the top-left corner of the rectangle.
- * @param y - The y-coordinate (in pixels) of the top-left corner of the rectangle.
- * @param width - The width (in pixels) of the rectangle.
- * @param height - The height (in pixels) of the rectangle.
- * @param tileMap - A 2D array representing the tile map, where each value corresponds to a tile type (values > 0 are considered solid).
- * @param tileWidth - The width (in pixels) of a single tile.
- * @param tileHeight - The height (in pixels) of a single tile.
+ * @param x The x-coordinate (in pixels) of the top-left corner of the rectangle.
+ * @param y The y-coordinate (in pixels) of the top-left corner of the rectangle.
+ * @param width The width (in pixels) of the rectangle.
+ * @param height The height (in pixels) of the rectangle.
+ * @param tileMap A 2D array representing the tile map, where each value corresponds to a tile type (values > 0 are considered solid).
+ * @param tileWidth The width (in pixels) of a single tile.
+ * @param tileHeight The height (in pixels) of a single tile.
  * @returns `true` if the rectangle overlaps any non-empty (solid) tiles; otherwise, `false`.
  */
 export const isTileCollision = (
@@ -97,75 +84,48 @@ export const isTileCollision = (
 }
 
 /**
- * Calculates the pixel coordinates (x, y) of a tile based on its row and column indices.
- *
- * @param row - The row index of the tile (zero-based).
- * @param col - The column index of the tile (zero-based).
- * @param width - The width of a single tile in pixels. Defaults to 32.
- * @param height - The height of a single tile in pixels. Defaults to 32.
- * @returns An `IPoint2D` representing the pixel coordinates of the top-left corner of the tile.
+ * Finds tiles of a specific type within the tile map.
+ * @param tileMap The 2D array representing the level tile map.
+ * @param type The type of tile to search for.
+ * @returns An array of indexed tiles matching the specified type.
  */
+export const getTilesByType = (tileMap: number[][], type: number): IPoint2D[] => {
+    // This function is fine as it returns grid indices, used for object placement.
+    return tileMap.flatMap((row, rowIndex) =>
+        row.map((tileType, colIndex) => {
+            if (tileType === type) {
+                return { x: colIndex, y: rowIndex };
+            }
+            return null;
+        }).filter(tile => tile !== null)
+    ) as { x: number, y: number }[];
+};
+
+
 export const getTileXy = (tileMap: number[][], row: number, col: number): IPoint2D => {
-    let x = 0;
-    let y = 0;
-
-    // Calculate the Y coordinate by summing the heights of all rows above the current one.
-    // The height of each row is determined by the maximum height of any tile in that row.
-    for (let i = 0; i < row; i++) {
-        let maxRowHeight = 0;
-        const currentRow = tileMap[i];
-        if (currentRow) {
-            for (const tileId of currentRow) {
-                const props = TILE_TYPES[tileId as keyof typeof TILE_TYPES];
-                if (props && props.height > maxRowHeight) {
-                    maxRowHeight = props.height;
-                }
-            }
-        }
-        y += maxRowHeight;
+    const tileWidth = 32;
+    const tileHeight = 32;
+    const tileId = tileMap[row][col];
+    const tileProperties = getTileProperties(tileId);
+    if (!tileProperties) {
+        // Fallback for unknown tile types
+        return { x: col * tileWidth, y: row * tileHeight };
     }
-
-    // Calculate the X coordinate by summing the widths of all tiles to the left in the current row.
-    const currentRow = tileMap[row];
-    if (currentRow) {
-        for (let j = 0; j < col; j++) {
-            const tileId = currentRow[j];
-            const props = TILE_TYPES[tileId as keyof typeof TILE_TYPES];
-            if (props) {
-                x += props.width;
-            }
-        }
-    }
-
-    return { x, y };
+    // Calculate the y offset to align the tile's bottom with the grid cell's bottom
+    const yOffset = tileHeight - tileProperties.height;
+    return { x: col * tileWidth, y: row * tileHeight + yOffset };
 };
 
-/*
-export const determineVisibleTiles = (props: ILevelProps, tile: IPoint2D,
-    viewport: { x: number; y: number },
-    screenWidth: number,
-    screenHeight: number
-): boolean => {
-    const tileX = tile.x * props.tileWidth;
-    const tileY = tile.y * props.tileHeight;
-    return isEntityInView(
-        {
-            getBoundingBox: () => ({
-                x: tileX,
-                y: tileY,
-                width: props.tileWidth,
-                height: props.tileHeight
-            })
-        } as unknown as IGameEntity<any>,
-        viewport,
-        screenWidth,
-        screenHeight,
-        0 // No additional buffer needed here
-    );
-};
 
-*/
-  
+/**
+ * Determines which tiles are visible within the viewport.
+ * @param props The level properties.
+ * @param tile The tile to check.
+ * @param viewport The current viewport.
+ * @param screenWidth The screen width.
+ * @param screenHeight The screen height.
+ * @returns True if the tile is visible, false otherwise.
+ */
 export const determineVisibleTiles = (
     props: ILevelProps,
     tile: IIndexedTile, // This should be the absolute world coordinates
@@ -200,19 +160,23 @@ export const determineVisibleTiles = (
     );
 };
 
-
-
-export const getTileProperties = (tileId: keyof typeof TILE_TYPES | number):ITileProps |  null=> {
+/**
+ * Gets a tile's properties based on its type.
+ * @param tileId The type of the tile.
+ * @returns An object with the tile's properties (width, height), or null if not found.
+ */
+export const getTileProperties = (tileId: keyof typeof TILE_TYPES | number): ITileProps | null => {
     if (TILE_TYPES.hasOwnProperty(tileId)) {
         return TILE_TYPES[tileId as keyof typeof TILE_TYPES];
     }
- 
     return null; 
 }
 
-
-
-
+/**
+ * Calculates the total width and height of the world based on the tile map.
+ * @param tileMap The 2D array representing the level tile map.
+ * @returns An object with the total width and height.
+ */
 export const calculateWorldDimensions = (tileMap: number[][]): { width: number; height: number } => {
     let maxWidth = 0;
     let totalHeight = 0;
@@ -232,9 +196,6 @@ export const calculateWorldDimensions = (tileMap: number[][]): { width: number; 
     }
 
     // Calculate total height
-    // This assumes each row has the same height based on its tallest tile.
-    // A more complex approach might be needed for different heights per column.
-    // Here we'll just sum the maximum height of any tile in each row.
     for (const row of tileMap) {
         let maxHeightInRow = 0;
         for (const tileId of row) {
@@ -249,44 +210,95 @@ export const calculateWorldDimensions = (tileMap: number[][]): { width: number; 
     return { width: maxWidth, height: totalHeight };
 };
 
-
-export interface IIndexedTile extends IPoint2D {
-    col: number; // Grid column index
-    row: number; // Grid row index
-    type: number; // Tile type ID
-}
-
-
+/**
+ * Calculates the indexed tile coordinates from a tile map.
+ * This function converts a 2D array of tile types into a flat array of objects
+ * with their absolute x and y coordinates, taking into account varying tile sizes.
+ * @param tileMap The 2D array representing the level tile map.
+ * @returns An array of indexed tiles.
+ */
 export const calculateTileCoordinates = (tileMap: number[][]): IIndexedTile[] => {
     const indexedTiles: IIndexedTile[] = [];
-    let currentY = 0;
+    const tileWidth = 32;
+    const tileHeight = 32;
 
     tileMap.forEach((row, rowIndex) => {
-        let currentX = 0;
-        let maxRowHeight = 0;
-
         row.forEach((tileId, colIndex) => {
             const tileProperties = getTileProperties(tileId);
-
             if (tileProperties) {
-                if (tileProperties.height > maxRowHeight) {
-                    maxRowHeight = tileProperties.height;
-                }
-
+                // Calculate the y-coordinate with an offset to align the bottom of the tile
+                const yOffset = tileHeight - tileProperties.height;
                 indexedTiles.push({
-                    x: currentX,
-                    y: currentY,
+                    x: colIndex * tileWidth,
+                    y: rowIndex * tileHeight + yOffset,
                     col: colIndex,
                     row: rowIndex,
                     type: tileId,
                 });
-
-                currentX += tileProperties.width;
             }
         });
-        currentY += maxRowHeight;
     });
-
     return indexedTiles;
 };
 
+/**
+ * Finds the tile at a specific world position.
+ * @param tileMap The 2D array representing the level tile map.
+ * @param worldX The x-coordinate in the game world.
+ * @param worldY The y-coordinate in the game world.
+ * @returns The indexed tile at the position, or null if no tile is found.
+ */
+export const getTileAtPosition = (tileMap: number[][], worldX: number, worldY: number): IIndexedTile | null => {
+    // Get the properties of the first tile type to determine tile dimensions.
+    // This assumes all tiles have the same dimensions as the first tile type.
+    const firstTileProps = getTileProperties(tileMap[0][0] as keyof typeof TILE_TYPES);
+    if (!firstTileProps) {
+        return null;
+    }
+    const tileWidth = firstTileProps.width;
+    const tileHeight = firstTileProps.height;
+
+    // Convert world coordinates to tile grid coordinates
+    const col = Math.floor(worldX / tileWidth);
+    const row = Math.floor(worldY / tileHeight);
+
+    // Check if the calculated tile coordinates are within the bounds of the tile map
+    if (row >= 0 && row < tileMap.length && col >= 0 && col < tileMap[0].length) {
+        return {
+            x: col * tileWidth,
+            y: row * tileHeight,
+            col,
+            row,
+            type: tileMap[row][col],
+        };
+    }
+    return null;
+}
+
+/**
+ * Retrieves tiles from a spatial grid that are near a given bounding box.
+ * This function helps to optimize collision checks by only looking at a subset of tiles.
+ * @param spatialGrid The spatial grid of tiles.
+ * @param bbox The bounding box to check against.
+ * @param gridSize The size of each grid cell.
+ * @returns An array of tiles near the bounding box.
+ */
+export function getSurroundingTiles(spatialGrid: Map<string, IIndexedTile[]>, bbox: IBoundingBox, gridSize: number): IIndexedTile[] {
+    const surroundingTiles: IIndexedTile[] = [];
+    const minGridX = Math.floor(bbox.x / gridSize);
+    const maxGridX = Math.floor((bbox.x + bbox.width) / gridSize);
+    const minGridY = Math.floor(bbox.y / gridSize);
+    const maxGridY = Math.floor((bbox.y + bbox.height) / gridSize);
+
+    for (let y = minGridY; y <= maxGridY; y++) {
+        for (let x = minGridX; x <= maxGridX; x++) {
+            const key = `${x}_${y}`;
+            const tilesInCell = spatialGrid.get(key);
+            if (tilesInCell) {
+                surroundingTiles.push(...tilesInCell);
+            }
+        }
+    }
+    // Filter out duplicates in case a bounding box overlaps with multiple grid cells
+    return Array.from(new Set(surroundingTiles));
+}

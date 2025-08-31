@@ -11,7 +11,7 @@ import { IPositioned } from "./IPositioned";
  * @property color - The color of the platform, as a string.
  */
 export interface IPlatformProps extends IGameEntityBase {
-    position: IPositioned
+    positioned: IPositioned
     velY: number;
     minY: number;
     maxY: number;

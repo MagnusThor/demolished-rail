@@ -1,14 +1,16 @@
-import { CollisionHelper } from "../../../../../src/Engine/Helpers/CollisionHelper";
-import { IBoundingBox } from "../../../interface/IBoundingBox";
-import { IEnemyBehavior, IEnemyProps } from "../../../interface/IEnemyProps";
-import { TILE_TYPES } from "../../../LEVEL_SAMPLE";
-import { IIndexedTile, isSolidTile, getTileProperties } from "../../../utils/tileBlockHelpers";
-import { ENEMY_SPEED } from "../enemyEntity";
 
 /**
  * Patrolling behavior: moves the enemy back and forth.
  * This behavior must now receive a reference to the indexedTiles for accurate collision checks.
  */
+
+import { CollisionHelper } from "../../../../../src/Engine/Helpers/CollisionHelper";
+import { IBoundingBox } from "../../../interface/IBoundingBox";
+import { IEnemyBehavior, IEnemyProps } from "../../../interface/IEnemyProps";
+import { IIndexedTile } from "../../../interface/IIndexedTile";
+import { TILE_TYPES } from "../../../LEVEL_SAMPLE";
+import { isSolidTile, getTileProperties } from "../../../utils/tileBlockHelpers";
+import { ENEMY_SPEED } from "../enemyEntity";
 
 export const EnemyPatrollingBehavior = (indexedTiles: IIndexedTile[]): IEnemyBehavior => {
     return {
@@ -18,14 +20,16 @@ export const EnemyPatrollingBehavior = (indexedTiles: IIndexedTile[]): IEnemyBeh
 
             // Create a temporary bounding box for the next frame's position
             const nextBbox: IBoundingBox = {
-                x: props.position.x + (props.direction * ENEMY_SPEED),
-                y: props.position.y,
-                width: props.position.width,
-                height: props.position.height
+                x: props.positioned.x + (props.direction * ENEMY_SPEED),
+                y: props.positioned.y,
+                width: props.positioned.width,
+                height: props.positioned.height
             };
 
             // Check for collision with tiles in the simulated next position
             let willCollide = false;
+            let willFall = true; // Assume the enemy will fall unless a tile is found below
+
             for (const tile of indexedTiles) {
                 if (isSolidTile(tile.type)) {
                     const tileProperties = getTileProperties(tile.type as keyof typeof TILE_TYPES);
@@ -36,19 +40,30 @@ export const EnemyPatrollingBehavior = (indexedTiles: IIndexedTile[]): IEnemyBeh
                             width: tileProperties.width,
                             height: tileProperties.height
                         };
+
+                        // Check for wall collision
                         if (CollisionHelper.AABBColliding(nextBbox, tileBbox)) {
                             willCollide = true;
-                            break;
+                        }
+
+                        // Check for a solid tile beneath the enemy's leading edge
+                        // This prevents the enemy from walking off ledges.
+                        const futureFootX = props.positioned.x + (props.direction * props.positioned.width / 2) + (props.direction * 10);
+                        const footY = props.positioned.y + props.positioned.height + 1; // Check one pixel below the enemy's feet
+
+                        if (CollisionHelper.AABBColliding({ x: futureFootX, y: footY, width: 1, height: 1 }, tileBbox)) {
+                            willFall = false;
                         }
                     }
                 }
             }
 
-            if (willCollide) {
+            if (willCollide || willFall) {
                 props.direction *= -1;
             }
 
-            props.velX = props.direction * ENEMY_SPEED;
+            props.velX = props.direction * 0.2;
+            props.positioned.x += props.velX; // This line applies the movement to the enemy's position
         },
     };
 };

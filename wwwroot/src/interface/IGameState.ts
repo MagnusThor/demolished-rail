@@ -30,6 +30,6 @@ export interface IGameState {
     entities: IGameEntity<any>[];
     dynamicEntities: IDynamicEntity<any>[]; // New dedicated list for bullets
     removeDynamicEntity: (entity: IDynamicEntity<any>) => void; // Method to remove a dynamic entity by its UUID
-    findEntities(key: string): IEntity[] | IGameEntity<any>[]; // A method to find entities by their key or name
+    findEntities(key: string): IGameEntity<any>[]; // A method to find entities by their key or name
     removeEntityByUUID: (uuid:string) => void; // Optional method to remove an entity by its UUID
 }

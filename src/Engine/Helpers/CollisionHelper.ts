@@ -2,7 +2,8 @@
 import { IBoundingBox } from "../../../wwwroot/src/interface/IBoundingBox";
 import { CollisionAxis } from "../../../wwwroot/src/enums/CollisionAxis";
 import { ICollisionResult } from "../../../wwwroot/src/interface/ICollisionResult";
-import { getTileProperties, IIndexedTile } from "../../../wwwroot/src/utils/tileBlockHelpers";
+import { getTileProperties } from "../../../wwwroot/src/utils/tileBlockHelpers";
+import { IIndexedTile } from "../../../wwwroot/src/interface/IIndexedTile";
 
 export class CollisionHelper {
     /**

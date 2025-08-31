@@ -2,8 +2,9 @@
 import { gameAssets } from "../gameState";
 import { IGameAsset } from "../interface/IGameAsset";
 import { ITexture } from "../interface/ITexture";
-import { ISpriteSheetAsset } from "./ISpriteSheetAsset";
-import { createTexture } from "./TextureManager";
+import { ISpriteSheetAsset } from "../interface/ISpriteSheetAsset";
+
+import { IBoundingBox } from "../interface/IBoundingBox";
 
 /**
  * Manages loading, storing, and retrieving game assets such as images and sprite sheets.
@@ -95,14 +96,21 @@ export class GameAssetsManager {
 
         const textureKey = `${assetKey}_${srcX}_${srcY}_${srcWidth}_${srcHeight}`;
 
-        return {
+        const properties:ITexture = {
             texture: asset,
             key: textureKey,
             x: srcX,
             y: srcY,
             width: srcWidth,
             height: srcHeight,
-        };
+            getBoundingBox: function (): IBoundingBox {
+                throw new Error("Function not implemented.");
+            }
+        }; 
+
+     
+
+        return properties; 
     }
 
     public getSpriteSheet(

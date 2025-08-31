@@ -16,7 +16,7 @@ export const enemyCollisionDetectors = [
         targetName: "bulletBlock",
         detectorFn: (enemyProps: IEnemyProps, bullet: IGameEntity<IBulletProps>) => {
             const collisionResults = new Array<ICollisionResult>();
-            if (CollisionHelper.AABBColliding(enemyProps.position.getBoundingBox!(), bullet.getBoundingBox!(bullet))) {
+            if (CollisionHelper.AABBColliding(enemyProps.positioned.getBoundingBox!(), bullet.getBoundingBox!(bullet))) {
                 collisionResults.push({
                     x: bullet.props.position.x,
                     y: bullet.props.position.y,
@@ -40,12 +40,12 @@ export const enemyCollisionDetectors = [
         targetName: "playerBlock",
         detectorFn: (enemyProps: IEnemyProps, player: IGameEntity<IPlayerProps>) => {
             const collisionResults = new Array<ICollisionResult>();
-            if (CollisionHelper.AABBColliding(enemyProps.position.getBoundingBox!(), player.getBoundingBox!(player))) {
+            if (CollisionHelper.AABBColliding(enemyProps.positioned.getBoundingBox!(), player.getBoundingBox!(player))) {
                 collisionResults.push({
-                    x: player.props.position.x,
-                    y: player.props.position.y,
-                    width: player.props.position.width,
-                    height: player.props.position.height,
+                    x: player.props.positioned.x,
+                    y: player.props.positioned.y,
+                    width: player.props.positioned.width,
+                    height: player.props.positioned.height,
                     axis: CollisionAxis.X,
                     targetEntity: player
                 });
@@ -61,7 +61,7 @@ export const enemyCollisionDetectors = [
         targetName: "tileBlock",
         detectorFn: (enemyProps: IEnemyProps, tileEntity: IGameEntity<ILevelProps>) => {
             const collisionResults = new Array<ICollisionResult>();
-            const enemyBbox = enemyProps.position.getBoundingBox!();
+            const enemyBbox = enemyProps.positioned.getBoundingBox!();
 
             const indexedTiles = tileEntity.props.indexedTiles;
             if (indexedTiles) {
@@ -98,27 +98,27 @@ export const enemyCollisionDetectors = [
                 width: collisionData.width,
                 height: collisionData.height
             };
-            const dx = (selfProps.position.x + selfProps.position.width / 2) - (tileBbox.x + tileBbox.width / 2);
-            const dy = (selfProps.position.y + selfProps.position.height / 2) - (tileBbox.y + tileBbox.height / 2);
-            const width = (selfProps.position.width + tileBbox.width) / 2;
-            const height = (selfProps.position.height + tileBbox.height) / 2;
+            const dx = (selfProps.positioned.x + selfProps.positioned.width / 2) - (tileBbox.x + tileBbox.width / 2);
+            const dy = (selfProps.positioned.y + selfProps.positioned.height / 2) - (tileBbox.y + tileBbox.height / 2);
+            const width = (selfProps.positioned.width + tileBbox.width) / 2;
+            const height = (selfProps.positioned.height + tileBbox.height) / 2;
             const crossWidth = width * dy;
             const crossHeight = height * dx;
 
             if (crossWidth > crossHeight) {
                 if (crossWidth > -crossHeight) {
-                    selfProps.position.y = tileBbox.y + tileBbox.height;
+                    selfProps.positioned.y = tileBbox.y + tileBbox.height;
                     selfProps.velY = 0;
                 } else {
-                    selfProps.position.x = tileBbox.x - selfProps.position.width;
+                    selfProps.positioned.x = tileBbox.x - selfProps.positioned.width;
                     selfProps.velX = 0;
                 }
             } else {
                 if (crossWidth > -crossHeight) {
-                    selfProps.position.x = tileBbox.x + tileBbox.width;
+                    selfProps.positioned.x = tileBbox.x + tileBbox.width;
                     selfProps.velX = 0;
                 } else {
-                    selfProps.position.y = tileBbox.y - selfProps.position.height;
+                    selfProps.positioned.y = tileBbox.y - selfProps.positioned.height;
                     selfProps.velY = 0;
                     selfProps.isGrounded = true;
                 }

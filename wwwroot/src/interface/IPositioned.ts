@@ -7,7 +7,7 @@ export interface IPositioned {
     y: number;
     width: number;
     height: number;
-    getBoundingBox?(): IBoundingBox;
+    getBoundingBox(): IBoundingBox;
     toPoint2D?(): IPoint2D;
 }
 

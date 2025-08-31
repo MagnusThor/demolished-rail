@@ -12,9 +12,10 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
         constructor(props:IPlayerProps)     {   
             super("playerBlock", props);
             this.collisionDetectors =playerCollisionDetectors;
-            this.props.currentAnimation = this.props.animations["idle"];        }
+            this.props.currentAnimation = this.props.animations["idle"];     
+         }
         getBoundingBox = (self:IGameEntity<IPlayerProps>): IBoundingBox => {  
-            return self.props.position.getBoundingBox!();
+            return self.props.positioned.getBoundingBox!();
         }
         onInit = (self: IGameEntity<IPlayerProps>) => {
                 self.props.isInitialized = true;
@@ -26,8 +27,8 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
              const props = self.props              
              helper.drawAnimatedSprite(
                     props.currentAnimation!,
-                    props.position.x,
-                    props.position.y,
+                    props.positioned.x,
+                    props.positioned.y,
                     performance.now()
             );
         }

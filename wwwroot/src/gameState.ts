@@ -43,19 +43,9 @@ export const gameState: IGameState = {
         }
     },
     findEntities: (name: string): IGameEntity<any>[] => {
-        const find = (entities: IGameEntity<any>[], targetKey: string): IGameEntity<any>[] => {
-            let found: IGameEntity<any>[] = [];
-            for (const entity of entities) {
-                if (entity.name === targetKey) {
-                    found.push(entity);
-                }
-                if ((entity as unknown as ICompositeEntity<any>).props.blocks) {
-                    found = found.concat(find((entity as unknown as IGameEntity<any>).props.blocks, targetKey));
-                }
-            }
-            return found;
-        };
-        return find(gameState.entities, name);
+        const foundEntities = gameState.entities.filter(entity => entity.name === name);
+        const foundDynamicEntities = gameState.dynamicEntities.filter(entity => entity.name === name);
+        return [...foundEntities, ...foundDynamicEntities];
     }
 };
 export const gameAssets = new GameAssetsManager();

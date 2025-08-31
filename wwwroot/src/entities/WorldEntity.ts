@@ -16,7 +16,7 @@ export interface IWorldProps {
     viewportY: number;
     viewportWidth: number;
     viewportHeight: number;
-    blocks: IGameEntity<any>[];
+  
 }
 
 
@@ -74,14 +74,15 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
      */
     updateBlocks(ts: number): void {
         // Combine static and dynamic entities for collision processing.
-        const allEntities = [...this.props.blocks, ...gameState.dynamicEntities];
+        const allEntities = [...gameState.entities, ...gameState.dynamicEntities];
 
         // Update all dynamic entities and filter out the ones that are no longer alive.
         gameState.dynamicEntities = gameState.dynamicEntities.filter(entity => {
             if (entity.props.isAlive === false && entity.onDestroy) {
                 entity.onDestroy(entity);
             }
-            entity.onUpdate!(entity, ts);
+            if(entity.onUpdate)
+                entity.onUpdate (entity, ts);
 
             if (entity.processCollisions) {
                 entity.processCollisions(entity, allEntities);
@@ -90,8 +91,9 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         });
 
         // Update all the static blocks within the world.
-        this.props.blocks.forEach(block => {
-            block.onUpdate!(block, ts);
+        gameState.entities.forEach(block => {
+            if(block.onUpdate)
+                block.onUpdate!(block, ts);
         });
 
         // Update the viewport to smoothly follow the target.
@@ -99,8 +101,8 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
             const targetProps = this.followTarget.props as IPlayerProps;
 
             // Calculate the desired viewport position to center the target.
-            const targetCenterX = targetProps.position.x + targetProps.position.width / 2;
-            const targetCenterY = targetProps.position.y + targetProps.position.height / 2;
+            const targetCenterX = targetProps.positioned.x + targetProps.positioned.width / 2;
+            const targetCenterY = targetProps.positioned.y + targetProps.positioned.height / 2;
             const desiredViewportX = targetCenterX - this.props.viewportWidth / 2;
             const desiredViewportY = targetCenterY - this.props.viewportHeight / 2;
 
@@ -135,14 +137,14 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         gameState.viewport.y = this.props.viewportY;
     }
 
-    async addBlock(block: IGameEntity<any>) {
-        if (block.onInit) {
-            block.onInit(block);
-        }
-        block.props.isInitialized = true;
-        this.props.blocks.push(block);
-        return this;
-    }
+    // async addBlock(block: IGameEntity<any>) {
+    //     if (block.onInit) {
+    //         block.onInit(block);
+    //     }
+    //     block.props.isInitialized = true;
+    //     this.props.blocks.push(block);
+    //     return this;
+    // }
 
     private worldEntityRenderer = (
         ts: number,
@@ -160,21 +162,27 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         // Draw all entities. They will be drawn relative to the translated world origin.
         // For better performance, you could add logic here to only draw entities
         // that are currently within the viewport's bounds.
-        this.props.blocks.forEach(block => {
-            block.onDraw!(block, canvasHelper);
-        });
-        gameState.dynamicEntities.forEach(entity => {
-            entity.onDraw!(entity, canvasHelper);
-        });
+            gameState.entities.forEach(entity => {
+                if(entity.onDraw)
+                    entity.onDraw!(entity, canvasHelper);
+            });
+
+            gameState.dynamicEntities.forEach(entity => {
+                if(entity.onDraw)
+                entity.onDraw!(entity, canvasHelper);
+            });
 
         // Restore the canvas to its original state (removes the translation).
         // This is crucial for drawing UI elements that should not move with the world.
+
+         //this.drawDebugInfo(ctx);
+
         ctx.restore();
 
         // --- DEBUG INFO ---
         // This code now runs after ctx.restore(), so it draws directly onto the
         // screen and is not affected by the camera's position.
-        //this.drawDebugInfo(ctx);
+       
     };
 
     private drawDebugInfo(ctx: CanvasRenderingContext2D): void {

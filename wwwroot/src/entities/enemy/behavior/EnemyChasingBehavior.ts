@@ -25,8 +25,8 @@ export const EnemyChasingBehavior = (): IEnemyBehavior => {
             const playerProps = playerEntity.props;
 
             // Get the distance to the player to determine if the enemy should chase.
-            const distanceX = playerProps.position.x - props.position.x;
-            const distanceY = playerProps.position.y - props.position.y;
+            const distanceX = playerProps.positioned.x - props.positioned.x;
+            const distanceY = playerProps.positioned.y - props.positioned.y;
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 
             // A threshold for when the enemy should start chasing.

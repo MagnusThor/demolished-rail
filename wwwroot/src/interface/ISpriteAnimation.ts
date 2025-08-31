@@ -1,4 +1,4 @@
-import { ISpriteSheetAsset } from "../utils/ISpriteSheetAsset";
+import { ISpriteSheetAsset } from "./ISpriteSheetAsset";
 
 // MODIFIED: This now only contains data specific to one animation sequence
 

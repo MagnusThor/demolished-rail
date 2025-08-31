@@ -1,4 +1,4 @@
-import { IIndexedTile } from "../utils/tileBlockHelpers";
+import { IIndexedTile } from "./IIndexedTile";
 import { ICollectibleProps } from "./ICollectibleProps";
 import { IGameEntity } from "./IGameEntity";
 import { ITexture } from "./ITexture";
@@ -9,12 +9,12 @@ export interface ILevelProps {
     tileMap: number[][];
     tileWidth: number;
     tileHeight: number;
-    platforms: IGameEntity<any>[];
-    collectibles: IGameEntity<ICollectibleProps>[];
-    textures: ITexture[]
     indexedTiles: IIndexedTile[],
     isInitialized: boolean;
     logicalCollisionMap?: boolean[][];
+    textures?: {
+        [key:string]: ITexture
+    }
 
 }
 

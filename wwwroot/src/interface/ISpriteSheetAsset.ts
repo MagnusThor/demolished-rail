@@ -1,4 +1,4 @@
-import { IGameAsset } from "../interface/IGameAsset";
+import { IGameAsset } from "./IGameAsset";
 
 /**
  * Represents a sprite sheet asset used in the game.

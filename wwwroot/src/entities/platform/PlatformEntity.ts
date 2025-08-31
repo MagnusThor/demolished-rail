@@ -8,23 +8,29 @@ import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlatformProps } from "../../interface/IPlatformProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
 import { Positioned } from "../../interface/IPositioned";
-import { findClosestSolidTile } from "../../utils/tileBlockHelpers";
+import { findClosestSolidTile, getTileProperties } from "../../utils/tileBlockHelpers";
 import { GameEntity } from "../GameEntity";
 
 
 export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameEntity<IPlatformProps> {
+    texture: any;
+    // Add a class property to store the tile properties
+    private tileProperties: any;
     
-    constructor(tile: any, props: ILevelProps) {
+    constructor(tile: any, props: ILevelProps,texture:any) {
         // Find platform boundaries based on surrounding solid tiles
         const closestTopTile = findClosestSolidTile(props.tileMap, tile.x, tile.y, "up");
         const closestBottomTile = findClosestSolidTile(props.tileMap, tile.x, tile.y, "down");
-        const minY = closestTopTile ? closestTopTile.y * props.tileHeight + props.tileHeight : tile.y * props.tileHeight;
-        const maxY = closestBottomTile ? closestBottomTile.y * props.tileHeight - props.tileHeight : tile.y * props.tileHeight;
+        const minY = closestTopTile ? closestTopTile.y * props.tileHeight + (props.tileHeight+32) : tile.y * props.tileHeight;
+        const maxY = closestBottomTile ? closestBottomTile.y * props.tileHeight  : tile.y * props.tileHeight;
+        
+        // Calculate the tile properties and store them in a local variable before the super call.
+        const tileProps = getTileProperties(3)!;
         
         super(
             "platformBlock",
             {
-                position: new Positioned(tile.x * props.tileWidth, minY, props.tileWidth, props.tileHeight),
+                positioned: new Positioned(tile.x * props.tileWidth, minY, tileProps.width, tileProps.height),
                 velY: 1,
                 minY: minY,
                 maxY: maxY,
@@ -33,6 +39,11 @@ export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameE
                 isInitialized: false,
             }
         );
+
+        // Now, after the super call, assign the local variable to the class property.
+        this.tileProperties = tileProps;
+        this.texture = texture
+        
         
         this.collisionDetectors = [
             {
@@ -45,21 +56,21 @@ export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameE
     
 
     getBoundingBox = (self: IGameEntity<IPlatformProps>): IBoundingBox => {
-        return self.props.position.getBoundingBox!();
+        return self.props.positioned.getBoundingBox!();
     }
     
     private detectPlayerCollision(platformProps: IPlatformProps, playerEntity: IGameEntity<IPlayerProps>): ICollisionResult[] {
         const playerProps = playerEntity.props;
         const collisionResults = new Array<ICollisionResult>();
 
-        if (CollisionHelper.AABBColliding(playerProps.position.getBoundingBox!(), platformProps.position.getBoundingBox!())) {
+        if (CollisionHelper.AABBColliding(playerProps.positioned.getBoundingBox!(), platformProps.positioned.getBoundingBox!())) {
             collisionResults.push({
                 axis: CollisionAxis.Y,
                 targetEntity: playerEntity,
-                x: platformProps.position.x,
-                y: platformProps.position.y,
-                width: platformProps.position.width,
-                height: platformProps.position.height,
+                x: platformProps.positioned.x,
+                y: platformProps.positioned.y,
+                width: platformProps.positioned.width,
+                height: platformProps.positioned.height,
             });
         }
         return collisionResults;
@@ -73,34 +84,53 @@ export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameE
         // This prevents the platform from affecting the player if they hit it from the sides or below.
         if (playerProps.velY >= 0) {
             // This logic is now more robust. It places the player precisely on top of the platform.
-            playerProps.position.y = platformProps.position.y - playerProps.position.height;
-            playerProps.position.y += platformProps.velY;
+            playerProps.positioned.y = platformProps.positioned.y - playerProps.positioned.height;
+            playerProps.positioned.y += platformProps.velY;
             playerProps.velY = 0;
             playerProps.isGrounded = true;
         }
     }
     
     public onUpdate(self: IGameEntity<IPlatformProps>): void {
-        self.props.oldY = self.props.position.y;
+        self.props.oldY = self.props.positioned.y;
         
         // Predict the next position to prevent overshooting the boundaries
-        const nextY = self.props.position.y + self.props.velY;
+        const nextY = self.props.positioned.y + self.props.velY;
         
-        if (nextY >= self.props.maxY || nextY <= self.props.minY) {
+        // FIX: The platform was reversing direction too early. The check for maxY must include the platform's height.
+        if ((nextY + self.props.positioned.height) >= self.props.maxY || nextY <= self.props.minY) {
             self.props.velY *= -1;
         }
 
-        self.props.position.y += self.props.velY;
+        self.props.positioned.y += self.props.velY;
     }
     
     public onDraw(self: IGameEntity<IPlatformProps>, helper: CanvasHelper): void {
+
+        
+        const tileTexture = this.texture;
+
         const ctx = helper.ctx;
-        ctx.fillStyle = self.props.color;
-        ctx.fillRect(
-            self.props.position.x, 
-            self.props.position.y,
-            self.props.position.width,
-            self.props.position.height
+
+        ctx.drawImage(
+            tileTexture.texture.src, // Source image
+            tileTexture.x,           // Source x
+            tileTexture.y,           // Source y
+            tileTexture.width,       // Source width
+            tileTexture.height,      // Source height
+            self.props.positioned.x,                  // Destination x
+            self.props.positioned.y,                  // Destination y
+            // Use the stored tile properties for drawing dimensions
+            this.tileProperties.width,    // Destination width
+            this.tileProperties.height     // Destination height
         );
+
+        // ctx.fillStyle = self.props.color;
+        // ctx.fillRect(
+        //  self.props.positioned.x, 
+        //  self.props.positioned.y,
+        //  self.props.positioned.width,
+        //  self.props.positioned.height
+        // );
     }
 }

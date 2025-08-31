@@ -6,14 +6,8 @@ import { IGameSpriteProps } from "./IGameSpriteProps";
 
 
 
-export interface IPlayerProps extends IGameSpriteProps {
-    // x: number;
-    // y: number;
-    // width: number;
-    // height: number;
-    
-    position: IPositioned;
-
+export interface IPlayerProps extends IGameSpriteProps {   
+    positioned: IPositioned;
     velX: number;
     velY: number;
     gravity: number;
@@ -22,9 +16,7 @@ export interface IPlayerProps extends IGameSpriteProps {
     isMovingLeft: boolean;
     isMovingRight: boolean;
     lastDirection: "left" | "right";
-    tileMap: number[][];
-    tileWidth: number;
-    tileHeight: number;
     isInitialized: boolean;
     health: IHealthProps;
+    oldY: number
 }

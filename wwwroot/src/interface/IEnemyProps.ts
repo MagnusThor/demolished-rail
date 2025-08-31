@@ -15,7 +15,7 @@ export interface IEnemyBehavior {
 }
 
 export interface IEnemyProps extends IGameEntityBase{
-    position: IPositioned;
+    positioned: IPositioned;
     health: IHealthProps;
     isAlive: boolean;
     lifeTime: number;
@@ -23,9 +23,8 @@ export interface IEnemyProps extends IGameEntityBase{
     velY: number; // Added for movement
     gravity: number; // Added gravity
     isGrounded: boolean; // Indicates if the enemy is on a solid surface
-    tileMap: number[][]; // A reference to the tile map for collisions
-    tileWidth: number; // The width of a tile
-    tileHeight: number; // The height of a tile
+    // tileWidth: number; // The width of a tile
+    // tileHeight: number; // The height of a tile
     behavior?: IEnemyBehavior[];
     direction: number; // Added to control patrol direction
 }
