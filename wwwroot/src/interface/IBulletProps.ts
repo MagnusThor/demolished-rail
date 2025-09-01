@@ -8,7 +8,7 @@ import { IPositioned } from "./IPositioned";
 
 export interface IBulletProps extends IDynamicProps {
 
-    position: IPositioned; // The position of the bullet in the game world
+    positioned: IPositioned; // The position of the bullet in the game world
     velX: number;
     velY: number;
     isAlive: boolean;

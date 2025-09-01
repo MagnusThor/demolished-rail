@@ -10,27 +10,33 @@ import { Positioned } from "../../interface/IPositioned";
 import { isSolidTile } from "../../utils/tileBlockHelpers";
 import { GameEntity } from "../GameEntity";
 import { IEnemyProps } from "../../interface/IEnemyProps";
+import { StateHelper } from "../StateHelper";
 
 const BULLET_SPEED = 10;
 
-export class BulletEntity extends GameEntity<IBulletProps> implements IGameEntity<IBulletProps> {
+export class BulletEntity extends GameEntity<IBulletProps>  {
     
-    constructor(startX: number, startY: number, direction: "left" | "right") {
-        super(
-            "bulletBlock",
-            {
+    constructor(startX: number, startY: number, direction: string) {
+         const props = {
                 health: {
                     health: 100,
                     damage: 10
                 },
-                position: new Positioned(startX, startY, 8, 8),
+                positioned: new Positioned(startX, startY, 8, 8),
                 velX: direction === "right" ? BULLET_SPEED : -BULLET_SPEED,
                 velY: 0,
                 isAlive: true,
                 lifeTime: 2000,
-                isInitialized: true
+                isInitialized: true,
+                zIndex:1,
+                states:{}
             }
+
+        super(
+            "bulletBlock",
+            props   
         );
+
         
         this.collisionDetectors = [
             {
@@ -43,7 +49,7 @@ export class BulletEntity extends GameEntity<IBulletProps> implements IGameEntit
                 targetName: "enemyBlock",
                 detectorFn: (bulletProps: IBulletProps, enemyEntity: IGameEntity<IEnemyProps>) => {
                     const collisionResults = new Array<ICollisionResult>();
-                    const bulletBBox = bulletProps.position.getBoundingBox!();
+                    const bulletBBox = bulletProps.positioned.getBoundingBox!();
                     const enemyBBox = enemyEntity.getBoundingBox!(enemyEntity);
 
                     if (CollisionHelper.AABBColliding(bulletBBox, enemyBBox)) {
@@ -67,11 +73,11 @@ export class BulletEntity extends GameEntity<IBulletProps> implements IGameEntit
     }
     
     getBoundingBox = (self: IGameEntity<IBulletProps>): IBoundingBox => {
-        return self.props.position.getBoundingBox!();
+        return self.props.positioned.getBoundingBox!();
     }
     
     onUpdate? =(self: IGameEntity<IBulletProps>, timeStamp: number): void => {
-        self.props.position.x += self.props.velX;
+        self.props.positioned.x += self.props.velX;
         self.props.lifeTime -= timeStamp;
         if (self.props.lifeTime <= 0) {
             self.props.isAlive = false;
@@ -87,10 +93,10 @@ export class BulletEntity extends GameEntity<IBulletProps> implements IGameEntit
         
         ctx.fillStyle = "#FFC107";
         ctx.fillRect(
-            props.position.x,
-            props.position.y,
-            props.position.width,
-            props.position.height,
+            props.positioned.x,
+            props.positioned.y,
+            props.positioned.width,
+            props.positioned.height,
         );
     }
     
@@ -99,10 +105,10 @@ export class BulletEntity extends GameEntity<IBulletProps> implements IGameEntit
     private detectTileCollision(bulletProps: IBulletProps, tileEntity: IGameEntity<ILevelProps>): ICollisionResult[] | false {
         const tileProps = tileEntity.props;
         const collisionResults = new Array<ICollisionResult>();
-        const bulletBBox = bulletProps.position.getBoundingBox!();
+        const bulletBBox = bulletProps.positioned.getBoundingBox!();
 
-        const bulletTileX = Math.floor(bulletProps.position.x / tileProps.tileWidth);
-        const bulletTileY = Math.floor(bulletProps.position.y / tileProps.tileHeight);
+        const bulletTileX = Math.floor(bulletProps.positioned.x / tileProps.tileWidth);
+        const bulletTileY = Math.floor(bulletProps.positioned.y / tileProps.tileHeight);
         
         // Dynamically adjust the collision check radius based on bullet speed
         const checkRadius = Math.ceil(Math.abs(bulletProps.velX) / tileProps.tileWidth) + 1;

@@ -1,23 +1,25 @@
-import { CollisionAxis } from "../../enums/CollisionAxis";
 import { KeyCode } from "../../enums/KeyCode";
 import { gameState } from "../../state/gameState";
-import { ICollisionDetector } from "../../interface/ICollisionDetector";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { IPlayerProps } from "../../interface/IPlayerProps";
-import { isEntityInView, runCollitionDetectors } from "../../utils/collitionHelpers";
+import { runCollitionDetectors } from "../../utils/collitionHelpers";
 import { BulletEntity } from "../bullet/BulletEntity";
-import { CollectibleEntity } from "../collectible/CollectibleEntity";
+
 
 
 
 export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number): void => {
     const props = self.props;
     const input = gameState.input!;
-    const MOVE_SPEED = 5;
-    const JUMP_SPEED = 10;
-    
+    const MOVE_SPEED = 4;
+    const JUMP_SPEED = 6;
+
+    const stateHelper = self.stateHelper;
+
+    // Create an instance of the StateHelper for this entity
+   
     // Reset the onLadder flag each frame before collision detection
-    props.onLadder = false;
+    stateHelper.set<boolean>("onLadder", false);
 
     // Check for collisions after updating the x position
     const detectors = gameState.player!.collisionDetectors;
@@ -41,23 +43,24 @@ export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number)
     }
 
     // Horizontal movement
-    props.isMovingLeft = input.isKeyPressed(KeyCode.ArrowLeft) || input.isKeyPressed(KeyCode.KeyA);
-    props.isMovingRight = input.isKeyPressed(KeyCode.ArrowRight) || input.isKeyPressed(KeyCode.KeyD);
+    stateHelper.set<boolean>("isMovingLeft", input.isKeyPressed(KeyCode.ArrowLeft) || input.isKeyPressed(KeyCode.KeyA));
+    stateHelper.set<boolean>("isMovingRight", input.isKeyPressed(KeyCode.ArrowRight) || input.isKeyPressed(KeyCode.KeyD));
+
+    
     props.velX = 0;
 
-    if (props.isMovingLeft) {
+    if (stateHelper.get<boolean>("isMovingLeft")) {
         props.velX = -MOVE_SPEED;
-        props.lastDirection = "left";
-    } else if (props.isMovingRight) {
+        stateHelper.set<string>("lastDirection", "left");
+    } else if (stateHelper.get<boolean>("isMovingRight")) {
         props.velX = MOVE_SPEED;
-        props.lastDirection = "right";
+        stateHelper.set<string>("lastDirection", "right");
     }
 
     // Ladder climbing logic
-    if (props.onLadder) {
-        props.isGrounded = true; // Stay "grounded" on the ladder to prevent gravity from taking over.
+    if (stateHelper.get<boolean>("onLadder")) {
+        stateHelper.set<boolean>("isGrounded", true); // Stay "grounded" on the ladder to prevent gravity from taking over.
         props.velY = 0; // Stop vertical movement from gravity/jumping.
-
         // Handle up/down movement on the ladder
         if (input.isKeyPressed(KeyCode.ArrowUp) || input.isKeyPressed(KeyCode.KeyW)) {
             props.velY = -MOVE_SPEED;
@@ -66,9 +69,9 @@ export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number)
         }
     } else {
         // Normal jumping logic if not on a ladder
-        if ((input.isKeyPressed(KeyCode.ArrowUp) || input.isKeyPressed(KeyCode.KeyW)) && props.isGrounded) {
-            props.isJumping = true;
-            props.isGrounded = false;
+        if ((input.isKeyPressed(KeyCode.ArrowUp) || input.isKeyPressed(KeyCode.KeyW)) && stateHelper.get<boolean>("isGrounded")) {
+            stateHelper.set<boolean>("isJumping", true);
+            stateHelper.set<boolean>("isGrounded", false);
             props.velY = -JUMP_SPEED;
             props.currentAnimation = props.animations["jump"];
         }
@@ -102,9 +105,8 @@ export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number)
 
     if (input.isKeyPressed(KeyCode.Space)) {
         const newBullet = new BulletEntity(
-            props.positioned.x + (props.lastDirection === "right" ? props.positioned.width : -props.positioned.width),
-            props.positioned.y + props.positioned.height / 2,
-            props.lastDirection
+            props.positioned.x + (stateHelper.get<string>("lastDirection") === "right" ? props.positioned.width : -props.positioned.width),
+            props.positioned.y + props.positioned.height / 2, stateHelper.get<string>("lastDirection") as string
         );
         gameState.dynamicEntities.push(newBullet);
 
@@ -112,14 +114,14 @@ export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number)
     }
     
     // Jump animation takes priority
-    if (!props.isGrounded) {
+    if (!stateHelper.get<boolean>("isGrounded")) {
         if (props.currentAnimation!.name !== "jump") {
             props.currentAnimation = props.animations["jump"];
         }
     }
     // If not in the air, check for walk or idle
     else {
-        if (props.isMovingLeft || props.isMovingRight) {
+        if (stateHelper.get<boolean>("isMovingLeft") || stateHelper.get<boolean>("isMovingRight")) {
             // If the player is moving, switch to the walk animation
             if (props.currentAnimation!.name !== 'walk') {
                 props.currentAnimation = props.animations.walk;

@@ -1,13 +1,13 @@
 import { IIndexedTile } from "./IIndexedTile";
 import { ICollectibleProps } from "./ICollectibleProps";
-import { IGameEntity } from "./IGameEntity";
+import { IGameEntity, IGameEntityBase } from "./IGameEntity";
 import { ITexture } from "./ITexture";
 import { IPositioned } from "./IPositioned";
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 
 
 
-export interface ILevelProps {
+export interface ILevelProps extends IGameEntityBase  {
     tileMap: number[][];
     tileWidth: number;
     tileHeight: number;
@@ -16,7 +16,10 @@ export interface ILevelProps {
     logicalCollisionMap?: boolean[][];
     textures?: {
         [key:string]: ITexture
-    }
+    },
+
+
+    
 
 }
 

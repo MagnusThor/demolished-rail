@@ -54,7 +54,7 @@ export class BackgroundEntity extends Canvas2DEntity<{}> {
             // Draw a basic mountain range using a series of lines
             const mountainHeight = this.screenHeight * 0.4;
             const mountainBase = this.screenHeight - mountainHeight;
-            const segmentWidth = this.screenWidth / 50;
+            const segmentWidth = this.screenWidth / 30;
             
             // Draw the first mountain range at the current offset
             ctx.moveTo(-parallaxOffset, mountainBase);

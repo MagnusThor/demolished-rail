@@ -1,22 +1,17 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
-import { CollisionAxis } from "../../enums/CollisionAxis";
-import { gameAssets, gameState } from "../../state/gameState";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { ICollisionDetector } from "../../interface/ICollisionDetector";
-import { ICollisionResult } from "../../interface/ICollisionResult";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { IIndexedTile } from "../../interface/IIndexedTile";
 import { ILevelProps } from "../../interface/ILevelProps";
-import { IPlayerProps } from "../../interface/IPlayerProps";
-import { Positioned } from "../../interface/IPositioned";
 import { TileDefinitions } from "../../level/TileDefinitions";
-import { isSolidTile, calculateTileCoordinates, getTilesByType, getTileXY, getTileAtPosition, getTileProperties, determineVisibleTiles, getSurroundingTiles } from "../../utils/tileBlockHelpers";
-import { isEntityInView } from "../../utils/collitionHelpers";
-import { CollectibleEntity } from "../collectible/CollectibleEntity";
+import { gameState } from "../../state/gameState";
+import { calculateTileCoordinates, isSolidTile, getTileProperties, determineVisibleTiles } from "../../utils/tileBlockHelpers";
 import { GameEntity } from "../GameEntity";
-import { PlatformEntity } from "../platform/PlatformEntity";
+import { StateHelper } from "../StateHelper";
 
-export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<ILevelProps>{
+
+export class TileEntity extends GameEntity<ILevelProps> {
     collisionDetectors?: ICollisionDetector[];
     private tileSpatialGrid: Map<string, IIndexedTile[]> = new Map();
     public logicalCollisionMap: boolean[][] = [];    
@@ -94,20 +89,20 @@ export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<I
                     
                     ctx.drawImage(
                         tileTexture.texture.src, // Source image
-                        tileTexture.x,          // Source x
-                        tileTexture.y,          // Source y
-                        tileTexture.width,      // Source width
+                        tileTexture.x,           // Source x
+                        tileTexture.y,           // Source y
+                        tileTexture.width,       // Source width
                         tileTexture.height,      // Source height
-                        tile.x,          // Destination x
-                        tile.y,          // Destination y
+                        tile.x,           // Destination x
+                        tile.y,           // Destination y
                         tileProperties.width,    // Destination width
-                        tileProperties.height     // Destination height
+                        tileProperties.height      // Destination height
                     );
                 } else if (tile.type === 2) {
                     ctx.fillStyle = "#8B4513";
                     ctx.fillRect(tile.x, tile.y, tileProperties.width, tileProperties.height);
                 } else if (tile.type === 5) {
-                    const tileTexture = self.props.textures!["pilar"];                 
+                    const tileTexture = self.props.textures!["pilar"];                
                     ctx.drawImage(
                         tileTexture.texture.src,
                         tileTexture.x,
@@ -121,7 +116,7 @@ export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<I
                     );
 
                 }else if(tile.type == 6){
-                       const tileTexture = self.props.textures![tileProperties.texture!];                 
+                        const tileTexture = self.props.textures![tileProperties.texture!];                 
                     ctx.drawImage(
                         tileTexture.texture.src,
                         tileTexture.x,

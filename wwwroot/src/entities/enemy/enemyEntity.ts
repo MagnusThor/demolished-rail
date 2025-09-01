@@ -11,11 +11,13 @@ import { Positioned } from "../../interface/IPositioned";
 import { EnemyChasingBehavior } from "./behavior/EnemyChasingBehavior";
 import { EnemyPatrollingBehavior } from "./behavior/EnemyPatrollingBehavior";
 import { enemyCollisionDetectors } from "./enemyCollisionDetectors";
+import { StateHelper } from "../StateHelper";
 
 // ent
 export const ENEMY_SPEED = 2;
 
 export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
+    stateHelper: StateHelper<IEnemyProps>;
     constructor(startX: number,
         startY: number,
         indexedTiles: IIndexedTile[]) {      
@@ -45,17 +47,20 @@ export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
             velX: 0,
             velY: 0,
             gravity: 0.35,
-            isGrounded: false,        
+            isGrounded: false, 
             behavior: assignedBehavior,
             direction: 1,
             isInitialized: true,
-            zIndex:1
+            zIndex:1,
+            states:{}
         };
 
+        this.stateHelper = new StateHelper(this.props);
         this.collisionDetectors = enemyCollisionDetectors;
 
 
     }
+  
     uuid: string;
     name: string;
     key: string;

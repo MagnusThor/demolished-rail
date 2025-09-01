@@ -6,6 +6,7 @@ import { IGameEntity, IGameEntityBase } from "../interface/IGameEntity";
 import { IPositioned } from "../interface/IPositioned";
 import { ITexture } from "../interface/ITexture";
 import { GameEntity } from "./GameEntity";
+import { StateHelper } from "./StateHelper";
 
 
 export interface ILadderProps extends IGameEntityBase{
@@ -20,12 +21,14 @@ export interface ILadderProps extends IGameEntityBase{
 export class LadderEntity extends GameEntity<ILadderProps> implements IGameEntity<ILadderProps> 
 {
     collisionDetectors?: ICollisionDetector[] | undefined;
-   
+    stateHelper: StateHelper<ILadderProps>;
 
     constructor(props:ILadderProps){
         super("ladder",props);
+        this.stateHelper = new StateHelper(props);
 
     }
+   
     
    onInit?: (self: IGameEntity<ILadderProps>) => void = (self) => {
         // Initialization logic for the ladder, if needed.

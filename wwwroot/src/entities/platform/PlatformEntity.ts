@@ -12,7 +12,7 @@ import { findClosestSolidTile, getTileProperties } from "../../utils/tileBlockHe
 import { GameEntity } from "../GameEntity";
 
 
-export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameEntity<IPlatformProps> {
+export class PlatformEntity extends GameEntity<IPlatformProps> {
     texture: any;
     // Add a class property to store the tile properties
     private tileProperties: any;
@@ -37,7 +37,8 @@ export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameE
                 oldY: tile.y * props.tileHeight,
                 color: "blue",
                 isInitialized: false,
-                zIndex:1
+                zIndex:1,
+                states:{}
             }
         );
 
@@ -88,7 +89,8 @@ export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameE
             playerProps.positioned.y = platformProps.positioned.y - playerProps.positioned.height;
             playerProps.positioned.y += platformProps.velY;
             playerProps.velY = 0;
-            playerProps.isGrounded = true;
+            //playerProps.states["isGrounded"] = true;
+            player.stateHelper.set("isGrounded",true);
         }
     }
     
@@ -119,11 +121,11 @@ export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameE
             tileTexture.y,           // Source y
             tileTexture.width,       // Source width
             tileTexture.height,      // Source height
-            self.props.positioned.x,                  // Destination x
-            self.props.positioned.y,                  // Destination y
+            self.props.positioned.x,              // Destination x
+            self.props.positioned.y,              // Destination y
             // Use the stored tile properties for drawing dimensions
             this.tileProperties.width,    // Destination width
-            this.tileProperties.height     // Destination height
+            this.tileProperties.height      // Destination height
         );
 
         // ctx.fillStyle = self.props.color;

@@ -8,11 +8,11 @@ import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { GameEntity } from "../GameEntity";
 
 
-export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntity<IPlayerProps> {   
+export class PlayerEntity extends GameEntity<IPlayerProps> {   
         constructor(props:IPlayerProps)     {   
             super("playerBlock", props);
             this.collisionDetectors =playerCollisionDetectors;
-            this.props.currentAnimation = this.props.animations["idle"];     
+            this.props.currentAnimation = this.props.animations["idle"];    
          }
         getBoundingBox = (self:IGameEntity<IPlayerProps>): IBoundingBox => {  
             return self.props.positioned.getBoundingBox!();

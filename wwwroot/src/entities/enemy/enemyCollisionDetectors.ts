@@ -18,10 +18,10 @@ export const enemyCollisionDetectors = [
             const collisionResults = new Array<ICollisionResult>();
             if (CollisionHelper.AABBColliding(enemyProps.positioned.getBoundingBox!(), bullet.getBoundingBox!(bullet))) {
                 collisionResults.push({
-                    x: bullet.props.position.x,
-                    y: bullet.props.position.y,
-                    width: bullet.props.position.width,
-                    height: bullet.props.position.height,
+                    x: bullet.props.positioned.x,
+                    y: bullet.props.positioned.y,
+                    width: bullet.props.positioned.width,
+                    height: bullet.props.positioned.height,
                     axis: CollisionAxis.X,
                     targetEntity: bullet
                 });

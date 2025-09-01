@@ -94,27 +94,28 @@ export class RunWorld {
             console.error("Player start position not found in the tile map!");
             return [];
         }
-        console.log(playerStartTile);
+      
 
         const player = new PlayerEntity({
             positioned: new Positioned(playerStartTile.x, playerStartTile.y, playerProps.width, playerProps.height),
             velX: 0,
-            velY: 0,
-            oldY: 0,
-            gravity: 0.25,
-            isJumping: false,
-            isGrounded: false,
-            isMovingLeft: false,
-            isMovingRight: false,
-            lastDirection: "right",
-            isInitialized: false,
-            onLadder: false,
+            velY: 0,          
+            gravity: 0.2,
+            isInitialized: false,        
             health: {
                 health: 100,
                 damage: 0
             },
             animations: playerAnimations(),
-            zIndex:10
+            zIndex:10,
+            states:{
+                onLadder: false,
+                isJumping: false,
+                isGrounded: false,
+                isMovingLeft: false,
+                isMovingRight: false,
+                lastDirection: "right",
+            }
         });
         gameState.player = player;
 
@@ -132,6 +133,7 @@ export class RunWorld {
 
         // Use the new LevelInitializer to create the level's static entities
         const levelProps: ILevelProps = {
+            positioned: new Positioned(0,0,0,0), // not used
             tileMap: LEVEL_SAMPLE,
             tileWidth: DEFAULT_TILE_WIDTH,
             tileHeight: DEFULT_TILE_HEIGHT,
@@ -143,7 +145,9 @@ export class RunWorld {
                 "stone": gameAssets.createTexture("tileset_1",0,112,16,16)!,
                 "ladder": gameAssets.createTexture("tileset_1",48,160,16,16)!
             },
-            isInitialized: false
+            isInitialized: false,
+            states:{},
+            zIndex:0
         };
 
         const staticLevelEntities = createLevelEntities(levelProps);
@@ -155,6 +159,10 @@ export class RunWorld {
             viewportHeight: this.screenCanvas.height,
             viewportX: 0,
             viewportY: 0,
+            isInitialized:false,
+            positioned : new Positioned(0,0,0,0),
+            states:{},
+            zIndex:0
         }, this.screenCanvas.width, this.screenCanvas.height);
 
         // Add all entities to the world

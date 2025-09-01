@@ -15,7 +15,7 @@ import { GameEntity } from "../GameEntity";
  * A class-based collectible entity.
  * It assumes the correct world coordinates are passed in from the tileBlock.
  */
-export class CollectibleEntity extends GameEntity<ICollectibleProps> implements IGameEntity<ICollectibleProps> {
+export class CollectibleEntity extends GameEntity<ICollectibleProps>  {
 
     // Define the fixed size of the collectible.
     private static readonly COLLECTIBLE_WIDTH = 16;
@@ -31,7 +31,8 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> implements 
                 color: "gold",
                 uuid: crypto.randomUUID(),
                 isInitialized: false,
-                zIndex:1
+                zIndex:1,
+                states:{}
             }
         );
         this.collisionDetectors = [

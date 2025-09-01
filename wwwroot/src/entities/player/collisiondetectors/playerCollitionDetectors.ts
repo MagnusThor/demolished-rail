@@ -77,7 +77,7 @@ export const playerCollisionDetectors =
             } else if (axis === CollisionAxis.Y) {
                 if (playerProps.velY > 0) {
                     playerProps.positioned.y = tileY - playerProps.positioned.height;
-                    playerProps.isGrounded = true;
+                    playerProps.states!["isGrounded"] = true;
                 } else if (playerProps.velY < 0) {
                     playerProps.positioned.y = tileY + tileHeight;
                 }
@@ -137,7 +137,7 @@ export const playerCollisionDetectors =
             } else if (axis === CollisionAxis.Y) {
                 if (playerProps.velY > 0) {
                     playerProps.positioned.y = platformY - playerProps.positioned.height;
-                    playerProps.isGrounded = true;
+                    playerProps.states!["isGrounded"] = true;
                 } else if (playerProps.velY < 0) {
                     playerProps.positioned.y = platformY + platformHeight;
                 }
@@ -163,8 +163,8 @@ export const playerCollisionDetectors =
         onCollision: (playerProps: IPlayerProps, collisionData: ICollisionResult, ladderEntity: LadderEntity) => {
             // This is where you will enable the climbing logic in your player's update function.
             // For now, we will simply set a flag.
-            playerProps.onLadder = true;
-            console.log("hitting a ladder",ladderEntity)
+            playerProps.states!["onLadder"] = true;
+          
         }
     }
 ];

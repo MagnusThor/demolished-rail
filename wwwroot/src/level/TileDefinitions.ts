@@ -57,13 +57,12 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
     },
     // Ladder
     42: {
-        width: 16,
-        height: 16,
+        width: 15,
+        height: 15,
         texture: "ladder",
         isSolid: true,
         creator: (levelProps,tile:IPoint2D) => {
                 const texture = levelProps.textures!["ladder"];
-                console.log(texture);
                  const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x)
                   return new LadderEntity({
                     ...levelProps,
@@ -72,12 +71,12 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
                       positioned: new Positioned(x,y,32,32),
                       isInitialized:false,
                       texture:texture,
-                      zIndex:1
+                      zIndex:1,
+                      states:{}
                    });
 
         }
     },
-
 
     // Crate tile, can be destroyed
     40: {

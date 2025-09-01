@@ -3,13 +3,15 @@ import { Canvas2DEntity } from '../../../src/Engine/Entity/Canvas2DEntity';
 import { ICompositeEntity } from '../../../src/Engine/Entity/CompositeEntity';
 import { CanvasHelper } from '../../../src/Engine/Helpers/CanvasHelper';
 import { gameState } from '../state/gameState';
-import { IGameEntity } from '../interface/IGameEntity';
+import { IGameEntity, IGameEntityBase } from '../interface/IGameEntity';
 import { IPlayerProps } from '../interface/IPlayerProps';
+import { isEntityInView } from '../utils/collitionHelpers';
+import { StateHelper } from './StateHelper';
 
 /**
  * Interface for the properties of a WorldEntity.
  */
-export interface IWorldProps {
+export interface IWorldProps extends IGameEntityBase {
     worldWidth: number;
     worldHeight: number;
     viewportX: number;
@@ -24,9 +26,11 @@ export interface IWorldProps {
  * WorldEntity represents a scrollable world with a viewport.
  * It manages all game entities and controls the camera.
  */
-export class WorldEntity extends Canvas2DEntity<IWorldProps> {
+export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEntity<IWorldProps> {
     // CHANGE: Removed worldCanvas, worldCtx, and canvasHelper as they are no longer needed.
     private followTarget?: IGameEntity<any>;
+ 
+    stateHelper: StateHelper<IWorldProps>;
 
     // A getter for a key if your engine requires it.
     get key() {
@@ -36,6 +40,8 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
 
     uuid: string = crypto.randomUUID();
 
+
+    
     constructor(
         public name: string,
         public props: IWorldProps,
@@ -51,6 +57,8 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
             screenWidth,
             screenHeight
         );
+
+        this.stateHelper = new StateHelper(props);
 
         gameState.worldWidth = props.worldWidth;
         gameState.worldHeight = props.worldHeight;
@@ -167,7 +175,12 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
 
 
         for (const entity of allEntities) {
-            if (entity.onDraw) {
+            // if (entity.onDraw) {
+            //     entity.onDraw(entity, canvasHelper);
+            // }
+             if (entity.onDraw && isEntityInView(entity, {
+                x:this.props.viewportX, y:this.props.viewportY
+                }  , this.props.viewportWidth, this.props.viewportHeight)) {
                 entity.onDraw(entity, canvasHelper);
             }
         }
