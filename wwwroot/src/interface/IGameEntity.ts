@@ -2,10 +2,13 @@ import { IEntity, ICompositeEntity } from "../../../src";
 import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "./IBoundingBox";
 import { ICollisionDetector } from "./ICollisionDetector";
+import { IPositioned } from "./IPositioned";
 
 
 export interface IGameEntityBase  {
   isInitialized: boolean
+  positioned: IPositioned
+  zIndex: number
 }
 export interface IGameEntityProp {
   isAlive?: boolean; // Optional property to indicate if the entity is alive

@@ -1,17 +1,18 @@
 import { InputHelper } from "../../../src";
 import { IHealthProps } from "./IHealthProps";
-import { IGameEntityProp } from "../interface/IGameEntity";
+import { IGameEntityBase, IGameEntityProp } from "../interface/IGameEntity";
 import { IPositioned } from "./IPositioned";
 import { IGameSpriteProps } from "./IGameSpriteProps";
 
 
 
-export interface IPlayerProps extends IGameSpriteProps {   
+export interface IPlayerProps extends IGameSpriteProps, IGameEntityBase {   
     positioned: IPositioned;
     velX: number;
     velY: number;
     gravity: number;
     isJumping: boolean;
+    onLadder: boolean
     isGrounded: boolean;
     isMovingLeft: boolean;
     isMovingRight: boolean;
@@ -19,4 +20,5 @@ export interface IPlayerProps extends IGameSpriteProps {
     isInitialized: boolean;
     health: IHealthProps;
     oldY: number
+    
 }

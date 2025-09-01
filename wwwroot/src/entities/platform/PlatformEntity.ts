@@ -37,6 +37,7 @@ export class PlatformEntity extends GameEntity<IPlatformProps> implements IGameE
                 oldY: tile.y * props.tileHeight,
                 color: "blue",
                 isInitialized: false,
+                zIndex:1
             }
         );
 

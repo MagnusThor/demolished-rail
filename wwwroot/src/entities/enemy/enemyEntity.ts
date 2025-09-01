@@ -1,5 +1,5 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
-import { gameState } from "../../gameState";
+import { gameState } from "../../state/gameState";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { ICollisionDetector } from "../../interface/ICollisionDetector";
 import { ICollisionResult } from "../../interface/ICollisionResult";
@@ -49,6 +49,7 @@ export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
             behavior: assignedBehavior,
             direction: 1,
             isInitialized: true,
+            zIndex:1
         };
 
         this.collisionDetectors = enemyCollisionDetectors;

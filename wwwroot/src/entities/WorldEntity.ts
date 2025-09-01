@@ -2,7 +2,7 @@
 import { Canvas2DEntity } from '../../../src/Engine/Entity/Canvas2DEntity';
 import { ICompositeEntity } from '../../../src/Engine/Entity/CompositeEntity';
 import { CanvasHelper } from '../../../src/Engine/Helpers/CanvasHelper';
-import { gameState } from '../gameState';
+import { gameState } from '../state/gameState';
 import { IGameEntity } from '../interface/IGameEntity';
 import { IPlayerProps } from '../interface/IPlayerProps';
 
@@ -76,6 +76,8 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         // Combine static and dynamic entities for collision processing.
         const allEntities = [...gameState.entities, ...gameState.dynamicEntities];
 
+         allEntities.sort((a, b) => (a.props.zIndex || 0) - (b.props.zIndex || 0));
+
         // Update all dynamic entities and filter out the ones that are no longer alive.
         gameState.dynamicEntities = gameState.dynamicEntities.filter(entity => {
             if (entity.props.isAlive === false && entity.onDestroy) {
@@ -91,7 +93,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         });
 
         // Update all the static blocks within the world.
-        gameState.entities.forEach(block => {
+        allEntities.forEach(block => {
             if(block.onUpdate)
                 block.onUpdate!(block, ts);
         });
@@ -159,18 +161,17 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> {
         // This effectively moves the camera.
         ctx.translate(-this.props.viewportX, -this.props.viewportY);
 
-        // Draw all entities. They will be drawn relative to the translated world origin.
-        // For better performance, you could add logic here to only draw entities
-        // that are currently within the viewport's bounds.
-            gameState.entities.forEach(entity => {
-                if(entity.onDraw)
-                    entity.onDraw!(entity, canvasHelper);
-            });
+         const allEntities = [...gameState.entities, ...gameState.dynamicEntities]
 
-            gameState.dynamicEntities.forEach(entity => {
-                if(entity.onDraw)
-                entity.onDraw!(entity, canvasHelper);
-            });
+          allEntities.sort((a, b) => (a.props.zIndex || 0) - (b.props.zIndex || 0));
+
+
+        for (const entity of allEntities) {
+            if (entity.onDraw) {
+                entity.onDraw(entity, canvasHelper);
+            }
+        }
+
 
         // Restore the canvas to its original state (removes the translation).
         // This is crucial for drawing UI elements that should not move with the world.

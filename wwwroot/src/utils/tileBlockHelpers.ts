@@ -3,7 +3,8 @@ import { IBoundingBox } from "../interface/IBoundingBox";
 import { IGameEntity } from "../interface/IGameEntity";
 import { IIndexedTile } from "../interface/IIndexedTile";
 import { ILevelProps, ITileProps } from "../interface/ILevelProps";
-import { TILE_TYPES } from "../LEVEL_SAMPLE";
+import { DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "../level/LEVEL_SAMPLE";
+import { TileDefinitions } from "../level/TileDefinitions";
 import { isEntityInView } from "./collitionHelpers";
 
 
@@ -13,6 +14,7 @@ import { isEntityInView } from "./collitionHelpers";
  * @returns True if the tile is solid, false otherwise.
  */
 export const isSolidTile = (tileType: number): boolean => {
+
     return tileType === 1 || tileType === 2 || tileType == 5 
 }
 
@@ -102,9 +104,9 @@ export const getTilesByType = (tileMap: number[][], type: number): IPoint2D[] =>
 };
 
 
-export const getTileXy = (tileMap: number[][], row: number, col: number): IPoint2D => {
-    const tileWidth = 32;
-    const tileHeight = 32;
+export const getTileXY = (tileMap: number[][], row: number, col: number): IPoint2D => {
+    const tileWidth = DEFAULT_TILE_WIDTH;
+    const tileHeight = DEFULT_TILE_HEIGHT;
     const tileId = tileMap[row][col];
     const tileProperties = getTileProperties(tileId);
     if (!tileProperties) {
@@ -165,9 +167,9 @@ export const determineVisibleTiles = (
  * @param tileId The type of the tile.
  * @returns An object with the tile's properties (width, height), or null if not found.
  */
-export const getTileProperties = (tileId: keyof typeof TILE_TYPES | number): ITileProps | null => {
-    if (TILE_TYPES.hasOwnProperty(tileId)) {
-        return TILE_TYPES[tileId as keyof typeof TILE_TYPES];
+export const getTileProperties = (tileId: keyof typeof TileDefinitions | number): ITileProps | null => {
+    if (TileDefinitions.hasOwnProperty(tileId)) {
+        return TileDefinitions[tileId as keyof typeof TileDefinitions];
     }
     return null; 
 }
@@ -185,7 +187,7 @@ export const calculateWorldDimensions = (tileMap: number[][]): { width: number; 
     for (const row of tileMap) {
         let rowWidth = 0;
         for (const tileId of row) {
-            const props = getTileProperties(tileId as keyof typeof TILE_TYPES);
+            const props = getTileProperties(tileId as keyof typeof TileDefinitions);
             if (props) {
                 rowWidth += props.width;
             }
@@ -199,7 +201,7 @@ export const calculateWorldDimensions = (tileMap: number[][]): { width: number; 
     for (const row of tileMap) {
         let maxHeightInRow = 0;
         for (const tileId of row) {
-            const props = getTileProperties(tileId as keyof typeof TILE_TYPES);
+            const props = getTileProperties(tileId as keyof typeof TileDefinitions);
             if (props && props.height > maxHeightInRow) {
                 maxHeightInRow = props.height;
             }
@@ -251,7 +253,7 @@ export const calculateTileCoordinates = (tileMap: number[][]): IIndexedTile[] =>
 export const getTileAtPosition = (tileMap: number[][], worldX: number, worldY: number): IIndexedTile | null => {
     // Get the properties of the first tile type to determine tile dimensions.
     // This assumes all tiles have the same dimensions as the first tile type.
-    const firstTileProps = getTileProperties(tileMap[0][0] as keyof typeof TILE_TYPES);
+    const firstTileProps = getTileProperties(tileMap[0][0] as keyof typeof TileDefinitions);
     if (!firstTileProps) {
         return null;
     }

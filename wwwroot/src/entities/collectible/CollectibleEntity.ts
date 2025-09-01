@@ -1,7 +1,7 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { CollisionHelper } from "../../../../src/Engine/Helpers/CollisionHelper";
 import { CollisionAxis } from "../../enums/CollisionAxis";
-import { gameState } from "../../gameState";
+import { gameState } from "../../state/gameState";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { ICollectibleProps } from "../../interface/ICollectibleProps";
 import { ICollisionResult } from "../../interface/ICollisionResult";
@@ -31,6 +31,7 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> implements 
                 color: "gold",
                 uuid: crypto.randomUUID(),
                 isInitialized: false,
+                zIndex:1
             }
         );
         this.collisionDetectors = [

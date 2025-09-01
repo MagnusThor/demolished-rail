@@ -1,6 +1,6 @@
 import { CollisionHelper } from "../../../../../src/Engine/Helpers/CollisionHelper";
 import { CollisionAxis } from "../../../enums/CollisionAxis";
-import { gameState } from "../../../gameState";
+import { gameState } from "../../../state/gameState";
 import { ICollisionResult } from "../../../interface/ICollisionResult";
 import { IPlayerProps } from "../../../interface/IPlayerProps";
 import { getTileProperties } from "../../../utils/tileBlockHelpers";
@@ -8,6 +8,7 @@ import { CollectibleEntity } from "../../collectible/CollectibleEntity";
 import { GameEntity } from "../../GameEntity";
 import { PlatformEntity } from "../../platform/PlatformEntity";
 import { TileEntity } from "../../tiles/tileEntity";
+import { LadderEntity } from "../../ladderEntity";
 
 
 export const playerCollisionDetectors =
@@ -89,7 +90,7 @@ export const playerCollisionDetectors =
         targetName: "collectibleBlock",
         detectorFn: (playerProps: IPlayerProps, collectibleEntity: CollectibleEntity) => {
             // If the collectible is already collected, no need to check for collision.
-           
+            
 
             const collisionResults = new Array<ICollisionResult>();
             const collisionResult = CollisionHelper.isRectRectColliding(
@@ -142,6 +143,28 @@ export const playerCollisionDetectors =
                 }
                 playerProps.velY = 0;
             }
+        }
+    },
+    // Collision detector for ladders
+    {
+        targetName: "ladder",
+        detectorFn: (playerProps: IPlayerProps, ladderEntity: LadderEntity) => {
+            const collisionResults = new Array<ICollisionResult>();
+            const collisionResult = CollisionHelper.isRectRectColliding(
+                playerProps.positioned.x, playerProps.positioned.y, playerProps.positioned.width, playerProps.positioned.height,
+                ladderEntity.props.positioned.x, ladderEntity.props.positioned.y, ladderEntity.props.positioned.width, ladderEntity.props.positioned.height
+            );
+            
+            if (collisionResult) {
+                collisionResults.push(collisionResult);
+            }
+            return collisionResults;
+        },
+        onCollision: (playerProps: IPlayerProps, collisionData: ICollisionResult, ladderEntity: LadderEntity) => {
+            // This is where you will enable the climbing logic in your player's update function.
+            // For now, we will simply set a flag.
+            playerProps.onLadder = true;
+            console.log("hitting a ladder",ladderEntity)
         }
     }
 ];

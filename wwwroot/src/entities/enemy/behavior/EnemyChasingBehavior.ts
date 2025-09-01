@@ -1,4 +1,4 @@
-import { gameState } from "../../../gameState";
+import { gameState } from "../../../state/gameState";
 import { IEnemyBehavior } from "../../../interface/IEnemyProps";
 import { IGameEntity } from "../../../interface/IGameEntity";
 import { IPlayerProps } from "../../../interface/IPlayerProps";

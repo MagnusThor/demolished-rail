@@ -1,6 +1,6 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { CollisionAxis } from "../../enums/CollisionAxis";
-import { gameAssets, gameState } from "../../gameState";
+import { gameAssets, gameState } from "../../state/gameState";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { ICollisionDetector } from "../../interface/ICollisionDetector";
 import { ICollisionResult } from "../../interface/ICollisionResult";
@@ -9,8 +9,8 @@ import { IIndexedTile } from "../../interface/IIndexedTile";
 import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
 import { Positioned } from "../../interface/IPositioned";
-import { TILE_TYPES } from "../../LEVEL_SAMPLE";
-import { isSolidTile, calculateTileCoordinates, getTilesByType, getTileXy, getTileAtPosition, getTileProperties, determineVisibleTiles, getSurroundingTiles } from "../../utils/tileBlockHelpers";
+import { TileDefinitions } from "../../level/TileDefinitions";
+import { isSolidTile, calculateTileCoordinates, getTilesByType, getTileXY, getTileAtPosition, getTileProperties, determineVisibleTiles, getSurroundingTiles } from "../../utils/tileBlockHelpers";
 import { isEntityInView } from "../../utils/collitionHelpers";
 import { CollectibleEntity } from "../collectible/CollectibleEntity";
 import { GameEntity } from "../GameEntity";
@@ -19,13 +19,9 @@ import { PlatformEntity } from "../platform/PlatformEntity";
 export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<ILevelProps>{
     collisionDetectors?: ICollisionDetector[];
     private tileSpatialGrid: Map<string, IIndexedTile[]> = new Map();
-
-    public logicalCollisionMap: boolean[][] = [];
-    
+    public logicalCollisionMap: boolean[][] = [];    
     constructor(props:ILevelProps){
-        super("tileBlock",props);
-        
-      
+        super("tileBlock",props);        
     }
 
     private buildSpatialGrid(indexedTiles: IIndexedTile[], grid_size:number) {
@@ -74,8 +70,6 @@ export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<I
         });
     }
 
-    
-
     onUpdate? = (self: IGameEntity<ILevelProps>, timeStamp: number) => {
         const viewport = gameState.viewport;
     };
@@ -90,13 +84,14 @@ export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<I
         
         // Iterate over the pre-calculated tiles. This is much faster.
         self.props.indexedTiles.forEach(tile => {
-            const tileProperties = getTileProperties(tile.type as keyof typeof TILE_TYPES)!;
+            const tileProperties = getTileProperties(tile.type as keyof typeof TileDefinitions)!;
             const isVisible = determineVisibleTiles(props, tile, viewport, screenWidth, screenHeight); 
             
             if (isVisible) {
                 if (tile.type === 1) {
-                    const tileTexture = self.props.textures!["solid"] 
+                    const tileTexture = self.props.textures![tileProperties.texture!] 
                     // Use the full drawImage signature to specify source and destination rectangles
+                    
                     ctx.drawImage(
                         tileTexture.texture.src, // Source image
                         tileTexture.x,          // Source x
@@ -112,7 +107,21 @@ export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<I
                     ctx.fillStyle = "#8B4513";
                     ctx.fillRect(tile.x, tile.y, tileProperties.width, tileProperties.height);
                 } else if (tile.type === 5) {
-                    const tileTexture = self.props.textures!["pilar"];
+                    const tileTexture = self.props.textures!["pilar"];                 
+                    ctx.drawImage(
+                        tileTexture.texture.src,
+                        tileTexture.x,
+                        tileTexture.y,
+                        tileTexture.width,
+                        tileTexture.height,
+                        tile.x + (tileTexture.width / 2),
+                        tile.y+tileTexture.height -32,
+                        tileTexture.width,
+                        tileTexture.height
+                    );
+
+                }else if(tile.type == 6){
+                       const tileTexture = self.props.textures![tileProperties.texture!];                 
                     ctx.drawImage(
                         tileTexture.texture.src,
                         tileTexture.x,
@@ -121,8 +130,8 @@ export class TileEntity extends GameEntity<ILevelProps> implements IGameEntity<I
                         tileTexture.height,
                         tile.x,
                         tile.y,
-                        tileProperties.width,
-                        tileProperties.height
+                        tileTexture.width,
+                        tileTexture.height
                     );
                 }
             }

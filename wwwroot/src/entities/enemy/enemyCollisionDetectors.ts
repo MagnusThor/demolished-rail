@@ -7,7 +7,7 @@ import { IEnemyProps } from "../../interface/IEnemyProps";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
-import { TILE_TYPES } from "../../LEVEL_SAMPLE";
+import { TileDefinitions } from "../../level/TileDefinitions";
 import { isSolidTile, getTileProperties } from "../../utils/tileBlockHelpers";
 
 
@@ -67,7 +67,7 @@ export const enemyCollisionDetectors = [
             if (indexedTiles) {
                 for (const tile of indexedTiles) {
                     if (isSolidTile(tile.type)) {
-                        const tileProperties = getTileProperties(tile.type as keyof typeof TILE_TYPES);
+                        const tileProperties = getTileProperties(tile.type as keyof typeof TileDefinitions);
                         if (tileProperties) {
                             const tileBbox = {
                                 x: tile.x,

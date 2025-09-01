@@ -8,7 +8,7 @@ import { CollisionHelper } from "../../../../../src/Engine/Helpers/CollisionHelp
 import { IBoundingBox } from "../../../interface/IBoundingBox";
 import { IEnemyBehavior, IEnemyProps } from "../../../interface/IEnemyProps";
 import { IIndexedTile } from "../../../interface/IIndexedTile";
-import { TILE_TYPES } from "../../../LEVEL_SAMPLE";
+import { TileDefinitions } from "../../../level/TileDefinitions";
 import { isSolidTile, getTileProperties } from "../../../utils/tileBlockHelpers";
 import { ENEMY_SPEED } from "../enemyEntity";
 
@@ -32,7 +32,7 @@ export const EnemyPatrollingBehavior = (indexedTiles: IIndexedTile[]): IEnemyBeh
 
             for (const tile of indexedTiles) {
                 if (isSolidTile(tile.type)) {
-                    const tileProperties = getTileProperties(tile.type as keyof typeof TILE_TYPES);
+                    const tileProperties = getTileProperties(tile.type as keyof typeof TileDefinitions);
                     if (tileProperties) {
                         const tileBbox: IBoundingBox = {
                             x: tile.x,

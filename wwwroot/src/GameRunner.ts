@@ -1,5 +1,5 @@
 import { Sequence, InputHelper, DefaultAudioLoader, SceneBuilder, IEntity } from "../../src";
-import { gameAssetsToPreload } from "./assetsToLoad";
+import { gameAssetsToPreload } from "./assets/assetsToLoad";
 import { BackgroundEntity } from "./entities/BackgroundEntity";
 import { CollectibleEntity } from "./entities/collectible/CollectibleEntity";
 import { EnemyEntity } from "./entities/enemy/enemyEntity";
@@ -8,15 +8,15 @@ import { playerAnimations } from "./entities/player/animations/playerAnimations"
 import { PlayerEntity } from "./entities/player/playerEntity";
 import { TileEntity } from "./entities/tiles/tileEntity";
 import { WorldEntity } from "./entities/WorldEntity";
-import { gameState, gameAssets } from "./gameState";
+import { gameState, gameAssets } from "./state/gameState";
 import { IDynamicEntity } from "./interface/IDynamicEntity";
 import { IGameEntity } from "./interface/IGameEntity";
 import { ILevelProps } from "./interface/ILevelProps";
 import { IPlayerProps } from "./interface/IPlayerProps";
 import { Positioned } from "./interface/IPositioned";
-import { LEVEL_SAMPLE, TILE_WIDTH, TILE_HEIGHT } from "./LEVEL_SAMPLE";
-import { getTilesByType, getTileXy, calculateWorldDimensions, getTileProperties, calculateTileCoordinates } from "./utils/tileBlockHelpers";
-import { createLevelEntities } from "./LevelFactory";
+import { LEVEL_SAMPLE, DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "./level/LEVEL_SAMPLE";
+import { getTilesByType, getTileXY, calculateWorldDimensions, getTileProperties, calculateTileCoordinates } from "./utils/tileBlockHelpers";
+import { createLevelEntities } from "./level/LevelFactory";
 
 export class RunWorld {
     screenCanvas: HTMLCanvasElement;
@@ -65,7 +65,9 @@ export class RunWorld {
         const sb = new SceneBuilder(sequence.audioBuffer.duration * 1000);
         sb.durationUntilEndInMs("scene0");
 
-        const gameBackground = new BackgroundEntity("background", {}, this.screenCanvas.width, this.screenCanvas.height);
+        const gameBackground = new BackgroundEntity("background", {}, this.screenCanvas.width, this.screenCanvas.height,
+            gameState
+        );
         (sb.getScenes())[0]!.addEntity(gameBackground);
         (sb.getScenes())[0]!.addEntities(...await this.createLevel(sequence));
 
@@ -82,7 +84,7 @@ export class RunWorld {
         const playerStartTileFromMap = getTilesByType(LEVEL_SAMPLE, 99)[0];
 
         // Convert the grid coordinates to a world position
-        const playerStartTile = getTileXy(LEVEL_SAMPLE, playerStartTileFromMap.y, playerStartTileFromMap.x);
+        const playerStartTile = getTileXY(LEVEL_SAMPLE, playerStartTileFromMap.y, playerStartTileFromMap.x);
         const playerProps = getTileProperties(99);
 
         // Find all enemy start positions and convert their grid coordinates to world positions
@@ -106,11 +108,13 @@ export class RunWorld {
             isMovingRight: false,
             lastDirection: "right",
             isInitialized: false,
+            onLadder: false,
             health: {
                 health: 100,
                 damage: 0
             },
             animations: playerAnimations(),
+            zIndex:10
         });
         gameState.player = player;
 
@@ -122,20 +126,22 @@ export class RunWorld {
         // Map the enemy grid coordinates to enemy entities
         const enemies: IDynamicEntity<any>[] = enemyStartTiles.map(tile => {
             const enemyProps = getTileProperties(50)!;
-            const { x, y } = getTileXy(LEVEL_SAMPLE, tile.y, tile.x);
+            const { x, y } = getTileXY(LEVEL_SAMPLE, tile.y, tile.x);
             return new EnemyEntity(x, y, indexedTiles);
         });
 
         // Use the new LevelInitializer to create the level's static entities
         const levelProps: ILevelProps = {
             tileMap: LEVEL_SAMPLE,
-            tileWidth: TILE_WIDTH,
-            tileHeight: TILE_HEIGHT,
+            tileWidth: DEFAULT_TILE_WIDTH,
+            tileHeight: DEFULT_TILE_HEIGHT,
             indexedTiles: calculateTileCoordinates(LEVEL_SAMPLE),
             textures: {
                 "solid": gameAssets.createTexture("tileset_1", 0, 0, 32, 32)!,
                 "platform": gameAssets.createTexture("tileset_1", 0, 64, 32, 16)!,
-                "pilar": gameAssets.createTexture("tileset_1", 0, 160, 32, 224)!
+                "pilar": gameAssets.createTexture("tileset_1", 0, 160, 16, 64)!,
+                "stone": gameAssets.createTexture("tileset_1",0,112,16,16)!,
+                "ladder": gameAssets.createTexture("tileset_1",48,160,16,16)!
             },
             isInitialized: false
         };

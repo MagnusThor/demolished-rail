@@ -1,8 +1,8 @@
-import { IEntity, ICompositeEntity, InputHelper } from "../../src";
-import { IDynamicEntity } from "./interface/IDynamicEntity";
-import { IGameEntity } from "./interface/IGameEntity";
-import { IGameState } from "./interface/IGameState";
-import { GameAssetsManager } from "./utils/GameAssets";
+import { IEntity, ICompositeEntity, InputHelper } from "../../../src";
+import { IDynamicEntity } from "../interface/IDynamicEntity";
+import { IGameEntity } from "../interface/IGameEntity";
+import { IGameState } from "../interface/IGameState";
+import { GameAssetsManager } from "../utils/GameAssets";
 
 /**
  * The global game state object.
