@@ -14,9 +14,23 @@ import { isEntityInView } from "./collitionHelpers";
  * @returns True if the tile is solid, false otherwise.
  */
 export const isSolidTile = (tileType: number): boolean => {
-
-    return tileType === 1 || tileType === 2 || tileType == 5 
+    const properties = getTileProperties(tileType);
+    return properties!.isSolid
 }
+
+export const getTileImageDataAndProps = (tileImageData:Map<number, ImageData>,
+        type: number): { props: ITileProps, data: ImageData } | null => {
+        const props = getTileProperties(type);
+     
+        const data = tileImageData.get(type);
+            
+        if (props && data) {
+            return { props, data };
+        }
+        return null;
+    }
+
+
 
 /**
  * Finds the closest solid tile in a specific direction.

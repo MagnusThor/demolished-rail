@@ -10,6 +10,8 @@ import { GameAssetsManager } from "../utils/GameAssets";
  */
 
 export const gameState: IGameState = {
+    showImageDataOverlay:true,
+    ctx: undefined,
     input:undefined,
     viewport: {
         x: 0,

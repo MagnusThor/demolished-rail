@@ -36,7 +36,7 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
             "bulletBlock",
             props   
         );
-
+       
         
         this.collisionDetectors = [
             {

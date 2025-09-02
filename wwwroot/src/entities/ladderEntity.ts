@@ -4,7 +4,7 @@ import { IBoundingBox } from "../interface/IBoundingBox";
 import { ICollisionDetector } from "../interface/ICollisionDetector";
 import { IGameEntity, IGameEntityBase } from "../interface/IGameEntity";
 import { IPositioned } from "../interface/IPositioned";
-import { ITexture } from "../interface/ITexture";
+import { IGameTexture } from "../interface/ITexture";
 import { GameEntity } from "./GameEntity";
 import { StateHelper } from "./StateHelper";
 
@@ -13,7 +13,7 @@ export interface ILadderProps extends IGameEntityBase{
     width:number,
     height:number
     positioned: IPositioned
-    texture?: ITexture
+    texture?: IGameTexture
     
 }
 

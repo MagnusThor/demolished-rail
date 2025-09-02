@@ -10,12 +10,14 @@ import { getTileXY } from "../utils/tileBlockHelpers";
 
 
 
+
 export const TileDefinitions: { [key: string]: ITileProps; } = {
     // Empty space, no collision
     0: {
         width: 32,
         height: 32,
-        isSolid: false
+        isSolid: false,
+      
     },
 
     // Solid wall or block, collidable
@@ -23,21 +25,23 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         width: 32,
         height: 32,
         texture: "solid",
-        isSolid: true
+        isSolid: true,
+        
     },
 
     // Water tile
     2: {
         width: 32,
         height: 32,
-        isSolid: true
+        isSolid: false,
+        texture:"solid"
     },
     // platform
     3: {
         width: 32,
         height: 16,
         texture: "platform",
-        isSolid: true,
+        isSolid: false,
         creator: (levelProps,tile) => {
                return new PlatformEntity(tile, levelProps, levelProps.textures!["platform"]);
         }
@@ -53,7 +57,13 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         width:16,
         height:16,
         texture:"stone",
-        isSolid:false
+        isSolid:true
+    },
+    7: {
+        width: 112,
+        height: 224,
+        isSolid:true,
+        texture:"valley"
     },
     // Ladder
     42: {
@@ -83,7 +93,7 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         width: 32,
         height: 32,
         texture: "solid",
-        isSolid: true,
+        isSolid: false,
         creator: (levelProps, tile )=> {
               const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
                     return {

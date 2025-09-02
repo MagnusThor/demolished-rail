@@ -1,7 +1,7 @@
 
 import { gameAssets } from "../state/gameState";
 import { IGameAsset } from "../interface/IGameAsset";
-import { ITexture } from "../interface/ITexture";
+import { IGameTexture } from "../interface/ITexture";
 import { ISpriteSheetAsset } from "../interface/ISpriteSheetAsset";
 
 import { IBoundingBox } from "../interface/IBoundingBox";
@@ -85,8 +85,8 @@ export class GameAssetsManager {
         srcX: number,
         srcY: number,
         srcWidth: number,
-        srcHeight: number,
-    ): ITexture | undefined {
+        srcHeight: number, createImageData: boolean
+    ): IGameTexture | undefined {
         const asset = this.getAsset(assetKey);
 
         if (!asset) {
@@ -96,9 +96,12 @@ export class GameAssetsManager {
 
         const textureKey = `${assetKey}_${srcX}_${srcY}_${srcWidth}_${srcHeight}`;
 
-        const properties:ITexture = {
+        const properties: IGameTexture = {
             texture: asset,
             key: textureKey,
+            imageData:
+                createImageData ?
+                    this.getTileCollisionMaskFromArt(this.getImageData(asset.src, srcX, srcY, srcWidth, srcHeight)) : undefined,
             x: srcX,
             y: srcY,
             width: srcWidth,
@@ -106,11 +109,54 @@ export class GameAssetsManager {
             getBoundingBox: function (): IBoundingBox {
                 throw new Error("Function not implemented.");
             }
-        }; 
+        };
+        return properties;
+    }
 
-     
+    getTileCollisionMaskFromArt(tileTexture: ImageData, threshold = 128): ImageData {
+        const canvas = document.createElement("canvas");
+        canvas.width = tileTexture.width;
+        canvas.height = tileTexture.height;
+        const ctx = canvas.getContext("2d")!;
+        const imageData = ctx.createImageData(tileTexture.width, tileTexture.height);
 
-        return properties; 
+        const src = tileTexture.data;
+        const dst = imageData.data;
+
+        for (let i = 0; i < src.length; i += 4) {
+            const alpha = src[i + 3];
+            if (alpha > threshold) {
+                dst[i] = 255;     // white
+                dst[i + 1] = 255;
+                dst[i + 2] = 255;
+                dst[i + 3] = 255; // solid
+            } else {
+                dst[i + 3] = 0;   // transparent
+            }
+        }
+        return imageData;
+    }
+
+
+    public getImageData(image: any, x: number, y: number, w: number, h: number) {
+
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d')!;
+
+        tempCanvas.width = w;
+        tempCanvas.height = h;
+        tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.drawImage(
+            image,
+            x,
+            y,
+            w,
+            h,
+            0, 0, w, h
+        );
+
+        return tempCtx.getImageData(0, 0, w, h)
+
     }
 
     public getSpriteSheet(

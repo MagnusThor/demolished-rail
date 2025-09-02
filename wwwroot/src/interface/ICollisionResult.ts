@@ -10,4 +10,5 @@ export interface ICollisionResult {
   height: number;
   axis: CollisionAxis;
   targetEntity?: IGameEntity<any>; // Optional reference to the target entity
+  overlap?:ICollisionResult
 }

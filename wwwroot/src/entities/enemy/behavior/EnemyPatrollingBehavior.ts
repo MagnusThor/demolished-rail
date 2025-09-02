@@ -59,7 +59,7 @@ export const EnemyPatrollingBehavior = (indexedTiles: IIndexedTile[]): IEnemyBeh
             }
 
             if (willCollide || willFall) {
-                props.direction *= -1;
+                props.direction *= -.1;
             }
 
             props.velX = props.direction * 0.2;

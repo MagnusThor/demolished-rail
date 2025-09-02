@@ -13,6 +13,8 @@ import { IViewport } from "./IViewport";
 import { IPlayerProps } from "./IPlayerProps";
 
 export interface IGameState {
+    showImageDataOverlay:boolean
+    ctx: CanvasRenderingContext2D | undefined
     // The game's viewport, controlling what part of the world is visible on screen
     viewport: IViewport;
 

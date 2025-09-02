@@ -5,3 +5,10 @@ export interface IBoundingBox {
   width: number;
   height: number;
 }
+
+export interface IBoundingCircle {
+    x: number;
+    y: number;
+    radius: number;
+}
+

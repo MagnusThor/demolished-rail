@@ -1,7 +1,7 @@
 import { IIndexedTile } from "./IIndexedTile";
 import { ICollectibleProps } from "./ICollectibleProps";
 import { IGameEntity, IGameEntityBase } from "./IGameEntity";
-import { ITexture } from "./ITexture";
+import { IGameTexture } from "./ITexture";
 import { IPositioned } from "./IPositioned";
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 
@@ -15,7 +15,7 @@ export interface ILevelProps extends IGameEntityBase  {
     isInitialized: boolean;
     logicalCollisionMap?: boolean[][];
     textures?: {
-        [key:string]: ITexture
+        [key:string]: IGameTexture
     },
 
 

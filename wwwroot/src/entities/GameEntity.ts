@@ -19,8 +19,8 @@ export class GameEntity<T extends IGameEntityBase> implements IGameEntity<T> {
         this.stateHelper = new StateHelper(props)
     }
 
-     public getDetectorForTarget<T extends { isInitialized?: boolean | undefined; }>(entity: IGameEntity<T>, targetName: string): ICollisionDetector | undefined {
-        return entity.collisionDetectors?.find(d => d.targetName === targetName);
-    }
+    //  public getDetectorForTarget<T extends { isInitialized?: boolean | undefined; }>(entity: IGameEntity<T>, targetName: string): ICollisionDetector | undefined {
+    //     return entity.collisionDetectors?.find(d => d.targetName === targetName);
+    // }
 
 }

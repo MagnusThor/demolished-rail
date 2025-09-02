@@ -12,12 +12,11 @@ export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number)
     const props = self.props;
     const input = gameState.input!;
     const MOVE_SPEED = 4;
-    const JUMP_SPEED = 6;
+    const JUMP_SPEED = 8;
 
     const stateHelper = self.stateHelper;
 
-    // Create an instance of the StateHelper for this entity
-   
+
     // Reset the onLadder flag each frame before collision detection
     stateHelper.set<boolean>("onLadder", false);
 
@@ -26,7 +25,6 @@ export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number)
     if (detectors) {
         detectors.forEach(detector => {
             const targetEntities = gameState.findEntities(detector.targetName);
-
 
             if (targetEntities && targetEntities.length > 0) {
                 targetEntities.forEach(targetEntity => {
@@ -45,7 +43,6 @@ export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number)
     // Horizontal movement
     stateHelper.set<boolean>("isMovingLeft", input.isKeyPressed(KeyCode.ArrowLeft) || input.isKeyPressed(KeyCode.KeyA));
     stateHelper.set<boolean>("isMovingRight", input.isKeyPressed(KeyCode.ArrowRight) || input.isKeyPressed(KeyCode.KeyD));
-
     
     props.velX = 0;
 

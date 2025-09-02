@@ -100,7 +100,7 @@ export class RunWorld {
             positioned: new Positioned(playerStartTile.x, playerStartTile.y, playerProps.width, playerProps.height),
             velX: 0,
             velY: 0,          
-            gravity: 0.2,
+            gravity: 0.3,
             isInitialized: false,        
             health: {
                 health: 100,
@@ -139,11 +139,12 @@ export class RunWorld {
             tileHeight: DEFULT_TILE_HEIGHT,
             indexedTiles: calculateTileCoordinates(LEVEL_SAMPLE),
             textures: {
-                "solid": gameAssets.createTexture("tileset_1", 0, 0, 32, 32)!,
-                "platform": gameAssets.createTexture("tileset_1", 0, 64, 32, 16)!,
-                "pilar": gameAssets.createTexture("tileset_1", 0, 160, 16, 64)!,
-                "stone": gameAssets.createTexture("tileset_1",0,112,16,16)!,
-                "ladder": gameAssets.createTexture("tileset_1",48,160,16,16)!
+                "solid": gameAssets.createTexture("tileset_1", 0, 0, 32, 32,false)!,
+                "platform": gameAssets.createTexture("tileset_1", 0, 64, 32, 16,false)!,
+                "pilar": gameAssets.createTexture("tileset_1", 0, 160, 16, 64,false)!,
+                "stone": gameAssets.createTexture("tileset_1",0,112,16,16,false)!,
+                "ladder": gameAssets.createTexture("tileset_1",48,160,16,16,false)!,
+                "valley": gameAssets.createTexture("dev_tiles",0,0,112,224,true)!
             },
             isInitialized: false,
             states:{},
@@ -164,6 +165,8 @@ export class RunWorld {
             states:{},
             zIndex:0
         }, this.screenCanvas.width, this.screenCanvas.height);
+
+
 
         // Add all entities to the world
         staticLevelEntities.forEach(entity => gameState.entities.push(entity));
@@ -199,6 +202,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     const sequence = await runner.initializeGame();
+        gameState.ctx= sequence.targetCtx!
+
 
 
     sequence.onLowFrameRate((fps) => {

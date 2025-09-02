@@ -162,6 +162,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
     ) => {
         const canvasHelper = new CanvasHelper(ctx)
 
+      
         // Save the clean, untransformed state of the main canvas.
         ctx.save();
 
