@@ -1,8 +1,10 @@
-import { IGameEntity } from "../interface/IGameEntity";
+import { IGameEntity, IGameEntityBase } from "../interface/IGameEntity";
 import { IBoundingBox } from "../interface/IBoundingBox";
 import { IGameState } from "../interface/IGameState";
-import { ICollisionDetector } from "../interface/ICollisionDetector";
+import { ICollidable, ICollisionDetector } from "../interface/ICollisionDetector";
 import { CollisionHelper } from "../../../src/Engine/Helpers/CollisionHelper";
+import { IPositioned } from "../interface/IPositioned";
+import { gameState } from "../state/gameState";
 
 /**
  * Checks if an entity's bounding box is within the viewport, plus an optional buffer.
@@ -40,16 +42,21 @@ export const isEntityInView = (
         return CollisionHelper.AABBColliding(entityBox, viewportBox);
 };
 
-export const runCollitionDetectors = <T>(gameState:IGameState,props:T,detectors: ICollisionDetector[]) => {
+export const runCollitionDetectors = <T>(
+        entity: IGameEntity<any>,detectors: ICollisionDetector[],_gameState?:IGameState,) => {
+
+        if(!_gameState) _gameState = gameState; // no state provided use global
+
+
         detectors.forEach(detector => {
-            const targetEntities =  getFilteredAndSortedEntities(gameState,props, detector.targetName)
+            const targetEntities =  getFilteredAndSortedEntities(_gameState,entity, detector.targetName)
             
             if (targetEntities && targetEntities.length > 0) {
-                targetEntities.forEach(targetEntity => {
-                    const collisionResults = detector.detectorFn(props, targetEntity);
+                targetEntities.forEach((targetEntity: any) => {
+                    const collisionResults = detector.detectorFn(entity, targetEntity);
                     if (Array.isArray(collisionResults)) {
                         collisionResults.forEach(collisionData => {
-                            detector.onCollision(props, collisionData, targetEntity);
+                            detector.onCollision(entity, collisionData, targetEntity);
                         });
                     }
                 });
@@ -58,22 +65,44 @@ export const runCollitionDetectors = <T>(gameState:IGameState,props:T,detectors:
     }
 
 
-const getFilteredAndSortedEntities = (gameState:IGameState, props: any, targetName: string) => {
+export const getFilteredAndSortedEntities = (gameState: IGameState, sourceEntity:IGameEntity<IGameEntityBase> , targetName: string) => {
+    // --- Defensive Check for Source Entity ---
+    // If the source entity or its 'positioned' property is missing, we can't do anything.
+    if (!sourceEntity || !sourceEntity.props.positioned) {
+        console.log(sourceEntity);
+        console.error("Source entity or its 'positioned' property is missing.");
+        return [];
+    }
+
     let targetEntities = gameState.findEntities(targetName);
 
     if (targetEntities && targetEntities.length > 0) {
-        // Filter entities that are not within the viewport
+        // --- Filter for Viewport AND Valid Position ---
+        // We'll add a check to make sure the 'positioned' property exists before filtering.
         targetEntities = targetEntities.filter(entity => 
-            isEntityInView(entity, gameState.viewport, gameState.viewport.viewportWidth, gameState.viewport.viewportHeight));
+            entity.props && entity.props.positioned && isEntityInView(entity, gameState.viewport, gameState.viewport.viewportWidth, gameState.viewport.viewportHeight)
+        );
 
-        // Sort entities by distance to the player
-        targetEntities.sort((a, b) => {
-            const distA = Math.sqrt(Math.pow(a.props.positioned.x - props.positioned.x, 2) + Math.pow(a.props.positioned.y - props.positioned.y, 2));
-            const distB = Math.sqrt(Math.pow(b.props.positioned.x - props.positioned.x, 2) + Math.pow(b.props.positioned.y - props.positioned.y, 2));
-            return distA - distB;
-        });
+        // --- Sort Entities with a Safer Check ---
+        try {
+            targetEntities.sort((a: { props: { positioned: { x: number; y: number; }; }; }, b: { props: { positioned: { x: number; y: number; }; }; }) => {
+                // If either 'a' or 'b' is missing the necessary properties,
+                // we'll return 0 to keep the sort from crashing.
+                if (!a.props || !a.props.positioned || !b.props || !b.props.positioned) {
+                    return 0;
+                }
+                // Now that we've checked, it's safe to calculate the distances.
+                const distA = Math.sqrt(Math.pow(a.props.positioned.x - sourceEntity.props.positioned.x, 2) + Math.pow(a.props.positioned.y - sourceEntity.props.positioned.y, 2));
+                const distB = Math.sqrt(Math.pow(b.props.positioned.x - sourceEntity.props.positioned.x, 2) + Math.pow(b.props.positioned.y - sourceEntity.props.positioned.y, 2));
+                return distA - distB;
+            });
+        }
+        catch (error) {
+            console.error("An error occurred during entity sorting:", error);
+            // We can return the unfiltered list to prevent a complete crash
+            // while the root problem is being debugged.
+            return targetEntities; 
+        }
     }
-
     return targetEntities;
 };
-

@@ -1,10 +1,16 @@
 import { ICollisionResult } from "./ICollisionResult";
-import { IGameEntity } from "./IGameEntity";
+import { IGameEntity, IGameEntityBase } from "./IGameEntity";
+
+
+
+export interface ICollidable{
+
+}
 
 
 
 export interface ICollisionDetector {
   targetName: string;
-  detectorFn: (a: any, b: any) => boolean | ICollisionResult | ICollisionResult[];
-  onCollision: (a: any, collisionData: ICollisionResult,targetEntity?:any) => void;
+  detectorFn: (source: any, target:any) => boolean | ICollisionResult | ICollisionResult[];
+  onCollision: (souce: any, collisionData: any,target?:any) => void;
 }

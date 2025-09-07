@@ -111,11 +111,13 @@ export class RunWorld {
             states:{
                 onLadder: false,
                 isJumping: false,
+                onPlatform: false,
                 isGrounded: false,
                 isMovingLeft: false,
                 isMovingRight: false,
                 lastDirection: "right",
-            }
+            },
+            gadgets:{}
         });
         gameState.player = player;
 

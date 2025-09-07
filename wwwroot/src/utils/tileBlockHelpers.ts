@@ -318,3 +318,14 @@ export function getSurroundingTiles(spatialGrid: Map<string, IIndexedTile[]>, bb
     // Filter out duplicates in case a bounding box overlaps with multiple grid cells
     return Array.from(new Set(surroundingTiles));
 }
+
+
+export const tileBoxCollision = (boxA: IBoundingBox, boxB: IBoundingBox): boolean => {
+    // Check if the boxes are not overlapping on any axis.
+    // If they are not overlapping, then they are not colliding.
+    // The opposite of this statement means they are colliding.
+    return boxA.x < boxB.x + boxB.width &&
+        boxA.x + boxA.width > boxB.x &&
+        boxA.y < boxB.y + boxB.height &&
+        boxA.y + boxA.height > boxB.y;
+}

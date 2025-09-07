@@ -20,10 +20,8 @@ export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
     stateHelper: StateHelper<IEnemyProps>;
     constructor(startX: number,
         startY: number,
-        indexedTiles: IIndexedTile[]) {      
+        indexedTiles: IIndexedTile[]) { 
         let assignedBehavior: IEnemyBehavior[] = [];
-
-      
         
         if (Math.random() < 0.5) {
             assignedBehavior.push(EnemyPatrollingBehavior(indexedTiles));
@@ -96,6 +94,7 @@ export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
     
     onInit?: ((self: IGameEntity<IEnemyProps>) => void) | undefined;
     onUpdate? = (self: IGameEntity<IEnemyProps>, timeStamp: number) => { 
+        
         const props = self.props;
         // The behavior now only sets the enemy's velocity
         if (props.behavior && props.behavior.length > 0) {
@@ -113,10 +112,12 @@ export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
         
     };
     onDraw? = (self: IGameEntity<IEnemyProps>, helper: CanvasHelper) => {
-        if (!gameState || !gameState.viewport) {
+        if (!gameState || !gameState.viewport ) {
                 console.warn("gameState or viewport not initialized, skipping enemy drawing.");
                 return;
             }
+
+            
             const props = self.props;
             const ctx = helper.ctx;
 

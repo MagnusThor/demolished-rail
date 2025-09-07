@@ -1,137 +1,52 @@
-import { KeyCode } from "../../enums/KeyCode";
-import { gameState } from "../../state/gameState";
-import { IGameEntity } from "../../interface/IGameEntity";
-import { IPlayerProps } from "../../interface/IPlayerProps";
-import { runCollitionDetectors } from "../../utils/collitionHelpers";
-import { BulletEntity } from "../bullet/BulletEntity";
+// import { ICollisionResult } from "../../interface/ICollisionResult";
+// import { gameState } from "../../state/gameState";
+// import { playerCollisionDetectors } from "./collisiondetectors/playerCollitionDetectors";
+// import { PlayerEntity } from "./playerEntity";
 
+// /**
+//  * The main update loop for the player entity.
+//  * This function handles physics, position updates, and collision detection.
+//  * @param player The player game entity.
+//  */
+// export const playerUpdate = (player: PlayerEntity) => {
+//     const props = player.props;
+//     const stateHelper = player.stateHelper;
 
+//     // --- Critical Fix ---
+//     // At the beginning of every frame, we assume the player is not grounded.
+//     // The collision detection system will then set it to true if a collision with a platform occurs.
+//     stateHelper.set<boolean>("isGrounded", false);
 
+//     // Apply gravity
+//     const GRAVITY = 0.5;
+//     props.velY += GRAVITY;
 
-export const playerUpdate = (self: IGameEntity<IPlayerProps>, timeStamp: Number): void => {
-    const props = self.props;
-    const input = gameState.input!;
-    const MOVE_SPEED = 4;
-    const JUMP_SPEED = 8;
-
-    const stateHelper = self.stateHelper;
-
-
-    // Reset the onLadder flag each frame before collision detection
-    stateHelper.set<boolean>("onLadder", false);
-
-    // Check for collisions after updating the x position
-    const detectors = gameState.player!.collisionDetectors;
-    if (detectors) {
-        detectors.forEach(detector => {
-            const targetEntities = gameState.findEntities(detector.targetName);
-
-            if (targetEntities && targetEntities.length > 0) {
-                targetEntities.forEach(targetEntity => {
-                    const collisionResults = detector.detectorFn(props, targetEntity);
-                    if (Array.isArray(collisionResults)) {
-                        collisionResults.forEach(collisionData => {
-                            // This single line replaces the old conditional logic, making the code more robust.
-                            detector.onCollision(props, collisionData, targetEntity);
-                        });
-                    }
-                });
-            }
-        });
-    }
-
-    // Horizontal movement
-    stateHelper.set<boolean>("isMovingLeft", input.isKeyPressed(KeyCode.ArrowLeft) || input.isKeyPressed(KeyCode.KeyA));
-    stateHelper.set<boolean>("isMovingRight", input.isKeyPressed(KeyCode.ArrowRight) || input.isKeyPressed(KeyCode.KeyD));
+//     // Apply horizontal friction to stop the player when not moving
+//     const FRICTION = 0.8;
+//     props.velX *= FRICTION;
     
-    props.velX = 0;
+//     // Clamp velocities to prevent them from getting out of control
+//     props.velX = Math.min(Math.max(props.velX, -10), 10);
+//     props.velY = Math.min(Math.max(props.velY, -20), 20);
 
-    if (stateHelper.get<boolean>("isMovingLeft")) {
-        props.velX = -MOVE_SPEED;
-        stateHelper.set<string>("lastDirection", "left");
-    } else if (stateHelper.get<boolean>("isMovingRight")) {
-        props.velX = MOVE_SPEED;
-        stateHelper.set<string>("lastDirection", "right");
-    }
+//     // Update player's position based on their velocity
+//     props.positioned.x += props.velX;
+//     props.positioned.y += props.velY;
 
-    // Ladder climbing logic
-    if (stateHelper.get<boolean>("onLadder")) {
-        stateHelper.set<boolean>("isGrounded", true); // Stay "grounded" on the ladder to prevent gravity from taking over.
-        props.velY = 0; // Stop vertical movement from gravity/jumping.
-        // Handle up/down movement on the ladder
-        if (input.isKeyPressed(KeyCode.ArrowUp) || input.isKeyPressed(KeyCode.KeyW)) {
-            props.velY = -MOVE_SPEED;
-        } else if (input.isKeyPressed(KeyCode.ArrowDown) || input.isKeyPressed(KeyCode.KeyS)) {
-            props.velY = MOVE_SPEED;
-        }
-    } else {
-        // Normal jumping logic if not on a ladder
-        if ((input.isKeyPressed(KeyCode.ArrowUp) || input.isKeyPressed(KeyCode.KeyW)) && stateHelper.get<boolean>("isGrounded")) {
-            stateHelper.set<boolean>("isJumping", true);
-            stateHelper.set<boolean>("isGrounded", false);
-            props.velY = -JUMP_SPEED;
-            props.currentAnimation = props.animations["jump"];
-        }
-        // Apply gravity if not on a ladder
-        if (props.velY < 10) {
-            props.velY += props.gravity;
-        }
-    }
+//     // --- Collision Detection and Resolution ---
+//     // This section loops through all entities and applies the collision detection logic you provided.
+//     // It's a standard physics loop that you'll need to integrate.
+//     for (const entity of gameState.entities) {
+//         if (entity === player) continue;
 
-    // Apply movement
-    props.positioned.x += props.velX;
-    props.positioned.y += props.velY;
-    
-    // Check for collisions after updating the y position
-    if (detectors) {
-        detectors.forEach(detector => {
-            const targetEntities = gameState.findEntities(detector.targetName);
-            if (targetEntities && targetEntities.length > 0) {
-                targetEntities.forEach(targetEntity => {
-                    const collisionResults = detector.detectorFn(props, targetEntity);
-                    if (Array.isArray(collisionResults)) {
-                        collisionResults.forEach(collisionData => {
-                            // This single line replaces the old conditional logic, making the code more robust.
-                            detector.onCollision(props, collisionData, targetEntity);
-                        });
-                    }
-                });
-            }
-        });
-    }
+//         const detector = playerCollisionDetectors.find(d => d.targetName === entity.props.type);
 
-    if (input.isKeyPressed(KeyCode.Space)) {
-        const newBullet = new BulletEntity(
-            props.positioned.x + (stateHelper.get<string>("lastDirection") === "right" ? props.positioned.width : -props.positioned.width),
-            props.positioned.y + props.positioned.height / 2, stateHelper.get<string>("lastDirection") as string
-        );
-        gameState.dynamicEntities.push(newBullet);
-
-        input.consumeKey(KeyCode.Space);
-    }
-    
-    // Jump animation takes priority
-    if (!stateHelper.get<boolean>("isGrounded")) {
-        if (props.currentAnimation!.name !== "jump") {
-            props.currentAnimation = props.animations["jump"];
-        }
-    }
-    // If not in the air, check for walk or idle
-    else {
-        if (stateHelper.get<boolean>("isMovingLeft") || stateHelper.get<boolean>("isMovingRight")) {
-            // If the player is moving, switch to the walk animation
-            if (props.currentAnimation!.name !== 'walk') {
-                props.currentAnimation = props.animations.walk;
-                props.currentAnimation.currentFrameIndex = 0; // Reset animation
-            }
-        } else {
-            // If the player is not moving, switch to the idle animation
-            if (props.currentAnimation!.name !== 'idle') {
-                props.currentAnimation = props.animations.idle;
-                props.currentAnimation.currentFrameIndex = 0; // Reset animation
-            }
-        }
-    }
-
-    runCollitionDetectors<IPlayerProps>(gameState, self.props, self.collisionDetectors!);
-}
+//         if (detector) {
+//             const collisionResults = detector.detectorFn(player, entity as any);
+//             for (const result of collisionResults) {
+//                 // Here we call the onCollision logic from your file
+//                 detector.onCollision(player, result as ICollisionResult, entity as any);
+//             }
+//         }
+//     }
+// }

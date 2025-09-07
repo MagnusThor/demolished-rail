@@ -22,5 +22,5 @@ export class GameEntity<T extends IGameEntityBase> implements IGameEntity<T> {
     //  public getDetectorForTarget<T extends { isInitialized?: boolean | undefined; }>(entity: IGameEntity<T>, targetName: string): ICollisionDetector | undefined {
     //     return entity.collisionDetectors?.find(d => d.targetName === targetName);
     // }
-
+    
 }

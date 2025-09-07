@@ -47,7 +47,9 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
             // Collision detector for the enemy entity
             {
                 targetName: "enemyBlock",
-                detectorFn: (bulletProps: IBulletProps, enemyEntity: IGameEntity<IEnemyProps>) => {
+                detectorFn: (bulletEntity: BulletEntity, enemyEntity: IGameEntity<IEnemyProps>) => {
+                    const bulletProps = bulletEntity.props;
+
                     const collisionResults = new Array<ICollisionResult>();
                     const bulletBBox = bulletProps.positioned.getBoundingBox!();
                     const enemyBBox = enemyEntity.getBoundingBox!(enemyEntity);
@@ -102,7 +104,10 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
     
     public onInit(): void { }
     
-    private detectTileCollision(bulletProps: IBulletProps, tileEntity: IGameEntity<ILevelProps>): ICollisionResult[] | false {
+    private detectTileCollision(bulletEntity: BulletEntity, tileEntity: IGameEntity<ILevelProps>): ICollisionResult[] | false {
+
+        const bulletProps = bulletEntity.props;
+
         const tileProps = tileEntity.props;
         const collisionResults = new Array<ICollisionResult>();
         const bulletBBox = bulletProps.positioned.getBoundingBox!();
@@ -141,8 +146,9 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
         return collisionResults;
     }
 
-    private handleTileCollision(bulletProps: IBulletProps, collisionData: ICollisionResult): void {
-        bulletProps.isAlive = false;
+    private handleTileCollision(bulletEntity: BulletEntity, collisionData: ICollisionResult): void {
+
+        bulletEntity.props.isAlive = false;
         
     }
 }

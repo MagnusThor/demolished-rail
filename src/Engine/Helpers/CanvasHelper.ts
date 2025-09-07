@@ -83,4 +83,21 @@ export class CanvasHelper {
              animation.spriteSheet.frameHeight
         );
     }
+        public drawText(text: string, x: number, y: number, style: any): void {
+        // Save the current canvas state before applying new styles.
+        this.ctx.save();
+
+        // Apply default styles or override with provided styles.
+        this.ctx.font = style.font || "16px Arial";
+        this.ctx.fillStyle = style.color || "#FFFFFF";
+        this.ctx.textAlign = style.textAlign || "left";
+        this.ctx.textBaseline = style.textBaseline || "top";
+
+        // Draw the text at the specified coordinates.
+        this.ctx.fillText(text, x, y);
+
+        // Restore the previous canvas state. This is crucial to prevent styles from "leaking"
+        // and affecting other drawing operations.
+        this.ctx.restore();
+    }
 }

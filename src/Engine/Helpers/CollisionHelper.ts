@@ -28,15 +28,22 @@ export class CollisionHelper {
 
         if (overlapX > 0 && overlapY > 0) {
             // Determine the axis of the smallest overlap to resolve collision
+            let axis: CollisionAxis;
+            let normal = { x: 0, y: 0 };
+
             if (overlapX < overlapY) {
-                return {
-                    x: x2, y: y2, width: w2, height: h2, axis: CollisionAxis.X,
-                };
+                axis = CollisionAxis.X;
+                // Determine the direction of the normal based on player position relative to the tile
+                normal.x = (x1 + w1 / 2 < x2 + w2 / 2) ? -1 : 1;
             } else {
-                return {
-                    x: x2, y: y2, width: w2, height: h2, axis: CollisionAxis.Y,
-                };
+                axis = CollisionAxis.Y;
+                // Determine the direction of the normal based on player position relative to the tile
+                normal.y = (y1 + h1 / 2 < y2 + h2 / 2) ? -1 : 1;
             }
+
+            return {
+                x: x2, y: y2, width: w2, height: h2, axis: axis, collisionNormal: normal
+            };
         }
         return null;
     }
@@ -53,7 +60,7 @@ export class CollisionHelper {
         );
     }
 
-  
+ 
     static isPixelPerfectColliding(
         boundigBox: IBoundingBox,
         tile: IIndexedTile,

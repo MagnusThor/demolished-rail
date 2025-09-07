@@ -7,7 +7,7 @@ export class InputHelper {
     private mouseX: number = 0;
     private mouseY: number = 0;
     private mouseButtons: Set<number> = new Set();
-    private keyListeners: { [key: string]: (() => void)[] } = {};
+    private keyListeners: { [key: string]: { down: (() => void)[], up: (() => void)[] } } = {};
 
     /**
      * Initializes the Input class by attaching event listeners for keyboard and mouse events.
@@ -21,12 +21,18 @@ export class InputHelper {
     }
 
     /**
-     * Removes the specified key from the set of currently pressed keys.
-     *
-     * @param key - The key to be consumed and removed from the internal tracking set.
+     * Registers an event listener for a specific key and event type.
+     * @param type - The event type to listen for: 'down' or 'up'.
+     * @param key - The key to listen for (e.g., "a", "ArrowUp", " ").
+     * @param listener - The function to call when the key event occurs.
+     * @returns The Input instance for chaining.
      */
-    consumeKey(key: string): void {
-        this.keys.delete(key);
+    on(type: 'down' | 'up', key: string, listener: () => void): this {
+        if (!this.keyListeners[key]) {
+            this.keyListeners[key] = { down: [], up: [] };
+        }
+        this.keyListeners[key][type].push(listener);
+        return this;
     }
 
     /**
@@ -37,7 +43,7 @@ export class InputHelper {
     isKeyPressed(key: string): boolean {
         return this.keys.has(key);
     }
-
+    
     /**
      * Gets the current mouse X coordinate.
      * @returns The mouse X coordinate.
@@ -63,35 +69,21 @@ export class InputHelper {
         return this.mouseButtons.has(button);
     }
 
-    /**
-     * Adds an event listener for a specific key.
-     * @param key - The key to listen for (e.g., "a", "ArrowUp", " ").
-     * @param listener - The function to call when the key is pressed.
-     * @returns The Input instance for chaining.
-     */
-    on(key: string, listener: () => void): this {
-        if (!this.keyListeners[key]) {
-            this.keyListeners[key] = [];
-        }
-        this.keyListeners[key].push(listener);
-        return this;
-    }
-
     // --- Event Handlers ---
 
     private onKeyDown(event: KeyboardEvent) {
         this.keys.add(event.key);
-
-
-
         // Trigger key listeners
         if (this.keyListeners[event.key]) {
-            this.keyListeners[event.key].forEach(listener => listener());
+            this.keyListeners[event.key].down.forEach(listener => listener());
         }
     }
 
     private onKeyUp(event: KeyboardEvent) {
         this.keys.delete(event.key);
+        if (this.keyListeners[event.key]) {
+            this.keyListeners[event.key].up.forEach(listener => listener());
+        }
     }
 
     private onMouseMove(event: MouseEvent) {

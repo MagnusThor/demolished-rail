@@ -12,7 +12,7 @@ import { findClosestSolidTile, getTileProperties } from "../../utils/tileBlockHe
 import { GameEntity } from "../GameEntity";
 
 
-export class PlatformEntity extends GameEntity<IPlatformProps> {
+export class PlatformEntity extends GameEntity<IPlatformProps>{
     texture: any;
     // Add a class property to store the tile properties
     private tileProperties: any;
@@ -31,7 +31,7 @@ export class PlatformEntity extends GameEntity<IPlatformProps> {
             "platformBlock",
             {
                 positioned: new Positioned(tile.x * props.tileWidth, minY, tileProps.width, tileProps.height),
-                velY: 1,
+                velY: 2 * Math.random(),
                 minY: minY,
                 maxY: maxY,
                 oldY: tile.y * props.tileHeight,
@@ -61,7 +61,10 @@ export class PlatformEntity extends GameEntity<IPlatformProps> {
         return self.props.positioned.getBoundingBox!();
     }
     
-    private detectPlayerCollision(platformProps: IPlatformProps, playerEntity: IGameEntity<IPlayerProps>): ICollisionResult[] {
+    private detectPlayerCollision(platformEntity: PlatformEntity, playerEntity: IGameEntity<IPlayerProps>): ICollisionResult[] {
+
+        const platformProps = platformEntity.props;
+
         const playerProps = playerEntity.props;
         const collisionResults = new Array<ICollisionResult>();
 

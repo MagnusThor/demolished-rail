@@ -108,7 +108,13 @@ export class GameAssetsManager {
             height: srcHeight,
             getBoundingBox: function (): IBoundingBox {
                 throw new Error("Function not implemented.");
-            }
+            },
+            toPoint2D() {
+                throw "Not implemented"
+            },
+            updatePriorPosition() {
+                throw "Not implemented"
+            },
         };
         return properties;
     }
