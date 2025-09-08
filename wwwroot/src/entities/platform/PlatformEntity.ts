@@ -1,3 +1,4 @@
+import { Point2D } from "../../../../src";
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { CollisionHelper } from "../../../../src/Engine/Helpers/CollisionHelper";
 import { CollisionAxis } from "../../enums/CollisionAxis";
@@ -76,6 +77,8 @@ export class PlatformEntity extends GameEntity<IPlatformProps>{
                 y: platformProps.positioned.y,
                 width: platformProps.positioned.width,
                 height: platformProps.positioned.height,
+                collisionNormal:new Point2D(0,0)
+
             });
         }
         return collisionResults;

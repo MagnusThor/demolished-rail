@@ -1,31 +1,84 @@
-import { IBoundingCircle, IBoundingBox } from "../../../interface/IBoundingBox";
-import { CollisionAxis } from "../../../enums/CollisionAxis";
+import { IBoundingBox, IBoundingCircle } from "../../../interface/IBoundingBox";
 import { ICollisionResult } from "../../../interface/ICollisionResult";
-import { Point2D } from "../../../../../src";
-import { IIndexedTile } from "../../../interface/IIndexedTile";
-import { getTileProperties } from "../../../utils/tileBlockHelpers";
+import { CollisionAxis } from "../../../enums/CollisionAxis";
 
+// A basic 2D point/vector class required for the pixel collision logic.
+class Point2D {
+    constructor(public x: number, public y: number) { }
 
+    length(): number {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+}
 
-/**
- * A helper to perform more advanced, pixel-perfect collision checks.
- */
 export class ExtendedCollisionHelper {
-
-    
     /**
-     * Checks for a pixel-perfect collision between a circle and a tile's texture.
+     * Checks for a collision between two rectangles and returns detailed collision data.
+     */
+    static isRectRectColliding(
+        rect1X: number,
+        rect1Y: number,
+        rect1W: number,
+        rect1H: number,
+        rect2X: number,
+        rect2Y: number,
+        rect2W: number,
+        rect2H: number
+    ): ICollisionResult | null {
+        // Check for intersection
+        const isColliding =
+            rect1X < rect2X + rect2W &&
+            rect1X + rect1W > rect2X &&
+            rect1Y < rect2Y + rect2H &&
+            rect1Y + rect1H > rect2Y;
+
+        if (!isColliding) {
+            return null;
+        }
+
+        // Calculate overlap on both axes
+        const overlapX = Math.min(rect1X + rect1W, rect2X + rect2W) - Math.max(rect1X, rect2X);
+        const overlapY = Math.min(rect1Y + rect1H, rect2Y + rect2H) - Math.max(rect1Y, rect2Y);
+
+        // Determine the axis of least penetration
+        const collisionAxis = overlapX < overlapY ? CollisionAxis.X : CollisionAxis.Y;
+        const overlapMagnitude = Math.min(overlapX, overlapY);
+
+        // Determine the direction of the normal based on positions
+        let normalX = 0;
+        let normalY = 0;
+
+        if (collisionAxis === CollisionAxis.X) {
+            normalX = rect1X + rect1W / 2 < rect2X + rect2W / 2 ? -1 : 1;
+        } else {
+            normalY = rect1Y + rect1H / 2 < rect2Y + rect2H / 2 ? -1 : 1;
+        }
+
+        return {
+            x: rect2X,
+            y: rect2Y,
+            width: rect2W,
+            height: rect2H,
+            axis: collisionAxis,
+            collisionNormal: new Point2D(normalX, normalY),
+            overlapMagnitude: overlapMagnitude,
+        };
+    }
+
+    /**
+     * Performs a pixel-perfect collision check between a circle and a tile's image data.
+     * This is an expensive operation and should be used as a final check after a broad-phase collision.
+     *
      * @param playerCircle The player's bounding circle.
-     * @param tileBox The tile's bounding box.
-     * @param tileImageData The pixel data of the tile's texture.
-     * @returns An ICollisionResult with the axis and a collision normal vector, or null if no collision.
+     * @param tileBox The bounding box of the tile.
+     * @param tileImageData The raw ImageData of the tile.
+     * @returns A detailed collision result or null if no collision is detected.
      */
     static isCirclePixelColliding(
         playerCircle: IBoundingCircle,
         tileBox: IBoundingBox,
         tileImageData: ImageData
     ): ICollisionResult | null {
-
         const tileWidth = tileBox.width;
         const tileHeight = tileBox.height;
 
@@ -50,128 +103,36 @@ export class ExtendedCollisionHelper {
                     // Check if the tile's pixel is solid (alpha > 0)
                     const pixelIndex = (y * tileWidth + x) * 4 + 3; // +3 for the alpha channel
                     if (tileImageData.data[pixelIndex] > 0) {
-                        // We have a pixel collision!
+                        // We have a pixel collision! Now we calculate the true collision normal.
                         const overlapMagnitude = playerCircle.radius - distance;
-                        let collisionAxis: CollisionAxis;
-                        let collisionNormal: Point2D;
 
-                        // Determine the primary collision axis and create a proper normal vector.
-                        // The previous implementation was creating an erratic normal based on the single pixel,
-                        // which caused the bug. This is a much more robust approach.
-                        if (Math.abs(dx) > Math.abs(dy)) {
-                            collisionAxis = CollisionAxis.X;
-                            // Normal is a simple vector pointing left or right.
-                            collisionNormal = new Point2D(Math.sign(dx), 0);
-                        } else {
-                            collisionAxis = CollisionAxis.Y;
-                            // Normal is a simple vector pointing up or down.
-                            collisionNormal = new Point2D(0, Math.sign(dy));
-                        }
+                        // The collision normal is the vector from the solid pixel to the circle's center.
+                        // We normalize it to get a unit vector for the direction.
+                        const collisionNormal = new Point2D(dx, dy);
+                        const normalLength = collisionNormal.length();
+                        const normalizedNormal = normalLength > 0 ?
+                            new Point2D(collisionNormal.x / normalLength, collisionNormal.y / normalLength) :
+                            new Point2D(0, 0); // Handle the zero-length case
 
-                        // The collisionNormal now just provides direction. We multiply it by the overlap
-                        // magnitude to provide the full push vector, which matches your existing setup.
+                        // Determine the primary collision axis based on the normalized normal vector.
+                        const collisionAxis = Math.abs(normalizedNormal.x) > Math.abs(normalizedNormal.y) ?
+                            CollisionAxis.X : CollisionAxis.Y;
+
                         return {
+                            // Return the tile's coordinates and dimensions
                             x: tileBox.x,
                             y: tileBox.y,
                             width: tileBox.width,
                             height: tileBox.height,
+                            // Return the calculated collision data
                             axis: collisionAxis,
-                            collisionNormal: new Point2D(collisionNormal.x * overlapMagnitude, collisionNormal.y * overlapMagnitude)
+                            collisionNormal: normalizedNormal,
+                            overlapMagnitude: overlapMagnitude
                         };
                     }
                 }
             }
         }
-
         return null;
-    }
-
-    /**
-     * Checks for a circular collision between two objects.
-     */
-    static circularDetection(a: { x: number; y: number; r: number }, b: { x: number; y: number; r: number }): boolean {
-        const dx = a.x - b.x;
-        const dy = a.y - b.y;
-        const distanceSquared = dx * dx + dy * dy;
-        const radiiSquared = (a.r + b.r) * (a.r + b.r);
-        return distanceSquared <= radiiSquared;
-    }
-
-    /**
-     * Checks for a rectangular collision and returns the axis of the collision.
-     * This is a more robust version for player-tile collision.
-     */
-    static isRectRectColliding(x1: number, y1: number, w1: number, h1: number, x2: number, y2: number, w2: number, h2: number): ICollisionResult | null {
-        // Calculate the overlap on each axis
-        const overlapX = Math.max(0, Math.min(x1 + w1, x2 + w2) - Math.max(x1, x2));
-        const overlapY = Math.max(0, Math.min(y1 + h1, y2 + h2) - Math.max(y1, y2));
-
-        if (overlapX > 0 && overlapY > 0) {
-            // Determine the axis of the smallest overlap to resolve collision
-            let axis: CollisionAxis;
-            let normal = { x: 0, y: 0 };
-
-            if (overlapX < overlapY) {
-                axis = CollisionAxis.X;
-                // Determine the direction of the normal based on player position relative to the tile
-                normal.x = (x1 + w1 / 2 < x2 + w2 / 2) ? -1 : 1;
-            } else {
-                axis = CollisionAxis.Y;
-                // Determine the direction of the normal based on player position relative to the tile
-                normal.y = (y1 + h1 / 2 < y2 + h2 / 2) ? -1 : 1;
-            }
-
-            return {
-                x: x2, y: y2, width: w2, height: h2, axis: axis, collisionNormal: normal
-            };
-        }
-        return null;
-    }
-
-    /**
-     * Checks for a rectangular collision between two objects using IBoundingBox objects.
-     */
-    static AABBColliding(a: IBoundingBox, b: IBoundingBox): boolean {
-        return (
-            a.x < b.x + b.width &&
-            a.x + a.width > b.x &&
-            a.y < b.y + b.height &&
-            a.y + a.height > b.y
-        );
-    }
-
-
-    static isPixelPerfectColliding(
-        boundigBox: IBoundingBox,
-        tile: IIndexedTile,
-        textureData: ImageData
-    ): boolean {
-        const tileProperties = getTileProperties(tile.type);
-        if (!tileProperties) return false;
-
-        // Define points to check on the player's bounding box
-        const checkPoints = [
-            { x: boundigBox.x, y: boundigBox.y + boundigBox.height }, // Bottom-left
-            { x: boundigBox.x + boundigBox.width, y: boundigBox.y + boundigBox.height }, // Bottom-right
-        ];
-
-        for (const point of checkPoints) {
-            // Calculate the point's position relative to the tile's top-left corner
-            const relativeX = point.x - tile.x;
-            const relativeY = point.y - tile.y;
-
-            // Ensure the point is within the tile's texture bounds
-            if (relativeX >= 0 && relativeX < tileProperties.width && relativeY >= 0 && relativeY < tileProperties.height) {
-                // Get the pixel index in the texture data array
-                const pixelIndex = (Math.floor(relativeY) * tileProperties.width + Math.floor(relativeX)) * 4;
-                const alpha = textureData.data[pixelIndex + 3];
-
-                // If the pixel is not transparent, a collision is found
-                if (alpha > 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }

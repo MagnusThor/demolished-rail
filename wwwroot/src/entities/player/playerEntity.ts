@@ -78,7 +78,7 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
             const bullet = new BulletEntity(
                 this.props.positioned.x, self.props.positioned.y, direction);
             gameState.dynamicEntities.push(bullet);
-            console.log(`Player shot a bullet to the ${direction}`);
+          
         });
     }
 

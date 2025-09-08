@@ -6,6 +6,9 @@ import { IGameSpriteProps } from "./IGameSpriteProps";
 import { IEntityState } from "./IEntityState";
 
 
+export interface IPlayerGadget {
+    [key: string]: boolean | string | number | {};
+}
 
 export interface IPlayerProps extends IGameSpriteProps, IGameEntityBase {
     positioned: Positioned;
@@ -14,6 +17,7 @@ export interface IPlayerProps extends IGameSpriteProps, IGameEntityBase {
     gravity: number;
     isInitialized: boolean;
     health: IHealthProps;
+    gadgets: IPlayerGadget
   
 }
 

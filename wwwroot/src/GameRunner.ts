@@ -143,10 +143,10 @@ export class RunWorld {
             textures: {
                 "solid": gameAssets.createTexture("tileset_1", 0, 0, 32, 32,false)!,
                 "platform": gameAssets.createTexture("tileset_1", 0, 64, 32, 16,false)!,
-                "pilar": gameAssets.createTexture("tileset_1", 0, 160, 16, 64,false)!,
+                "pilar": gameAssets.createTexture("tileset_1", 0, 160, 16, 64,true)!,
                 "stone": gameAssets.createTexture("tileset_1",0,112,16,16,false)!,
                 "ladder": gameAssets.createTexture("tileset_1",48,160,16,16,false)!,
-                "valley": gameAssets.createTexture("dev_tiles",0,0,112,224,true)!
+                "valley": gameAssets.createTexture("dev_tiles",0,0,256,256,true)!
             },
             isInitialized: false,
             states:{},

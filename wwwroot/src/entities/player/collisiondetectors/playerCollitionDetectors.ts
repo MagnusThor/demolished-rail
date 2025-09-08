@@ -21,7 +21,6 @@ export const playerCollisionDetectors =
                 const collisionResults = new Array<ICollisionResult>();
                 const gridWidth = 32;
                 const gridHeight = 32;
-                const viewport = gameState.viewport;
                 const logicalCollisionMap = tileEntity.logicalCollisionMap;
 
                 if (!logicalCollisionMap) {
@@ -68,11 +67,11 @@ export const playerCollisionDetectors =
                                         tileBox,
                                         tileTexture.data
                                     );
-
                                     // If a collision is detected, add it to the results
                                     if (collisionResult) {
                                         collisionResult.targetEntity = tileEntity;
                                         collisionResults.push(collisionResult);
+                                        return collisionResults;
                                     }
                                 } else {
                                     // Fallback to plain AABB if pixel data is not available
@@ -97,6 +96,9 @@ export const playerCollisionDetectors =
                     return;
                 }
                 const { x: tileX, y: tileY, width: tileWidth, height: tileHeight, axis } = collisionData;
+                
+                // Use velocity to determine which side of the tile the player hit and snap their position.
+                // This is more reliable than using floating-point normal vectors.
                 if (axis === CollisionAxis.X) {
                     if (playerProps.velX > 0) {
                         playerProps.positioned.x = tileX - playerProps.positioned.width;
@@ -107,9 +109,7 @@ export const playerCollisionDetectors =
                 } else if (axis === CollisionAxis.Y) {
                     if (playerProps.velY > 0) {
                         playerProps.positioned.y = tileY - playerProps.positioned.height;
-
                         playerEntity.stateHelper.set<boolean>("isGrounded", true);
-
                     } else if (playerProps.velY < 0) {
                         playerProps.positioned.y = tileY + tileHeight;
                         playerEntity.stateHelper.set<boolean>("isGrounded", false);
@@ -138,7 +138,6 @@ export const playerCollisionDetectors =
             // This detector only needs to return a collision result for the game loop to process.
             onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, collectibleEntity: CollectibleEntity) => {
                 gameState.removeEntityByUUID(collectibleEntity.uuid);
-
             }
         },
         // Collision detector for platforms
@@ -158,14 +157,16 @@ export const playerCollisionDetectors =
                 return collisionResults;
             },
             onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, platformEntity: PlatformEntity) => {
-                // Check if the player is hitting the platform from above
+                // To prevent the player from "snapping" to the top of a platform when hitting it from below,
+                // we only apply the collision resolution if the player is moving downwards.
+                if (playerEntity.props.velY >= 0) {
                     playerEntity.props.positioned.y = platformEntity.props.positioned.y - playerEntity.props.positioned.height;
-                    playerEntity.props.velY = 0;       
+                    playerEntity.props.velY = 0;
                     playerEntity.props.velY = platformEntity.props.velY;
                     playerEntity.stateHelper.set("isGrounded", true);
                     playerEntity.stateHelper.set("onPlatform", true);
                 }
-           
+            }
         },
         // Collision detector for ladders
         {
@@ -185,7 +186,7 @@ export const playerCollisionDetectors =
                 return collisionResults;
             },
             onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, ladderEntity: LadderEntity) => {
-                playerEntity.stateHelper.set("onLadder", true);            
+                playerEntity.stateHelper.set("onLadder", true);
             }
         }
     ];

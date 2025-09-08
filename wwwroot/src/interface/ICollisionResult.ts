@@ -13,4 +13,6 @@ export interface ICollisionResult {
   targetEntity?: IGameEntity<any>; // Optional reference to the target entity
   collisionNormal?: IPoint2D
   type?:string
+  overlapMagnitude?: number 
+
 }

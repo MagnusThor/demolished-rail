@@ -60,7 +60,7 @@ export class Point3D extends Point2D implements IPoint3D {
      * Calculates the length of the vector represented by the point.
      * @returns The length of the vector.
      */
-    length(): number {
+    getLength(): number {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
 
@@ -79,7 +79,7 @@ export class Point3D extends Point2D implements IPoint3D {
      * @returns True if the normalization was successful, false otherwise (if the length is 0).
      */
     normalize(): boolean {
-        const length = this.length();
+        const length = this.getLength();
         if (length !== 0) {
             this.x /= length;
             this.y /= length;

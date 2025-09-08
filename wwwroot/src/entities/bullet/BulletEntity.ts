@@ -61,7 +61,8 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
                             width: enemyBBox.width,
                             height: enemyBBox.height,
                             axis: CollisionAxis.X, // or Y, depending on the game logic
-                            targetEntity: enemyEntity
+                            targetEntity: enemyEntity,
+                            
                         });
                     }
                     return collisionResults;

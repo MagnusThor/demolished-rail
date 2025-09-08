@@ -60,8 +60,8 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         isSolid:true
     },
     7: {
-        width: 112,
-        height: 224,
+        width: 256,
+        height: 256,
         isSolid:true,
         texture:"valley"
     },
