@@ -9,22 +9,24 @@ import { runCollitionDetectors } from "../../utils/collitionHelpers";
 import { getSurroundingTiles } from "../../utils/tileBlockHelpers";
 import { BulletEntity } from "../bullet/BulletEntity";
 import { GameEntity } from "../GameEntity";
+import { RopeEntity } from "../platform/RopeEntity";
 import { TileEntity } from "../tiles/tileEntity";
 import { playerCollisionDetectors } from "./collisiondetectors/playerCollitionDetectors";
-import { CollisionEvent } from "./CollisionEvent";
+import { EntityEvent } from "../EntityEvent";
 import { setupPlayerInput } from "./playerInput";
+import { allPlayerBehaviors, IPlayerBehavior } from "./playerBehaviors";
 
 export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidable {
-    entityEvents: CollisionEvent;
+    entityEvents: EntityEvent;
     
-    // Constant for jump speed to be used in the onUpdate method
-    private JUMP_SPEED = 8;
-
     constructor(props: IPlayerProps) {
         super("playerBlock", props);
         this.collisionDetectors = playerCollisionDetectors;
         this.props.currentAnimation = this.props.animations["idle"];
-        this.entityEvents = new CollisionEvent();
+        this.entityEvents = new EntityEvent();
+
+
+
         setupPlayerInput(this);
         this.onInit(this);
     }
@@ -43,8 +45,9 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
     onInit = (self: IGameEntity<IPlayerProps>) => {
 
         self.props.isInitialized = true;
+        self.props.attachedTo = undefined;
+        self.props.gadgets = { jetpack: true };
 
-        // Subscribe to a string-based topic for the ladder collision event.
         self.entityEvents!.subscribe("onLadder", (self, results) => {
             console.log("onLadder event called", results);
         });
@@ -59,18 +62,22 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
         });
 
         self.entityEvents!.subscribe("playerJump", (self, results) => {
-            if (!self.stateHelper.get<boolean>("onLadder")) {
-                self.stateHelper.set<boolean>("wantsToJump", true);
-            }
+            self.stateHelper.set<boolean>("wantsToJump", true);
         });
 
         self.entityEvents!.subscribe("playerClimb", (self, results) => {
-            if (self.stateHelper.get<boolean>("onLadder")) {
-                const velY = results.velY;
-                self.props.velY = velY;
-            } else {
-                self.props.velY = 0;
+            const velY = results.velY;
+            self.props.velY = velY;
+        });
+
+        self.entityEvents!.subscribe("playerStartJetpack", (self, results) => {
+            if (self.props.gadgets.jetpack) {
+                self.stateHelper.set<boolean>("isJetpacking", true);
             }
+        });
+
+        self.entityEvents!.subscribe("playerStopJetpack", (self, results) => {
+            self.stateHelper.set<boolean>("isJetpacking", false);
         });
 
         self.entityEvents!.subscribe("playerShoot", (self, results) => {
@@ -82,59 +89,30 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
         });
     }
 
-    onUpdate? = (self: IGameEntity<IPlayerProps>, timeStamp: number) => {
-        const props = self.props;
-        const stateHelper = this.stateHelper;
-
-        // --- 1. Reset State at the start of the frame ---
+    public resetState():void {
+        const stateHelper = this.stateHelper;   
         stateHelper.set<boolean>("isGrounded", false);
         stateHelper.set<boolean>("onLadder", false);
         stateHelper.set<boolean>("onPlatform", false); 
+    }
+
+    onUpdate? = (self: IGameEntity<IPlayerProps>, timeStamp: number) => {
+
+        // 1. Reset states at the start of the frame
         
-        // --- 2. Run Collisions and update State ---
+        this.resetState();        
+
+        // 2. Run collision detectors to update the state based on the current position
         runCollitionDetectors(self, self.collisionDetectors!);
-
-        // --- 3. Handle Jump Logic (after collision check) ---
-        if (stateHelper.get<boolean>("wantsToJump") && stateHelper.get<boolean>("isGrounded")) {
-            props.velY = -this.JUMP_SPEED;
-            stateHelper.set<boolean>("isJumping", true);
-            stateHelper.set<boolean>("wantsToJump", false);
-        }
-
-        // --- 4. Apply Gravity (only when not on a ladder) ---
-        if (!stateHelper.get<boolean>("onLadder") && !stateHelper.get<boolean>("isGrounded")) {
-            props.velY += props.gravity;
-        }
-
-        // --- 5. Apply Movement to Player Position ---
-        props.positioned.x += props.velX;
-        props.positioned.y += props.velY;
-
-        // --- 6. Animation Updates ---
-        if (stateHelper.get<boolean>("onLadder")) {
-             // Prioritize ladder animation if on a ladder.
-            if (props.currentAnimation!.name !== "idle") {
-                props.currentAnimation = props.animations["idle"];
-            }
-        } else if (stateHelper.get<boolean>("isGrounded") && props.velY === 0) {
-            // Check for isGrounded AND vertical velocity is zero for a reliable ground state.
-            stateHelper.set<boolean>("isJumping", false);
-            if (props.velX !== 0) {
-                if (props.currentAnimation!.name !== 'walk') {
-                    props.currentAnimation = props.animations.walk;
-                    props.currentAnimation.currentFrameIndex = 0;
-                }
-            } else {
-                if (props.currentAnimation!.name !== 'idle') {
-                    props.currentAnimation = props.animations.idle;
-                    props.currentAnimation.currentFrameIndex = 0;
+        
+        // 3. Apply behaviors based on current state
+        for (const behavior of allPlayerBehaviors) {
+            if (behavior.criteria(this)) {
+                if (behavior.onUpdate) {
+                    behavior.onUpdate(this);
                 }
             }
-        } 
-
-
-        // --- 7. Update Prior Position ---
-        props.positioned.updatePriorPosition!();
+        }
     }
 
     onDraw = (self: IGameEntity<IPlayerProps>, helper: CanvasHelper) => {
@@ -147,7 +125,5 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
             props.positioned.y,
             performance.now()
         );
-
-        
     }
 }

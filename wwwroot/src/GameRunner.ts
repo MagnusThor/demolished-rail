@@ -81,14 +81,14 @@ export class RunWorld {
         const { width: worldWidth, height: worldHeight } = calculateWorldDimensions(LEVEL_SAMPLE);
 
         // Find the player's starting grid coordinates (row and column)
-        const playerStartTileFromMap = getTilesByType(LEVEL_SAMPLE, 99)[0];
+        const playerStartTileFromMap = getTilesByType(LEVEL_SAMPLE, 0xFF)[0];
 
         // Convert the grid coordinates to a world position
         const playerStartTile = getTileXY(LEVEL_SAMPLE, playerStartTileFromMap.y, playerStartTileFromMap.x);
-        const playerProps = getTileProperties(99);
+        const playerProps = getTileProperties(0xFF);
 
         // Find all enemy start positions and convert their grid coordinates to world positions
-        const enemyStartTiles = getTilesByType(LEVEL_SAMPLE, 50);
+        const enemyStartTiles = getTilesByType(LEVEL_SAMPLE, 0xa0);
 
         if (!playerStartTile || !playerProps) {
             console.error("Player start position not found in the tile map!");
@@ -117,7 +117,8 @@ export class RunWorld {
                 isMovingRight: false,
                 lastDirection: "right",
             },
-            gadgets:{}
+            gadgets:{},
+            attachedTo:undefined
         });
         gameState.player = player;
 
@@ -128,7 +129,7 @@ export class RunWorld {
 
         // Map the enemy grid coordinates to enemy entities
         const enemies: IDynamicEntity<any>[] = enemyStartTiles.map(tile => {
-            const enemyProps = getTileProperties(50)!;
+            const enemyProps = getTileProperties(0xa0)!;
             const { x, y } = getTileXY(LEVEL_SAMPLE, tile.y, tile.x);
             return new EnemyEntity(x, y, indexedTiles);
         });
@@ -141,12 +142,24 @@ export class RunWorld {
             tileHeight: DEFULT_TILE_HEIGHT,
             indexedTiles: calculateTileCoordinates(LEVEL_SAMPLE),
             textures: {
-                "solid": gameAssets.createTexture("tileset_1", 0, 0, 32, 32,false)!,
-                "platform": gameAssets.createTexture("tileset_1", 0, 64, 32, 16,false)!,
-                "pilar": gameAssets.createTexture("tileset_1", 0, 160, 16, 64,true)!,
-                "stone": gameAssets.createTexture("tileset_1",0,112,16,16,false)!,
-                "ladder": gameAssets.createTexture("tileset_1",48,160,16,16,false)!,
-                "valley": gameAssets.createTexture("dev_tiles",0,0,256,256,true)!
+                "solid-1": gameAssets.createTexture("tileset_1", 0, 0, 32, 32,false)!, //1
+                "solid-2": gameAssets.createTexture("tileset_1", 64, 0, 32, 32,false)!, //2
+                "solid-3": gameAssets.createTexture("tileset_1", 96, 0, 32, 32,false)!, //2
+                "solid-4": gameAssets.createTexture("tileset_1", 129, 0, 32, 32,false)!, //2
+
+                "platform-1": gameAssets.createTexture("tileset_1", 0, 64, 32, 16,false)!, //30
+               
+               
+                "stone-1": gameAssets.createTexture("tileset_1",0,112,16,16,false)!,  // 60
+                "stone-2": gameAssets.createTexture("tileset_1",16,112,16,16,false)!, 
+                "stone-3": gameAssets.createTexture("tileset_1",32,112,16,16,false)!,
+                "stone-4": gameAssets.createTexture("tileset_1",0,128,16,16,false)!,
+                
+                "ladder-1": gameAssets.createTexture("tileset_1",48,160,16,16,false)!,
+               
+                "pilar-1": gameAssets.createTexture("tileset_1", 0, 160, 16, 64,true)!,
+
+                "bigblock-1": gameAssets.createTexture("tileset_1",160,0,64,64,true)!
             },
             isInitialized: false,
             states:{},

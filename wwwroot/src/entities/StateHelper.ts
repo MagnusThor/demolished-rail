@@ -16,9 +16,9 @@ export class StateHelper<T extends IGameEntityBase> {
      * @param key The key of the state property to retrieve.
      * @returns The value of the state property, or null if it doesn't exist or doesn't match the expected type.
      */
-    public get<T>(key: string): T | null {
+    public get<T>(key: string): T  {
         if (!this.props.states || typeof this.props.states[key] === 'undefined') {
-            return null;
+            return false as T;
         }
         return this.props.states[key] as T;
     }

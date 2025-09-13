@@ -1,6 +1,6 @@
 import { IEntity, ICompositeEntity } from "../../../src";
 import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
-import { CollisionEvent } from "../entities/player/CollisionEvent";
+import { EntityEvent } from "../entities/EntityEvent";
 
 import { StateHelper } from "../entities/StateHelper";
 import { IBoundingBox } from "./IBoundingBox";
@@ -34,7 +34,7 @@ export interface IGameEntity<P extends IGameEntityBase>  {
   props: P;
   uuid: string; // Optional unique identifier for the entity
   stateHelper: StateHelper<P>;
-  entityEvents?: CollisionEvent;
+  entityEvents?: EntityEvent;
   
 }
 

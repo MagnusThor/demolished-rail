@@ -16,76 +16,76 @@ export const setupPlayerInput = (player: PlayerEntity) => {
     const input = gameState.input!;
     const MOVE_SPEED = 4;
     const JUMP_SPEED = 8;
-    
+
     // We'll publish events instead of directly manipulating state.
     // This decouples input from game logic.
     const entityEvents = player.entityEvents!;
 
     // Set up listeners for horizontal movement
     input.on('down', KeyCode.ArrowLeft, () => {
-        entityEvents.publish('playerMove',player, { velX: -MOVE_SPEED });
+    
+        if (stateHelper.get<boolean>("isSwinging")) {
+            stateHelper.set<boolean>("isSwinging", false);
+        return;
+        };
+        entityEvents.publish('playerMove', player, { velX: -MOVE_SPEED });
         stateHelper.set<string>("lastDirection", "left");
+
     });
-    input.on('down', KeyCode.KeyA, () => {
-        entityEvents.publish('playerMove',player, { velX: -MOVE_SPEED });
-        stateHelper.set<string>("lastDirection", "left");
-    });
+
 
     input.on('up', KeyCode.ArrowLeft, () => {
-        entityEvents.publish('playerMove',player, { velX: 0 });
-    });
-    input.on('up', KeyCode.KeyA, () => {
-        entityEvents.publish('playerMove',player, { velX: 0 });
+        if (stateHelper.get<boolean>("isSwinging")) {
+            stateHelper.set<boolean>("isSwinging", false);
+            return;
+        };
+
+        entityEvents.publish('playerMove', player, { velX: 0 });
     });
 
+
+
     input.on('down', KeyCode.ArrowRight, () => {
-        entityEvents.publish('playerMove',player, { velX: MOVE_SPEED });
+        if (stateHelper.get<boolean>("isSwinging")) {
+            stateHelper.set<boolean>("isSwinging", false);
+            return;
+        };
+        entityEvents.publish('playerMove', player, { velX: MOVE_SPEED });
         stateHelper.set<string>("lastDirection", "right");
     });
-    
-    input.on('down', KeyCode.KeyD, () => {
-        entityEvents.publish('playerMove', player,{ velX: MOVE_SPEED });
-        stateHelper.set<string>("lastDirection", "right");
-    });
-    
+
     input.on('up', KeyCode.ArrowRight, () => {
-        entityEvents.publish('playerMove',player, { velX: 0 });
+        if (stateHelper.get<boolean>("isSwinging")) {
+            stateHelper.set<boolean>("isSwinging", false);
+            return;
+        };
+        entityEvents.publish('playerMove', player, { velX: 0 });
     });
-    input.on('up', KeyCode.KeyD, () => {
-        entityEvents.publish('playerMove',player, { velX: 0 });
-    });
+
 
     // Set up listeners for jumping and climbing
     input.on('down', KeyCode.ArrowUp, () => {
         if (stateHelper.get<boolean>("onLadder")) {
             entityEvents.publish('playerClimb', player, { velY: -MOVE_SPEED });
-        } else { // if (stateHelper.get<boolean>("isGrounded")) 
+        } else if (stateHelper.get<boolean>("isGrounded") || stateHelper.get<boolean>("isSwinging")) {
+            // Player can jump if on the ground or swinging
             entityEvents.publish('playerJump', player, { velY: -JUMP_SPEED });
-        }
-    });
-    
-    input.on('down', KeyCode.KeyW, () => {
-        if (stateHelper.get<boolean>("onLadder")) {
-            entityEvents.publish('playerClimb', player, { velY: -MOVE_SPEED });
-        } else if (stateHelper.get<boolean>("isGrounded")) {
-            entityEvents.publish('playerJump', player, { velY: -JUMP_SPEED });
+        } else if (props.gadgets.jetpack && !stateHelper.get<boolean>("isGrounded")) {
+            // Start the jetpack if in the air and player has it
+            entityEvents.publish('playerStartJetpack', player, {});
         }
     });
 
-    // Handle keyup for "up" arrow to stop climbing
     input.on('up', KeyCode.ArrowUp, () => {
         if (stateHelper.get<boolean>("onLadder")) {
             entityEvents.publish('playerClimb', player, { velY: 0 });
+        } else if (props.gadgets.jetpack) {
+            // Stop the jetpack when the key is released
+            entityEvents.publish('playerStopJetpack', player, {});
         }
     });
 
-    // Handle keyup for "W" key to stop climbing
-    input.on('up', KeyCode.KeyW, () => {
-        if (stateHelper.get<boolean>("onLadder")) {
-            entityEvents.publish('playerClimb', player, { velY: 0 });
-        }
-    });
-    
+
     // Add new listeners for climbing down
     input.on('down', KeyCode.ArrowDown, () => {
         if (stateHelper.get<boolean>("onLadder")) {
@@ -93,11 +93,6 @@ export const setupPlayerInput = (player: PlayerEntity) => {
         }
     });
 
-    input.on('down', KeyCode.KeyS, () => {
-        if (stateHelper.get<boolean>("onLadder")) {
-            entityEvents.publish('playerClimb', player, { velY: MOVE_SPEED });
-        }
-    });
 
     // Handle keyup for "down" arrow to stop climbing
     input.on('up', KeyCode.ArrowDown, () => {
@@ -106,12 +101,6 @@ export const setupPlayerInput = (player: PlayerEntity) => {
         }
     });
 
-    // Handle keyup for "S" key to stop climbing
-    input.on('up', KeyCode.KeyS, () => {
-        if (stateHelper.get<boolean>("onLadder")) {
-            entityEvents.publish('playerClimb', player, { velY: 0 });
-        }
-    });
 
     // Set up listeners for shooting
     input.on('down', KeyCode.Space, () => {

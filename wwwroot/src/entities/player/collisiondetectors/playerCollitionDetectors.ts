@@ -1,3 +1,4 @@
+import { Point2D } from "../../../../../src";
 import { CollisionAxis } from "../../../enums/CollisionAxis";
 import { IBoundingCircle } from "../../../interface/IBoundingBox";
 import { ICollisionResult } from "../../../interface/ICollisionResult";
@@ -6,9 +7,11 @@ import { getTileProperties, getTileImageDataAndProps } from "../../../utils/tile
 import { CollectibleEntity } from "../../collectible/CollectibleEntity";
 import { LadderEntity } from "../../ladderEntity";
 import { PlatformEntity } from "../../platform/PlatformEntity";
+import { RopeEntity } from "../../platform/RopeEntity";
 import { TileEntity } from "../../tiles/tileEntity";
 import { PlayerEntity } from "../playerEntity";
 import { ExtendedCollisionHelper } from "./extendedCollitionHelper";
+
 
 
 export const playerCollisionDetectors =
@@ -65,6 +68,7 @@ export const playerCollisionDetectors =
                                     const collisionResult = ExtendedCollisionHelper.isCirclePixelColliding(
                                         playerCircle,
                                         tileBox,
+                                    
                                         tileTexture.data
                                     );
                                     // If a collision is detected, add it to the results
@@ -96,7 +100,7 @@ export const playerCollisionDetectors =
                     return;
                 }
                 const { x: tileX, y: tileY, width: tileWidth, height: tileHeight, axis } = collisionData;
-                
+
                 // Use velocity to determine which side of the tile the player hit and snap their position.
                 // This is more reliable than using floating-point normal vectors.
                 if (axis === CollisionAxis.X) {
@@ -187,6 +191,47 @@ export const playerCollisionDetectors =
             },
             onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, ladderEntity: LadderEntity) => {
                 playerEntity.stateHelper.set("onLadder", true);
+            
+            }
+        },
+        // Collision detector for the rope
+        {
+            targetName: "rope",
+            detectorFn: (playerEntity: PlayerEntity, ropeEntity: RopeEntity) => {
+                const playerProps = playerEntity.props;
+                const collisionResults = new Array<ICollisionResult>();
+
+                // Get the start, control, and end points of the rope's Bézier curve
+                const ropeStart = new Point2D(ropeEntity.props.positioned.x, ropeEntity.props.positioned.y);
+                const ropeEnd = new Point2D(ropeEntity.endX, ropeEntity.endY);
+                const ropeControl = new Point2D(ropeEntity.controlX, ropeEntity.controlY);
+
+                // Use the new helper function to check for collision with the rope's curve
+                const collisionResult = ExtendedCollisionHelper.isRectCurveColliding(
+                    playerEntity.props.positioned.getBoundingBox!(),
+                    ropeStart,
+                    ropeControl,
+                    ropeEnd
+                );
+
+                if (collisionResult) {
+                    collisionResults.push(collisionResult);
+                }
+                return collisionResults;
+            },
+            onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, ropeEntity: RopeEntity) => {
+                // When the player collides with the rope, we "latch" them to it
+                // We'll handle the physics of swinging in the player's update function
+                playerEntity.stateHelper.set("isSwinging", true);
+                playerEntity.stateHelper.set("onLadder", false);
+                playerEntity.stateHelper.set("isGrounded", false);
+                // Store a reference to the rope entity so the player can follow its movement
+                 playerEntity.props.attachedTo = ropeEntity;
+
+                // Stop any other movement
+                playerEntity.props.velX = 0;
+                playerEntity.props.velY = 0;
+
             }
         }
     ];

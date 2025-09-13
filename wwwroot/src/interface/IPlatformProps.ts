@@ -16,6 +16,6 @@ export interface IPlatformProps extends IGameEntityBase {
     minY: number;
     maxY: number;
     oldY: number;
-    color: string;
+   
     
 }

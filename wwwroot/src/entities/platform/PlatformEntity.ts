@@ -26,7 +26,7 @@ export class PlatformEntity extends GameEntity<IPlatformProps>{
         const maxY = closestBottomTile ? closestBottomTile.y * props.tileHeight  : tile.y * props.tileHeight;
         
         // Calculate the tile properties and store them in a local variable before the super call.
-        const tileProps = getTileProperties(3)!;
+        const tileProps = getTileProperties(0x30)!;
         
         super(
             "platformBlock",
@@ -36,7 +36,6 @@ export class PlatformEntity extends GameEntity<IPlatformProps>{
                 minY: minY,
                 maxY: maxY,
                 oldY: tile.y * props.tileHeight,
-                color: "blue",
                 isInitialized: false,
                 zIndex:1,
                 states:{}

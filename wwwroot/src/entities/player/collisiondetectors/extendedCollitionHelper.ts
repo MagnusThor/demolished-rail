@@ -118,6 +118,7 @@ export class ExtendedCollisionHelper {
                         const collisionAxis = Math.abs(normalizedNormal.x) > Math.abs(normalizedNormal.y) ?
                             CollisionAxis.X : CollisionAxis.Y;
 
+                            
                         return {
                             // Return the tile's coordinates and dimensions
                             x: tileBox.x,
@@ -129,8 +130,114 @@ export class ExtendedCollisionHelper {
                             collisionNormal: normalizedNormal,
                             overlapMagnitude: overlapMagnitude
                         };
+
                     }
                 }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Checks if a rectangle collides with a line segment.
+     * This is useful for thin objects like ropes or laser beams.
+     * * @param rect The bounding box of the rectangle (e.g., the player).
+     * @param p1 The start point of the line segment (e.g., the rope's pivot).
+     * @param p2 The end point of the line segment (e.g., the rope's current end).
+     * @returns A collision result or null if no collision is detected.
+     */
+    static isRectLineColliding(rect: IBoundingBox, p1: Point2D, p2: Point2D): ICollisionResult | null {
+        // Line-rect intersection algorithm
+        let dx = p2.x - p1.x;
+        let dy = p2.y - p1.y;
+
+        const p = [ -dx, dx, -dy, dy ];
+        const q = [ p1.x - rect.x, rect.x + rect.width - p1.x, p1.y - rect.y, rect.y + rect.height - p1.y ];
+        
+        let u1 = 0.0;
+        let u2 = 1.0;
+
+        for (let i = 0; i < 4; i++) {
+            if (p[i] === 0) {
+                if (q[i] < 0) return null; // Parallel and outside
+            } else {
+                let u = q[i] / p[i];
+                if (p[i] < 0) {
+                    u1 = Math.max(u1, u);
+                } else {
+                    u2 = Math.min(u2, u);
+                }
+            }
+        }
+        
+        if (u1 > u2) return null; // No collision
+
+        // Collision detected. Return a simplified collision result for now.
+        // The precise collision normal and point are more complex for this type of check,
+        // but for a simple "latch on" effect, this is sufficient.
+        return {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+            axis: CollisionAxis.NONE, // No specific axis
+            collisionNormal: new Point2D(0, 0), // Default to a zero vector for simplicity
+            overlapMagnitude: 0
+        };
+    }
+
+       /**
+     * Checks for a collision between a rectangle and a single point.
+     * @param rect The rectangle bounding box.
+     * @param point The point to check.
+     * @returns A collision result if a collision occurs, otherwise null.
+     */
+    static isRectPointColliding(rect: IBoundingBox, point: Point2D): ICollisionResult | null {
+        if (point.x >= rect.x && point.x <= rect.x + rect.width &&
+            point.y >= rect.y && point.y <= rect.y + rect.height) {
+            return {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+                axis: CollisionAxis.NONE,
+                collisionNormal: new Point2D(0, 0),
+                overlapMagnitude: 0
+            };
+        }
+        return null;
+    }
+    
+    /**
+     * Checks for a collision between a rectangle and a quadratic Bézier curve.
+     * This is done by sampling points along the curve and checking each for a collision.
+     * @param rect The rectangle bounding box.
+     * @param p1 The start point of the curve.
+     * @param p2 The control point of the curve.
+     * @param p3 The end point of the curve.
+     * @param segments The number of points to sample along the curve.
+     * @returns A collision result if a collision occurs, otherwise null.
+     */
+    static isRectCurveColliding(rect: IBoundingBox, p1: Point2D, p2: Point2D, p3: Point2D, segments: number = 20): ICollisionResult | null {
+        for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            // Calculate a point on the curve using the Bézier formula
+            const pointX = (1 - t) * (1 - t) * p1.x + 2 * (1 - t) * t * p2.x + t * t * p3.x;
+            const pointY = (1 - t) * (1 - t) * p1.y + 2 * (1 - t) * t * p2.y + t * t * p3.y;
+
+            const point = new Point2D(pointX, pointY);
+
+            // Check if the current point on the curve collides with the rectangle
+            if (this.isRectPointColliding(rect, point)) {
+                return {
+                    x: rect.x,
+                    y: rect.y,
+                    width: rect.width,
+                    height: rect.height,
+                    axis: CollisionAxis.NONE,
+                    collisionNormal: new Point2D(0, 0),
+                    overlapMagnitude: 0
+                };
             }
         }
         return null;

@@ -2,6 +2,7 @@ import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { CollectibleEntity } from "../entities/collectible/CollectibleEntity";
 import { ILadderProps, LadderEntity } from "../entities/ladderEntity";
 import { PlatformEntity } from "../entities/platform/PlatformEntity";
+import { RopeEntity } from "../entities/platform/RopeEntity";
 import { IGameEntity } from "../interface/IGameEntity";
 import { ITileProps } from "../interface/ILevelProps";
 import { Positioned } from "../interface/IPositioned";
@@ -13,7 +14,7 @@ import { getTileXY } from "../utils/tileBlockHelpers";
 
 export const TileDefinitions: { [key: string]: ITileProps; } = {
     // Empty space, no collision
-    0: {
+    0x00: {
         width: 32,
         height: 32,
         isSolid: false,
@@ -21,58 +22,99 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
     },
 
     // Solid wall or block, collidable
-    1: {
+    0x01: {
         width: 32,
         height: 32,
-        texture: "solid",
+        texture: "solid-4",
+        isSolid: true,        
+    },
+
+
+
+    0x02: {
+        width: 32,
+        height: 32,
+        isSolid: true,
+        texture:"solid-1"
+    },
+
+    0x03: {
+        width: 32,
+        height: 32,
+        isSolid: true,
+        texture:"solid-2"
+    },
+
+     0x04: {
+        width: 32,
+        height: 32,
+        isSolid: true,
+        texture:"solid-3"
+    },
+    
+    // platform
+
+    0x30: {
+        width: 32,
+        height: 16,
+        texture: "platform-1",
+        isSolid: false,
+        creator: (levelProps,tile) => {
+               return new PlatformEntity(tile, levelProps, levelProps.textures!["platform-1"]);
+        }
+    },
+
+    0x50: {
+        width: 16,
+        height: 64,
+        texture: "pilar-1",
         isSolid: true,
         
     },
 
-    // Water tile
-    2: {
-        width: 32,
-        height: 32,
-        isSolid: false,
-        texture:"solid"
-    },
-    // platform
-    3: {
-        width: 32,
-        height: 16,
-        texture: "platform",
-        isSolid: false,
-        creator: (levelProps,tile) => {
-               return new PlatformEntity(tile, levelProps, levelProps.textures!["platform"]);
-        }
-    },
-      5: {
-        width: 16,
+    0x51: {
+        width: 64,
         height: 64,
-        texture: "pilar",
-        isSolid: true,
-      
+        isSolid:true,
+        texture:"bigblock-1"
     },
-    6:{
+
+
+    0x61:{
         width:16,
         height:16,
-        texture:"stone",
+        texture:"stone-1",
         isSolid:true
     },
-    7: {
-        width: 256,
-        height: 256,
-        isSolid:true,
-        texture:"valley"
+    0x62:{
+        width:16,
+        height:16,
+        texture:"stone-2",
+        isSolid:true
     },
+    0x63:{
+        width:16,
+        height:16,
+        texture:"stone-3",
+        isSolid:true
+    },
+
+    0x64:{
+        width:16,
+        height:16,
+        texture:"stone-4",
+        isSolid:true
+    },
+
+       
     // Ladder
-    42: {
+    0x42: {
         width: 15,
         height: 15,
-        texture: "ladder",
+        texture: "ladder-1",
         isSolid: true,
         creator: (levelProps,tile:IPoint2D) => {
-                const texture = levelProps.textures!["ladder"];
+                const texture = levelProps.textures!["ladder-1"];
                  const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x)
                   return new LadderEntity({
                     ...levelProps,
@@ -87,12 +129,21 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
 
         }
     },
+    0x43: {
+        width: 16,
+        height: 16,
+        texture: "rope",
+        isSolid: false,
+        creator: (levelProps,tile:IPoint2D) => {
+                 const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x)
+                 return new RopeEntity(x, y, 100, Math.PI / 3,30);
+        }
+    },
 
-    // Crate tile, can be destroyed
-    40: {
+  
+    0x70: {
         width: 32,
         height: 32,
-        texture: "solid",
         isSolid: false,
         creator: (levelProps, tile )=> {
               const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
@@ -104,16 +155,10 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
                         }
                     };
         }
-    },
-  
-    // Collectible item or coin
-    50: {
-        width: 32,
-        height: 32,
-        isSolid: false
-    },
+    },  
+   
     // Player spawn point
-    99: {
+    0xff: {
         width: 32,
         height: 32,
         texture: "player",
