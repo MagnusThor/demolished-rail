@@ -3,7 +3,7 @@ import { gameState } from "../../state/gameState";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { ICollisionDetector } from "../../interface/ICollisionDetector";
 import { ICollisionResult } from "../../interface/ICollisionResult";
-import { IDynamicEntity } from "../../interface/IDynamicEntity";
+
 import { IEnemyProps, IEnemyBehavior } from "../../interface/IEnemyProps";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { IIndexedTile } from "../../interface/IIndexedTile";
@@ -12,12 +12,14 @@ import { EnemyChasingBehavior } from "./behavior/EnemyChasingBehavior";
 import { EnemyPatrollingBehavior } from "./behavior/EnemyPatrollingBehavior";
 import { enemyCollisionDetectors } from "./enemyCollisionDetectors";
 import { StateHelper } from "../StateHelper";
+import { IgnorePlugin } from "webpack";
+import { EntityEvent } from "../EntityEvent";
 
-// ent
-export const ENEMY_SPEED = 2;
 
-export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
+export class EnemyEntity implements IGameEntity<IEnemyProps>  {
+    
     stateHelper: StateHelper<IEnemyProps>;
+
     constructor(startX: number,
         startY: number,
         indexedTiles: IIndexedTile[]) { 
@@ -33,11 +35,10 @@ export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
         this.uuid = crypto.randomUUID();
         this.name =  `enemy-${crypto.randomUUID()}`;
         this.key = this.name;
+    
         this.props =  {
             // The position is now set directly with world coordinates
             positioned: new Positioned(startX, startY, 32, 32),
-            isAlive: true,
-            lifeTime: -1,
             health: {
                 health: 100,
                 damage: 10
@@ -56,24 +57,33 @@ export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
         this.stateHelper = new StateHelper(this.props);
         this.collisionDetectors = enemyCollisionDetectors;
 
-
+        this.lifeTime = 2000; // 2 seconds
     }
+    lifeTime: number;
+    entityEvents?: EntityEvent | undefined;
   
     uuid: string;
     name: string;
     key: string;
     props: IEnemyProps;
     collisionDetectors?: ICollisionDetector[] | undefined;
-    onCreated?: ((self: IDynamicEntity<IEnemyProps>) => void) | undefined;
-    onDestroy?: ((self: IDynamicEntity<IEnemyProps>) => void) | undefined;
+
+    onCreated?: (self: IGameEntity<IEnemyProps>) => {
+
+    };
+    onDestroy?: (self: IGameEntity<IEnemyProps>) => {
+        
+    }
 
       // THIS IS THE CORRECTED METHOD
-    processCollisions? = (self: IDynamicEntity<IEnemyProps>, entities: IGameEntity<any>[]) => {
-        const selfProps = self.props;
+    processCollisions? = (self: IGameEntity<IEnemyProps>, entities: IGameEntity<any>[]) => {
+
+       // const selfProps = self.props;
+        
         for (const detector of self.collisionDetectors!) {
             for (const entity of entities) {
                 if (entity.name === detector.targetName) {
-                    const collisionResultsRaw = detector.detectorFn(selfProps, entity);
+                    const collisionResultsRaw = detector.detectorFn(self, entity);
                     let collisionResults: ICollisionResult[] = [];
                     if (Array.isArray(collisionResultsRaw)) {
                         collisionResults = collisionResultsRaw;
@@ -81,7 +91,7 @@ export class EnemyEntity implements IDynamicEntity<IEnemyProps>  {
                         collisionResults = [collisionResultsRaw];
                     }
                     for (const result of collisionResults) {
-                        detector.onCollision(selfProps, result);
+                        detector.onCollision(self, result);
                     }
                 }
             }

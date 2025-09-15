@@ -20,7 +20,7 @@ export interface ILadderProps extends IGameEntityBase{
 
 export class LadderEntity extends GameEntity<ILadderProps> implements IGameEntity<ILadderProps> 
 {
-    collisionDetectors?: ICollisionDetector[] | undefined;
+  
     stateHelper: StateHelper<ILadderProps>;
 
     constructor(props:ILadderProps){

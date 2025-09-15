@@ -4,11 +4,8 @@
  * This is the central repository for all game-wide data.
  */
 
-import { IEntity, InputHelper } from "../../../src";
-import { IBulletProps } from "./IBulletProps";
-
+import { InputHelper } from "../../../src";
 import { IGameEntity } from "./IGameEntity";
-import { IDynamicEntity } from "./IDynamicEntity";
 import { IViewport } from "./IViewport";
 import { IPlayerProps } from "./IPlayerProps";
 
@@ -30,8 +27,11 @@ export interface IGameState {
     // An array to hold all the game entities, like the player, tiles, and enemies.
     // This allows for a generic update and draw loop.
     entities: IGameEntity<any>[];
-    dynamicEntities: IDynamicEntity<any>[]; // New dedicated list for bullets
-    removeDynamicEntity: (entity: IDynamicEntity<any>) => void; // Method to remove a dynamic entity by its UUID
+
+    //dynamicEntities: IGameEntity<any>[]; // New dedicated list for bullets
+
+    //removeDynamicEntity: (entity: IGameEntity<any>) => void; // Method to remove a dynamic entity by its UUID
+    
     findEntities(key: string): IGameEntity<any>[]; // A method to find entities by their key or name
     removeEntityByUUID: (uuid:string) => void; // Optional method to remove an entity by its UUID
 }

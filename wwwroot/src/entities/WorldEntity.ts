@@ -41,7 +41,8 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
     uuid: string = crypto.randomUUID();
 
 
-    
+    lifeTime: number = Infinity
+
     constructor(
         public name: string,
         public props: IWorldProps,
@@ -82,28 +83,21 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
      */
     updateBlocks(ts: number): void {
         // Combine static and dynamic entities for collision processing.
-        const allEntities = [...gameState.entities, ...gameState.dynamicEntities];
+        const allEntities = [...gameState.entities];
 
          allEntities.sort((a, b) => (a.props.zIndex || 0) - (b.props.zIndex || 0));
 
         // Update all dynamic entities and filter out the ones that are no longer alive.
-        gameState.dynamicEntities = gameState.dynamicEntities.filter(entity => {
-            if (entity.props.isAlive === false && entity.onDestroy) {
-                entity.onDestroy(entity);
-            }
-            if(entity.onUpdate)
-                entity.onUpdate (entity, ts);
 
-            if (entity.processCollisions) {
-                entity.processCollisions(entity, allEntities);
-            }
-            return entity.props.isAlive;
-        });
 
         // Update all the static blocks within the world.
-        allEntities.forEach(block => {
-            if(block.onUpdate)
-                block.onUpdate!(block, ts);
+        allEntities.forEach(entity => {
+            if(entity.onUpdate)
+                entity.onUpdate!(entity, ts);
+
+             if (entity.processCollisions) {
+                entity.processCollisions(entity, allEntities);
+            }   
         });
 
         // Update the viewport to smoothly follow the target.
@@ -170,15 +164,10 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
         // This effectively moves the camera.
         ctx.translate(-this.props.viewportX, -this.props.viewportY);
 
-         const allEntities = [...gameState.entities, ...gameState.dynamicEntities]
-
-          allEntities.sort((a, b) => (a.props.zIndex || 0) - (b.props.zIndex || 0));
-
+         const allEntities = [...gameState.entities]
+            allEntities.sort((a, b) => (a.props.zIndex || 0) - (b.props.zIndex || 0));
 
         for (const entity of allEntities) {
-            // if (entity.onDraw) {
-            //     entity.onDraw(entity, canvasHelper);
-            // }
              if (entity.onDraw && isEntityInView(entity, {
                 x:this.props.viewportX, y:this.props.viewportY
                 }  , this.props.viewportWidth, this.props.viewportHeight)) {
@@ -200,40 +189,5 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
        
     };
 
-    private drawDebugInfo(ctx: CanvasRenderingContext2D): void {
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(0, 0, this.props.viewportWidth, this.props.viewportHeight);
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(10, 10, 280, 150);
-
-        ctx.fillStyle = 'white';
-        ctx.font = '14px Arial';
-        let y = 30;
-        const x = 20;
-        const line = 20;
-
-        ctx.fillText(`Viewport Pos: (${Math.round(this.props.viewportX)}, ${Math.round(this.props.viewportY)})`, x, y);
-        y += line;
-        ctx.fillText(`Dynamic Entities: ${gameState.dynamicEntities.length}`, x, y);
-        y += line;
-
-        if (this.followTarget) {
-            const p = this.followTarget.props.position;
-            ctx.fillText(`Player Pos: (${p.x.toFixed(0)}, ${p.y.toFixed(0)})`, x, y);
-            y += line;
-
-            const maxVpX = this.props.worldWidth - this.props.viewportWidth;
-            const maxVpY = this.props.worldHeight - this.props.viewportHeight;
-            const isClampedX = this.props.viewportX <= 0 || this.props.viewportX >= maxVpX;
-            const isClampedY = this.props.viewportY <= 0 || this.props.viewportY >= maxVpY;
-            ctx.fillText(`Viewport Clamped: X=${isClampedX}, Y=${isClampedY}`, x, y);
-            y += line;
-        }
-
-        ctx.fillText(`Viewport Size: ${this.props.viewportWidth} x ${this.props.viewportHeight}`, x, y);
-        y += line;
-        ctx.fillText(`Canvas Size: ${this.canvas.width} x ${this.canvas.height}`, x, y);
-    }
+  
 }

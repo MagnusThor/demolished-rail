@@ -9,7 +9,7 @@ import { PlayerEntity } from "./entities/player/playerEntity";
 import { TileEntity } from "./entities/tiles/tileEntity";
 import { WorldEntity } from "./entities/WorldEntity";
 import { gameState, gameAssets } from "./state/gameState";
-import { IDynamicEntity } from "./interface/IDynamicEntity";
+
 import { IGameEntity } from "./interface/IGameEntity";
 import { ILevelProps } from "./interface/ILevelProps";
 import { IPlayerProps } from "./interface/IPlayerProps";
@@ -17,6 +17,7 @@ import { Positioned } from "./interface/IPositioned";
 import { LEVEL_SAMPLE, DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "./level/LEVEL_SAMPLE";
 import { getTilesByType, getTileXY, calculateWorldDimensions, getTileProperties, calculateTileCoordinates } from "./utils/tileBlockHelpers";
 import { createLevelEntities } from "./level/LevelFactory";
+import { IEnemyProps } from "./interface/IEnemyProps";
 
 export class RunWorld {
     screenCanvas: HTMLCanvasElement;
@@ -128,10 +129,12 @@ export class RunWorld {
         let indexedTiles =  calculateTileCoordinates(LEVEL_SAMPLE);
 
         // Map the enemy grid coordinates to enemy entities
-        const enemies: IDynamicEntity<any>[] = enemyStartTiles.map(tile => {
-            const enemyProps = getTileProperties(0xa0)!;
+        const enemies: IGameEntity<IEnemyProps>[] = enemyStartTiles.map(tile => {
+
+           // const enemyProps = getTileProperties(0xa0)!;
             const { x, y } = getTileXY(LEVEL_SAMPLE, tile.y, tile.x);
             return new EnemyEntity(x, y, indexedTiles);
+
         });
 
         // Use the new LevelInitializer to create the level's static entities
@@ -187,16 +190,12 @@ export class RunWorld {
         staticLevelEntities.forEach(entity => gameState.entities.push(entity));
         
         //world.addBlock(player as IGameEntity<IPlayerProps>);
-        enemies.forEach(enemy => gameState.entities.push(enemy as IGameEntity<any>));
+        enemies.forEach(enemy => gameState.entities.push(enemy));
 
         // Follow the player with the camera
         world.follow(player as IGameEntity<IPlayerProps>);
 
-        // Add enemies to dynamicEntities so they can be handled by the game loop
-        enemies.forEach(enemy => {
-            gameState.dynamicEntities.push(enemy as IDynamicEntity<any>);
-        });
-
+      
         gameState.entities.push(world);
 
         sequence.onFrame((ts) => {

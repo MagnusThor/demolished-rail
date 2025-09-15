@@ -117,8 +117,8 @@ export const SwingingBehavior: IPlayerBehavior = {
     criteria: (player:PlayerEntity) => player.stateHelper.get<boolean>("isSwinging"),
     onUpdate: (player:PlayerEntity) => {
         const ropeEntity = player.props.attachedTo as RopeEntity;
-        player.props.positioned.x = ropeEntity.endX;
-        player.props.positioned.y = ropeEntity.endY;
+        player.props.positioned.x = ropeEntity.endX - (player.props.positioned.width / 2);
+        player.props.positioned.y = ropeEntity.endY - (player.props.positioned.height /2);
     }
 };
 
@@ -156,7 +156,7 @@ export const WalkBehavior: IPlayerBehavior = {
 };
 
 export const allPlayerBehaviors = [
-    
+
     IdleBehavior,
     WalkBehavior,
     JumpBehavior,

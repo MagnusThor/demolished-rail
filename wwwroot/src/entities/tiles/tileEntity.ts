@@ -13,11 +13,14 @@ import { gameAssets } from "../../state/gameState";
 
 
 export class TileEntity extends GameEntity<ILevelProps> {
-    collisionDetectors?: ICollisionDetector[];
+ 
     public tileSpatialGrid: Map<string, IIndexedTile[]> = new Map();
+    
     // Updated to store an object with the tile type, original world coordinates, and logical row/col
     public logicalCollisionMap: { type: number, x: number, y: number, row: number, col: number }[][] = [];
     public tileImageData: Map<number, ImageData> = new Map();
+
+    lifeTime: number = Infinity;
 
     constructor(props: ILevelProps) {
         super("tileBlock", props);
@@ -30,6 +33,8 @@ export class TileEntity extends GameEntity<ILevelProps> {
      * @param type The tile type number.
      * @returns An object containing the tile properties and its ImageData.
      */
+
+    
 
     private buildSpatialGrid(indexedTiles: IIndexedTile[], grid_size: number) {
         for (const tile of indexedTiles) {

@@ -12,7 +12,7 @@ import { GameEntity } from "../GameEntity";
 import { IEnemyProps } from "../../interface/IEnemyProps";
 import { StateHelper } from "../StateHelper";
 
-const BULLET_SPEED = 10;
+const BULLET_SPEED = 1;
 
 export class BulletEntity extends GameEntity<IBulletProps>  {
     

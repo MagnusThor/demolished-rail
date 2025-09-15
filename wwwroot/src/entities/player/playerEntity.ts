@@ -7,7 +7,7 @@ import { IPlayerProps } from "../../interface/IPlayerProps";
 import { gameState } from "../../state/gameState";
 import { runCollitionDetectors } from "../../utils/collitionHelpers";
 import { getSurroundingTiles } from "../../utils/tileBlockHelpers";
-import { BulletEntity } from "../bullet/BulletEntity";
+
 import { GameEntity } from "../GameEntity";
 import { RopeEntity } from "../platform/RopeEntity";
 import { TileEntity } from "../tiles/tileEntity";
@@ -15,21 +15,25 @@ import { playerCollisionDetectors } from "./collisiondetectors/playerCollitionDe
 import { EntityEvent } from "../EntityEvent";
 import { setupPlayerInput } from "./playerInput";
 import { allPlayerBehaviors, IPlayerBehavior } from "./playerBehaviors";
+import { BulletEntity } from "../bullet/BulletEntity";
 
-export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidable {
+export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidable, IGameEntity<IPlayerProps> {
     entityEvents: EntityEvent;
-    
+ 
+
     constructor(props: IPlayerProps) {
         super("playerBlock", props);
         this.collisionDetectors = playerCollisionDetectors;
         this.props.currentAnimation = this.props.animations["idle"];
         this.entityEvents = new EntityEvent();
 
-
-
         setupPlayerInput(this);
         this.onInit(this);
     }
+    processCollisions?: ((self: IGameEntity<IPlayerProps>, entities: IGameEntity<any>[]) => void) | undefined;
+    onCreated?: ((self: IGameEntity<IPlayerProps>) => void) | undefined;
+    onDestroy?: ((self: IGameEntity<IPlayerProps>) => void) | undefined;
+  
 
     getBoundingBox = (self: IGameEntity<IPlayerProps>): IBoundingBox => {
         return self.props.positioned.getBoundingBox!();
@@ -84,7 +88,7 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
             const direction = results.direction;
             const bullet = new BulletEntity(
                 this.props.positioned.x, self.props.positioned.y, direction);
-            gameState.dynamicEntities.push(bullet);
+            gameState.entities.push(bullet);
           
         });
     }

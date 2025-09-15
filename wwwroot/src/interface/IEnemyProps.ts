@@ -4,21 +4,18 @@ import { IHealthProps } from "./IHealthProps";
 import { IBoundingBox } from "./IBoundingBox";
 import { IDynamicProps } from "./IDynamicProps";
 import { IPositioned } from "./IPositioned";
-import { IDynamicEntity } from "./IDynamicEntity";
 import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
-import { IGameEntityBase } from "./IGameEntity";
+import { IGameEntity, IGameEntityBase } from "./IGameEntity";
 
 export interface IEnemyBehavior {
     name: string;
-    onUpdate?: (enemy: IDynamicEntity<IEnemyProps>) => void;
-    onDraw?: (enemy: IDynamicEntity<IEnemyProps>, helper: CanvasHelper) => void;
+    onUpdate?: (enemy: IGameEntity<IEnemyProps>) => void;
+    onDraw?: (enemy: IGameEntity<IEnemyProps>, helper: CanvasHelper) => void;
 }
 
 export interface IEnemyProps extends IGameEntityBase{
     positioned: IPositioned;
     health: IHealthProps;
-    isAlive: boolean;
-    lifeTime: number;
     velX: number; // Added for movement
     velY: number; // Added for movement
     gravity: number; // Added gravity
@@ -27,4 +24,17 @@ export interface IEnemyProps extends IGameEntityBase{
     // tileHeight: number; // The height of a tile
     behavior?: IEnemyBehavior[];
     direction: number; // Added to control patrol direction
+}
+
+export class EnemyHealth  implements IHealthProps
+{
+    constructor(public health:number,public damage:number ){
+
+    }
+
+    isAlive(): boolean{
+        return this.health > this.damage;
+    }
+   
+    
 }

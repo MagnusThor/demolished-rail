@@ -1,4 +1,5 @@
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
+import { BeamEntity } from "../entities/beams/beamEntity";
 import { CollectibleEntity } from "../entities/collectible/CollectibleEntity";
 import { ILadderProps, LadderEntity } from "../entities/ladderEntity";
 import { PlatformEntity } from "../entities/platform/PlatformEntity";
@@ -136,7 +137,7 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         isSolid: false,
         creator: (levelProps,tile:IPoint2D) => {
                  const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x)
-                 return new RopeEntity(x, y, 100, Math.PI / 3,30);
+                 return new RopeEntity(x, y, 100, 80);
         }
     },
 
@@ -156,6 +157,17 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
                     };
         }
     },  
+
+    0xa1: {
+            width:32,
+            height:32,
+            isSolid: false,
+             creator: (levelProps, tile )=> {
+
+              const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
+                    return new BeamEntity(x,y+16,-1);
+        }
+    },
    
     // Player spawn point
     0xff: {

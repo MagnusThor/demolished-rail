@@ -2,7 +2,7 @@ import { gameState } from "../../../state/gameState";
 import { IEnemyBehavior } from "../../../interface/IEnemyProps";
 import { IGameEntity } from "../../../interface/IGameEntity";
 import { IPlayerProps } from "../../../interface/IPlayerProps";
-import { ENEMY_SPEED } from "../enemyEntity";
+
 
 /**
  * Chasing behavior: remains at the initial position until the player gets close,
@@ -34,7 +34,7 @@ export const EnemyChasingBehavior = (): IEnemyBehavior => {
 
             if (distance < chaseDistance) {
                 // Chase the player by setting the enemy's velocity towards the player.
-                props.velX = Math.sign(distanceX) * ENEMY_SPEED;
+                props.velX = Math.sign(distanceX) * 3.;
             } else {
                 // If the player is too far away, stop moving.
                 props.velX = 0;

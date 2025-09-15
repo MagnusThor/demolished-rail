@@ -9,14 +9,19 @@ import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
 import { TileDefinitions } from "../../level/TileDefinitions";
 import { isSolidTile, getTileProperties } from "../../utils/tileBlockHelpers";
+import { EnemyEntity } from "./enemyEntity";
 
 
 export const enemyCollisionDetectors = [
     {
         targetName: "bulletBlock",
-        detectorFn: (enemyProps: IEnemyProps, bullet: IGameEntity<IBulletProps>) => {
+        detectorFn: (enemy: EnemyEntity, bullet: IGameEntity<IBulletProps>) => {
+
+            
+
             const collisionResults = new Array<ICollisionResult>();
-            if (CollisionHelper.AABBColliding(enemyProps.positioned.getBoundingBox!(), bullet.getBoundingBox!(bullet))) {
+
+            if (CollisionHelper.AABBColliding(enemy.getBoundingBox!(enemy), bullet.getBoundingBox!(bullet))) {
                 collisionResults.push({
                     x: bullet.props.positioned.x,
                     y: bullet.props.positioned.y,
@@ -28,19 +33,17 @@ export const enemyCollisionDetectors = [
             }
             return collisionResults;
         },
+
         onCollision: (selfProps: IEnemyProps, collisionData: ICollisionResult) => {
             selfProps.health.health -= collisionData.targetEntity!.props.health.damage;
-            collisionData.targetEntity!.props.isAlive = false;
-            if (selfProps.health.health <= 0) {
-                selfProps.isAlive = false;
-            }
         }
     },
     {
         targetName: "playerBlock",
-        detectorFn: (enemyProps: IEnemyProps, player: IGameEntity<IPlayerProps>) => {
+        detectorFn: (enemy: EnemyEntity, player: IGameEntity<IPlayerProps>) => {
+
             const collisionResults = new Array<ICollisionResult>();
-            if (CollisionHelper.AABBColliding(enemyProps.positioned.getBoundingBox!(), player.getBoundingBox!(player))) {
+            if (CollisionHelper.AABBColliding(enemy.props.positioned.getBoundingBox!(), player.getBoundingBox!(player))) {
                 collisionResults.push({
                     x: player.props.positioned.x,
                     y: player.props.positioned.y,
@@ -52,16 +55,16 @@ export const enemyCollisionDetectors = [
             }
             return collisionResults;
         },
-        onCollision: (selfProps: IEnemyProps, collisionData: ICollisionResult) => {
+        onCollision: (enemy: EnemyEntity, collisionData: ICollisionResult) => {
             const player = collisionData.targetEntity! as IGameEntity<IPlayerProps>;
-            player.props.health.health -= selfProps.health.damage;
+            player.props.health.health -= enemy.props.health.damage;
         }
     },
     {
         targetName: "tileBlock",
-        detectorFn: (enemyProps: IEnemyProps, tileEntity: IGameEntity<ILevelProps>) => {
+        detectorFn: (enemy: EnemyEntity, tileEntity: IGameEntity<ILevelProps>) => {
             const collisionResults = new Array<ICollisionResult>();
-            const enemyBbox = enemyProps.positioned.getBoundingBox!();
+            const enemyBbox = enemy.props.positioned.getBoundingBox!();
 
             const indexedTiles = tileEntity.props.indexedTiles;
             if (indexedTiles) {
@@ -91,7 +94,10 @@ export const enemyCollisionDetectors = [
             }
             return collisionResults;
         },
-        onCollision: (selfProps: IEnemyProps, collisionData: ICollisionResult) => {
+        onCollision: (enemy: EnemyEntity, collisionData: ICollisionResult) => {
+
+            const selfProps = enemy.props;
+
             const tileBbox: IBoundingBox = {
                 x: collisionData.x,
                 y: collisionData.y,

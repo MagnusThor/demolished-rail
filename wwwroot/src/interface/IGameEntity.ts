@@ -25,11 +25,21 @@ export interface IGameEntityProp {
  */
 export interface IGameEntity<P extends IGameEntityBase>  {
   collisionDetectors?: ICollisionDetector[];
+
+  processCollisions?: (self: IGameEntity<P>, entities: IGameEntity<any>[]) => void;
+
   onInit?: (self: IGameEntity<P>) => void; // Optional initialization function
   onUpdate?: (self: IGameEntity<P>, timeStamp: number) => void // Optional update function
   onDraw?: (self: IGameEntity<P>, helper: CanvasHelper) => void; // Optional draw function
+  
+  onCreated?: ((self: IGameEntity<P>) => void);
+  onDestroy?: ((self: IGameEntity<P>) => void);
+
   name: string; // Optional name for the entity
-  key: string; // Unique key for the entity
+  // key: string; // Unique key for the entity
+
+  lifeTime: number; //
+
   getBoundingBox?: (self: IGameEntity<P>) => IBoundingBox;
   props: P;
   uuid: string; // Optional unique identifier for the entity

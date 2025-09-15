@@ -203,7 +203,8 @@ export const playerCollisionDetectors =
 
                 // Get the start, control, and end points of the rope's Bézier curve
                 const ropeStart = new Point2D(ropeEntity.props.positioned.x, ropeEntity.props.positioned.y);
-                const ropeEnd = new Point2D(ropeEntity.endX, ropeEntity.endY);
+                const ropeEnd = new Point2D(ropeEntity.endX - (playerProps.positioned.width / 2), 
+                            ropeEntity.endY - ( playerProps.positioned.height / 2));
                 const ropeControl = new Point2D(ropeEntity.controlX, ropeEntity.controlY);
 
                 // Use the new helper function to check for collision with the rope's curve
