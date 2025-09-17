@@ -8,7 +8,7 @@ import { ICollisionResult } from "../../interface/ICollisionResult";
 import { CollisionAxis } from "../../enums/CollisionAxis";
 import { isSolidTile, getTileProperties } from "../../utils/tileBlockHelpers";
 import { runCollitionDetectors } from "../../utils/collitionHelpers";
-import { TileEntity } from "../tiles/tileEntity";
+import { LevelEntity  } from "../level/levelEntity";
 import { PlayerEntity } from "../player/playerEntity";
 
 /**
@@ -100,7 +100,9 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
      */
     public onUpdate(self: IGameEntity<IBeamProps>): void {
         // Run collision detectors from within the entity for now, as requested.
-        runCollitionDetectors(self, self.collisionDetectors!);
+        //runCollitionDetectors(self, self.collisionDetectors!);
+
+        this.runCollitionDetectors();
 
         const props = self.props;
 
@@ -143,7 +145,7 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
      * @param tileEntity The Level entity containing the tile map.
      * @returns An array of collision results or false if no collision.
      */
-    private detectTileCollision(beamEntity: BeamEntity, tileEntity: TileEntity): ICollisionResult[] | false {
+    private detectTileCollision(beamEntity: BeamEntity, tileEntity: LevelEntity ): ICollisionResult[] | false {
         const beamProps = beamEntity.props;
         const tileProps = tileEntity.props;
         const collisionResults = new Array<ICollisionResult>();
@@ -179,7 +181,7 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
                         y: tileY,
                         width: tileProperties.width,
                         height: tileProperties.height
-                    };                  
+                    }; 
 
                     // Check for a collision with the specific tile
                     if (CollisionHelper.AABBColliding(beamBBox, tileBBox)) {

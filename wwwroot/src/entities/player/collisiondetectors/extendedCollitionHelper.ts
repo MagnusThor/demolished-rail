@@ -1,6 +1,7 @@
 import { IBoundingBox, IBoundingCircle } from "../../../interface/IBoundingBox";
 import { ICollisionResult } from "../../../interface/ICollisionResult";
 import { CollisionAxis } from "../../../enums/CollisionAxis";
+import { IPositioned } from "../../../interface/IPositioned";
 
 // A basic 2D point/vector class required for the pixel collision logic.
 class Point2D {
@@ -118,7 +119,7 @@ export class ExtendedCollisionHelper {
                         const collisionAxis = Math.abs(normalizedNormal.x) > Math.abs(normalizedNormal.y) ?
                             CollisionAxis.X : CollisionAxis.Y;
 
-                            
+
                         return {
                             // Return the tile's coordinates and dimensions
                             x: tileBox.x,
@@ -151,9 +152,9 @@ export class ExtendedCollisionHelper {
         let dx = p2.x - p1.x;
         let dy = p2.y - p1.y;
 
-        const p = [ -dx, dx, -dy, dy ];
-        const q = [ p1.x - rect.x, rect.x + rect.width - p1.x, p1.y - rect.y, rect.y + rect.height - p1.y ];
-        
+        const p = [-dx, dx, -dy, dy];
+        const q = [p1.x - rect.x, rect.x + rect.width - p1.x, p1.y - rect.y, rect.y + rect.height - p1.y];
+
         let u1 = 0.0;
         let u2 = 1.0;
 
@@ -169,7 +170,7 @@ export class ExtendedCollisionHelper {
                 }
             }
         }
-        
+
         if (u1 > u2) return null; // No collision
 
         // Collision detected. Return a simplified collision result for now.
@@ -186,12 +187,12 @@ export class ExtendedCollisionHelper {
         };
     }
 
-       /**
-     * Checks for a collision between a rectangle and a single point.
-     * @param rect The rectangle bounding box.
-     * @param point The point to check.
-     * @returns A collision result if a collision occurs, otherwise null.
-     */
+    /**
+  * Checks for a collision between a rectangle and a single point.
+  * @param rect The rectangle bounding box.
+  * @param point The point to check.
+  * @returns A collision result if a collision occurs, otherwise null.
+  */
     static isRectPointColliding(rect: IBoundingBox, point: Point2D): ICollisionResult | null {
         if (point.x >= rect.x && point.x <= rect.x + rect.width &&
             point.y >= rect.y && point.y <= rect.y + rect.height) {
@@ -207,7 +208,7 @@ export class ExtendedCollisionHelper {
         }
         return null;
     }
-    
+
     /**
      * Checks for a collision between a rectangle and a quadratic Bézier curve.
      * This is done by sampling points along the curve and checking each for a collision.
@@ -242,4 +243,48 @@ export class ExtendedCollisionHelper {
         }
         return null;
     }
+    /**
+     * Determines whether two axis-aligned bounding boxes (AABB) are colliding.
+     *
+     * This method checks for overlap between two rectangles defined by their
+     * positions and dimensions. It returns `true` if the bounding boxes intersect,
+     * otherwise `false`.
+     *
+     * @param a - The first bounding box to check for collision.
+     * @param b - The second bounding box to check for collision.
+     * @returns `true` if the bounding boxes are colliding; otherwise, `false`.
+     */
+    static AABBColliding(a: IBoundingBox, b: IBoundingBox): boolean {
+        return (
+            a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y
+        );
+    }
+
+    /**
+ * Checks if one positioned entity is within a certain radius of another.
+ * This is useful for "interact" prompts or sound triggers, as it checks distance
+ * from the center point of each entity.
+ *
+ * @param {IPositioned} entity1 - The first positioned entity.
+ * @param {IPositioned} entity2 - The second positioned entity.
+ * @param {number} radius - The proximity radius.
+ * @returns {boolean} - True if entity1 is within the specified radius of entity2, otherwise false.
+ */
+    static checkProximity(entity1: IPositioned, entity2: IPositioned, radius: number): boolean {
+        // Calculate the center coordinates of each entity.
+        const center1X = entity1.x + entity1.width / 2;
+        const center1Y = entity1.y + entity1.height / 2;
+
+        const center2X = entity2.x + entity2.width / 2;
+        const center2Y = entity2.y + entity2.height / 2;
+
+        // Calculate the distance between the two centers using the Pythagorean theorem.
+        const distance = Math.sqrt(Math.pow(center2X - center1X, 2) + Math.pow(center2Y - center1Y, 2));
+
+        // Return true if the distance is less than or equal to the specified radius.
+        return distance <= radius;
+    };
 }

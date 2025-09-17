@@ -10,16 +10,16 @@ import { getSurroundingTiles } from "../../utils/tileBlockHelpers";
 
 import { GameEntity } from "../GameEntity";
 import { RopeEntity } from "../platform/RopeEntity";
-import { TileEntity } from "../tiles/tileEntity";
+import { LevelEntity } from "../level/levelEntity";
 import { playerCollisionDetectors } from "./collisiondetectors/playerCollitionDetectors";
 import { EntityEvent } from "../EntityEvent";
 import { setupPlayerInput } from "./playerInput";
 import { allPlayerBehaviors, IPlayerBehavior } from "./playerBehaviors";
 import { BulletEntity } from "../bullet/BulletEntity";
+import { SmokeRingEntity } from "./SmokeRingEntity";
 
 export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidable, IGameEntity<IPlayerProps> {
     entityEvents: EntityEvent;
- 
 
     constructor(props: IPlayerProps) {
         super("playerBlock", props);
@@ -33,19 +33,19 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
     processCollisions?: ((self: IGameEntity<IPlayerProps>, entities: IGameEntity<any>[]) => void) | undefined;
     onCreated?: ((self: IGameEntity<IPlayerProps>) => void) | undefined;
     onDestroy?: ((self: IGameEntity<IPlayerProps>) => void) | undefined;
-  
+
 
     getBoundingBox = (self: IGameEntity<IPlayerProps>): IBoundingBox => {
         return self.props.positioned.getBoundingBox!();
     }
-    
+
     getSurroundingTilesOfPlayer(): IIndexedTile[] {
-        const tileEntity = gameState.findEntities("tileBlock")[0] as unknown as TileEntity;
-        
+        const tileEntity = gameState.findEntities("tileBlock")[0] as unknown as LevelEntity;
+
         return getSurroundingTiles(tileEntity.tileSpatialGrid,
             this.props.positioned.getBoundingBox(), tileEntity.props.tileWidth);
     }
-    
+
     onInit = (self: IGameEntity<IPlayerProps>) => {
 
         self.props.isInitialized = true;
@@ -66,7 +66,12 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
         });
 
         self.entityEvents!.subscribe("playerJump", (self, results) => {
-            self.stateHelper.set<boolean>("wantsToJump", true);
+            const velY = results.velY;
+            self.props.velY = velY;
+            self.stateHelper.set<boolean>("isGrounded", false);
+
+
+
         });
 
         self.entityEvents!.subscribe("playerClimb", (self, results) => {
@@ -77,6 +82,7 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
         self.entityEvents!.subscribe("playerStartJetpack", (self, results) => {
             if (self.props.gadgets.jetpack) {
                 self.stateHelper.set<boolean>("isJetpacking", true);
+
             }
         });
 
@@ -89,26 +95,26 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
             const bullet = new BulletEntity(
                 this.props.positioned.x, self.props.positioned.y, direction);
             gameState.entities.push(bullet);
-          
+
         });
     }
 
-    public resetState():void {
-        const stateHelper = this.stateHelper;   
+    public resetState(): void {
+        const stateHelper = this.stateHelper;
         stateHelper.set<boolean>("isGrounded", false);
         stateHelper.set<boolean>("onLadder", false);
-        stateHelper.set<boolean>("onPlatform", false); 
+        stateHelper.set<boolean>("onPlatform", false);
     }
 
     onUpdate? = (self: IGameEntity<IPlayerProps>, timeStamp: number) => {
 
         // 1. Reset states at the start of the frame
-        
-        this.resetState();        
+
+        this.resetState();
 
         // 2. Run collision detectors to update the state based on the current position
         runCollitionDetectors(self, self.collisionDetectors!);
-        
+
         // 3. Apply behaviors based on current state
         for (const behavior of allPlayerBehaviors) {
             if (behavior.criteria(this)) {
@@ -116,6 +122,12 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
                     behavior.onUpdate(this);
                 }
             }
+        }
+
+        if (this.stateHelper.get<boolean>("isJetpacking")) {
+            const ring = new SmokeRingEntity(self.props.positioned.x+self.props.positioned.width / 2, self.props.positioned.y + self.props.positioned.height);
+
+            gameState.entities.push(ring);
         }
     }
 

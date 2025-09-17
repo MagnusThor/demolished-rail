@@ -20,7 +20,7 @@ export const isEntityInView = (
     viewport: { x: number; y: number },
     screenWidth: number,
     screenHeight: number,
-    buffer: number = 200
+    buffer: number = 32
 ): boolean => {
   
      // Get the bounding box from the entity's dedicated method
@@ -47,7 +47,6 @@ export const runCollitionDetectors = <T>(
 
         if(!_gameState) _gameState = gameState; // no state provided use global
 
-
         detectors.forEach(detector => {
             const targetEntities =  getFilteredAndSortedEntities(_gameState,entity, detector.targetName)
             
@@ -65,7 +64,8 @@ export const runCollitionDetectors = <T>(
     }
 
 
-export const getFilteredAndSortedEntities = (gameState: IGameState, sourceEntity:IGameEntity<IGameEntityBase> , targetName: string) => {
+export const getFilteredAndSortedEntities = (gameState: IGameState, 
+    sourceEntity:IGameEntity<IGameEntityBase> , targetName: string) => {
     // --- Defensive Check for Source Entity ---
     // If the source entity or its 'positioned' property is missing, we can't do anything.
     if (!sourceEntity || !sourceEntity.props.positioned) {

@@ -2,20 +2,23 @@ import { IGameEntity } from "../../../src/Engine/Entity/CompositeEntity";
 import { IBoundingBox } from "../interface/IBoundingBox";
 import { ICollisionDetector } from "../interface/ICollisionDetector";
 import { IGameEntityBase } from "../interface/IGameEntity";
+import { IGameState } from "../interface/IGameState";
+import { gameState } from "../state/gameState";
+import { getFilteredAndSortedEntities } from "../utils/collitionHelpers";
 import { StateHelper } from "./StateHelper";
 
 
 
 
 export class GameEntity<T extends IGameEntityBase> implements IGameEntity<T> {
-    collisionDetectors: ICollisionDetector[]; 
+    collisionDetectors: ICollisionDetector[];
     key: string;
     uuid: string
     public stateHelper: StateHelper<T>;
 
-    public lifeTime:number;
+    public lifeTime: number;
 
-    constructor(public name: string, public props: T,lifeTimeInMillieconds: number = Infinity) {
+    constructor(public name: string, public props: T, lifeTimeInMillieconds: number = Infinity) {
         this.uuid = crypto.randomUUID();
         this.key = name;
         this.lifeTime = lifeTimeInMillieconds;
@@ -23,8 +26,26 @@ export class GameEntity<T extends IGameEntityBase> implements IGameEntity<T> {
         this.collisionDetectors = new Array<ICollisionDetector>();
     }
 
-    //  public getDetectorForTarget<T extends { isInitialized?: boolean | undefined; }>(entity: IGameEntity<T>, targetName: string): ICollisionDetector | undefined {
-    //     return entity.collisionDetectors?.find(d => d.targetName === targetName);
-    // }
-    
+
+
+    runCollitionDetectors():void{
+        
+        const detectors = this.collisionDetectors;
+
+        detectors.forEach(detector => {
+            const targetEntities = getFilteredAndSortedEntities(gameState, this, detector.targetName)
+
+            if (targetEntities && targetEntities.length > 0) {
+                targetEntities.forEach((targetEntity: any) => {
+                    const collisionResults = detector.detectorFn(this, targetEntity);
+                    if (Array.isArray(collisionResults)) {
+                        collisionResults.forEach(collisionData => {
+                            detector.onCollision(this, collisionData, targetEntity);
+                        });
+                    }
+                });
+            }
+        });
+    }
+
 }

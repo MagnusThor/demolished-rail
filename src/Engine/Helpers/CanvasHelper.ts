@@ -39,21 +39,14 @@ export class CanvasHelper {
         this.ctx.drawImage(sprite, sx, sy, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
     }
 
-    /**
-     * Draws a frame from an animated sprite sheet and handles frame progression.
-     * @param animation The animation object to draw.
-     * @param spriteSheetData The full sprite sheet data.
-     * @param x The destination x-coordinate.
-     * @param y The destination y-coordinate.
-     * @param timeStamp The current timestamp from the game loop.
-     */
+
     drawAnimatedSprite(
-        animation: ISpriteAnimation,       
+        animation: ISpriteAnimation,
         x: number,
         y: number,
-        timeStamp: number
+        timeStamp: number,
+        flippedX: boolean = false
     ): void {
-        // Handle frame advancement
         const now = timeStamp;
         const elapsed = now - animation.lastFrameChangeTime;
         const frameDuration = 1000 / animation.frameRate;
@@ -63,27 +56,38 @@ export class CanvasHelper {
             animation.lastFrameChangeTime = now;
         }
 
-        // Get the current frame number from the animation sequence
         const frameNumber = animation.frames[animation.currentFrameIndex];
+        const spriteSheet = animation.spriteSheet;
+        const sx = (frameNumber % spriteSheet.columns) * spriteSheet.frameWidth;
+        const sy = Math.floor(frameNumber / spriteSheet.columns) * spriteSheet.frameHeight;
 
-        // Calculate source coordinates based on the frame number
-        const sx = (frameNumber %  animation.spriteSheet.columns) *  animation.spriteSheet.frameWidth;
-        const sy = Math.floor(frameNumber /  animation.spriteSheet.columns) *  animation.spriteSheet.frameHeight;
+        this.ctx.save();
 
-        // Draw the frame
+        // Translate to the center of the sprite and scale to flip
+        if (flippedX) {
+            this.ctx.translate(x + spriteSheet.frameWidth / 2, y + spriteSheet.frameHeight / 2);
+            this.ctx.scale(-1, 1);
+            this.ctx.translate(-(x + spriteSheet.frameWidth / 2), -(y + spriteSheet.frameHeight / 2));
+        }
+
         this.ctx.drawImage(
-            animation.spriteSheet.src,
+            spriteSheet.src,
             sx,
             sy,
-             animation.spriteSheet.frameWidth,
-             animation.spriteSheet.frameHeight,
+            spriteSheet.frameWidth,
+            spriteSheet.frameHeight,
             x,
             y,
-             animation.spriteSheet.frameWidth,
-             animation.spriteSheet.frameHeight
+            spriteSheet.frameWidth,
+            spriteSheet.frameHeight
         );
+
+        this.ctx.restore();
     }
-        public drawText(text: string, x: number, y: number, style: any): void {
+
+
+
+    public drawText(text: string, x: number, y: number, style: any): void {
         // Save the current canvas state before applying new styles.
         this.ctx.save();
 

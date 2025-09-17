@@ -3,10 +3,11 @@ import { gameAssetsToPreload } from "./assets/assetsToLoad";
 import { BackgroundEntity } from "./entities/BackgroundEntity";
 import { CollectibleEntity } from "./entities/collectible/CollectibleEntity";
 import { EnemyEntity } from "./entities/enemy/enemyEntity";
+import { enemyAnimations } from "./entities/enemy/enemyAnimations";
 import { PlatformEntity } from "./entities/platform/PlatformEntity";
 import { playerAnimations } from "./entities/player/animations/playerAnimations";
 import { PlayerEntity } from "./entities/player/playerEntity";
-import { TileEntity } from "./entities/tiles/tileEntity";
+import { LevelEntity  } from "./entities/level/levelEntity";
 import { WorldEntity } from "./entities/WorldEntity";
 import { gameState, gameAssets } from "./state/gameState";
 
@@ -14,9 +15,9 @@ import { IGameEntity } from "./interface/IGameEntity";
 import { ILevelProps } from "./interface/ILevelProps";
 import { IPlayerProps } from "./interface/IPlayerProps";
 import { Positioned } from "./interface/IPositioned";
-import { LEVEL_SAMPLE, DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "./level/LEVEL_SAMPLE";
+import { LEVEL_SAMPLE, DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "./level-settings/LEVEL_SAMPLE";
 import { getTilesByType, getTileXY, calculateWorldDimensions, getTileProperties, calculateTileCoordinates } from "./utils/tileBlockHelpers";
-import { createLevelEntities } from "./level/LevelFactory";
+import { createLevelEntities } from "./level-settings/LevelFactory";
 import { IEnemyProps } from "./interface/IEnemyProps";
 
 export class RunWorld {
@@ -131,9 +132,9 @@ export class RunWorld {
         // Map the enemy grid coordinates to enemy entities
         const enemies: IGameEntity<IEnemyProps>[] = enemyStartTiles.map(tile => {
 
-           // const enemyProps = getTileProperties(0xa0)!;
             const { x, y } = getTileXY(LEVEL_SAMPLE, tile.y, tile.x);
-            return new EnemyEntity(x, y, indexedTiles);
+
+            return new EnemyEntity(x, y, indexedTiles, enemyAnimations());
 
         });
 
@@ -145,10 +146,11 @@ export class RunWorld {
             tileHeight: DEFULT_TILE_HEIGHT,
             indexedTiles: calculateTileCoordinates(LEVEL_SAMPLE),
             textures: {
-                "solid-1": gameAssets.createTexture("tileset_1", 0, 0, 32, 32,false)!, //1
-                "solid-2": gameAssets.createTexture("tileset_1", 64, 0, 32, 32,false)!, //2
-                "solid-3": gameAssets.createTexture("tileset_1", 96, 0, 32, 32,false)!, //2
-                "solid-4": gameAssets.createTexture("tileset_1", 129, 0, 32, 32,false)!, //2
+                "solid-1": gameAssets.createTexture("tileset_1", 0, 0, 32, 32,false)!, 
+                "solid-2": gameAssets.createTexture("tileset_1", 64, 0, 32, 32,false)!, 
+                "solid-3": gameAssets.createTexture("tileset_1", 96, 0, 32, 32,false)!, 
+                "solid-4": gameAssets.createTexture("tileset_1", 129, 0, 32, 32,false)!, 
+                "bush-1": gameAssets.createTexture("bushes", 0, 0, 32, 16,false)!, 
 
                 "platform-1": gameAssets.createTexture("tileset_1", 0, 64, 32, 16,false)!, //30
                

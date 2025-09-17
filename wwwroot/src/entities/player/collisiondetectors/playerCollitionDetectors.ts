@@ -8,7 +8,7 @@ import { CollectibleEntity } from "../../collectible/CollectibleEntity";
 import { LadderEntity } from "../../ladderEntity";
 import { PlatformEntity } from "../../platform/PlatformEntity";
 import { RopeEntity } from "../../platform/RopeEntity";
-import { TileEntity } from "../../tiles/tileEntity";
+import { LevelEntity  } from "../../level/levelEntity";
 import { PlayerEntity } from "../playerEntity";
 import { ExtendedCollisionHelper } from "./extendedCollitionHelper";
 
@@ -19,7 +19,7 @@ export const playerCollisionDetectors =
         // Collision detector for static tile blocks
         {
             targetName: "tileBlock",
-            detectorFn: (playerEntity: PlayerEntity, tileEntity: TileEntity) => {
+            detectorFn: (playerEntity: PlayerEntity, tileEntity: LevelEntity ) => {
                 const playerProps = playerEntity.props;
                 const collisionResults = new Array<ICollisionResult>();
                 const gridWidth = 32;

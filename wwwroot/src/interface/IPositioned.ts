@@ -1,4 +1,4 @@
-import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
+import { IPoint2D, Point2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { gameState } from "../state/gameState";
 import { IBoundingBox } from "./IBoundingBox";
 
@@ -12,7 +12,7 @@ export interface IPositioned {
     getBoundingBox(): IBoundingBox;
     isMoving?(): boolean;
     updatePriorPosition(): void;
-    toPoint2D(): IPoint2D;
+    toPoint2D(): Point2D;
 }
 
 
@@ -58,7 +58,7 @@ export class Positioned implements IPositioned {
         };
     }
 
-    toPoint2D(): IPoint2D {
-        return { x: this.x, y: this.y };
+    toPoint2D(): Point2D {
+        return new Point2D(this.x, this.y) ;
     }
 }

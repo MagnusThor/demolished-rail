@@ -17,7 +17,7 @@ export const playerAnimations = (): { [key: string]: ISpriteAnimation; } => {
             frameRate: 1, // Can be a slow rate or 0
             currentFrameIndex: 0,
             lastFrameChangeTime: 0,
-            spriteSheet: gameAssets.getSpriteSheet("player_walk", 32, 32, 3, 2)!
+            spriteSheet: gameAssets.getSpriteSheet("player_idle", 32, 32, 3, 2)!
         },
         jump: {
             name: 'jump',

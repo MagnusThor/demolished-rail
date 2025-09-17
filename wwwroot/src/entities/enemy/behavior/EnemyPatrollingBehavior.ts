@@ -1,84 +1,102 @@
 import { CollisionHelper } from "../../../../../src/Engine/Helpers/CollisionHelper";
 import { IBoundingBox } from "../../../interface/IBoundingBox";
-import { IEnemyBehavior, IEnemyProps } from "../../../interface/IEnemyProps";
-import { IIndexedTile } from "../../../interface/IIndexedTile";
-import { TileDefinitions } from "../../../level/TileDefinitions";
-import { isSolidTile, getTileProperties } from "../../../utils/tileBlockHelpers";
+import { IEnemyBehavior } from "../../../interface/IEnemyProps";
+import { TileDefinitions } from "../../../level-settings/TileDefinitions";
+import { gameState } from "../../../state/gameState";
+import { getSurroundingTiles, isSolidTile, getTileProperties } from "../../../utils/tileBlockHelpers";
+import { LevelEntity } from "../../level/levelEntity";
+import { PlayerEntity } from "../../player/playerEntity";
+import { EnemyEntity } from "../enemyEntity";
+
 
 /**
  * Patrolling behavior: moves the enemy back and forth.
- * This behavior now handles both horizontal movement and vertical gravity/ground checks.
- * @param indexedTiles A reference to the indexed tiles for collision checks.
+ * This behavior includes look-ahead logic to turn the enemy around when it is about to hit a wall.
  */
-export const EnemyPatrollingBehavior = (indexedTiles: IIndexedTile[]): IEnemyBehavior => {
+export const EnemyPatrollingBehavior = (): IEnemyBehavior => {
     return {
         name: "patrolling",
-        onUpdate: (enemy) => {
-            const props = enemy.props as IEnemyProps;
+        onUpdate: (enemy: EnemyEntity) => {
+            const props = enemy.props
 
-            // --- Horizontal Movement and Collision Prediction ---
-            // Calculate a future horizontal position to check for walls
-            const futureX = props.positioned.x + (props.direction * 0.1);
-            const nextBbox: IBoundingBox = {
-                x: futureX,
-                y: props.positioned.y,
-                width: props.positioned.width,
-                height: props.positioned.height
-            };
+            // Get the player entity and calculate distance
+            const player = gameState.player! as PlayerEntity
+            const playerPos = player.props.positioned.toPoint2D()
+            const enemyPos = enemy.props.positioned.toPoint2D();
+            const distance = playerPos.distanceTo(enemyPos);
 
-            let turnAround = false;
+            // Determine if the enemy should face the player
+            if (playerPos.x < enemyPos.x) {
+                props.flippedX = true; // Player is to the left
+            } else {
+                props.flippedX = false; // Player is to the right
+            }
 
-            // --- Vertical Ground Check for Ledges ---
-            // Check the tile directly beneath the enemy's leading edge
-            const footX = props.positioned.x + (props.direction === 1 ? props.positioned.width : 0) + (props.direction * 1);
-            const footY = props.positioned.y + props.positioned.height + 1; // 1 pixel below the feet
+            // Check if the player is within range
+            if (distance < 200) {
+                // If the player is within attack range (32 pixels), stop and attack
+                if (distance <= 128) {
+                    props.velX = 0;
+                    enemy.props.currentAnimationKey = "attack";
+                } else {
+                    // If the player is within a larger range (32-200), advance slowly towards them
+                    props.velX = props.flippedX ? -0.5 : 0.5; // Slowly move towards the player
+                    enemy.props.currentAnimationKey = "walk";
+                }
+            } else {
+                // Otherwise, continue patrolling
+                // Get the level entity to access the spatial grid for look-ahead checks
+                const levelEntity = gameState.findEntities("tileBlock")[0] as LevelEntity;
+                if (!levelEntity) {
+                    console.error("Level entity not found in game state.");
+                    return;
+                }
 
-            let isGrounded = false;
-            let onLedge = true;
+                // Create a small "look-ahead" bounding box a few pixels in the direction of movement
+                const enemyBbox = props.positioned.getBoundingBox!();
+                const lookAheadX = props.direction > 0 ? enemyBbox.x + enemyBbox.width + 5 : enemyBbox.x - 5;
+                const lookAheadBbox: IBoundingBox = {
+                    x: lookAheadX,
+                    y: enemyBbox.y,
+                    width: 10,
+                    height: enemyBbox.height
+                };
 
-            for (const tile of indexedTiles) {
-                const tileProps = getTileProperties(tile.type as keyof typeof TileDefinitions);
-                if (tileProps && isSolidTile(tile.type)) {
-                    const tileBbox: IBoundingBox = {
-                        x: tile.x,
-                        y: tile.y,
-                        width: tileProps.width,
-                        height: tileProps.height
-                    };
-
-                    // Check for a solid wall collision in the future horizontal position
-                    if (CollisionHelper.AABBColliding(nextBbox, tileBbox)) {
-                        turnAround = true;
-                    }
-
-                    // Check if there is ground beneath the enemy
-                    if (CollisionHelper.AABBColliding({ x: props.positioned.x, y: footY, width: props.positioned.width, height: 1 }, tileBbox)) {
-                        isGrounded = true;
-                    }
-
-                    // Check if there's a tile just below the leading foot.
-                    if (CollisionHelper.AABBColliding({ x: footX, y: footY, width: 1, height: 1 }, tileBbox)) {
-                        onLedge = false;
+                // Check for solid tiles in the look-ahead area
+                const nearbyTiles = getSurroundingTiles(levelEntity.tileSpatialGrid, lookAheadBbox, 32);
+                let obstacleFound = false;
+                if (nearbyTiles) {
+                    for (const tile of nearbyTiles) {
+                        if (isSolidTile(tile.type)) {
+                            const tileProperties = getTileProperties(tile.type as keyof typeof TileDefinitions);
+                            if (tileProperties) {
+                                const tileBbox = {
+                                    x: tile.x,
+                                    y: tile.y,
+                                    width: tileProperties.width,
+                                    height: tileProperties.height
+                                };
+                                if (CollisionHelper.AABBColliding(lookAheadBbox, tileBbox)) {
+                                    obstacleFound = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
-            }
+                // If an obstacle is found, flip the direction
+                if (obstacleFound) {
+                    props.direction *= -1;
+                }
+                // Set the horizontal velocity based on the current direction.
+                props.velX = props.direction * 1.5;
 
-            // If a wall is hit or the enemy is about to walk off a ledge, flip the direction
-            if (turnAround || (isGrounded && onLedge)) {
-                props.direction *= -1;
-            }
+                // Set animation to walk
+                enemy.props.currentAnimationKey = "walk";
 
-            // --- Apply Gravity ---
-            if (!isGrounded) {
-                props.velY += props.gravity;
-            } else {
-                props.velY = 0;
+                // Flip the sprite based on direction
+                props.flippedX = props.direction === -1;
             }
- 
-            // --- Apply Velocities to Position ---
-            props.velX = props.direction * 0.1;
-            props.positioned.x += props.velX;
-            props.positioned.y += props.velY;
         },
     };
 };

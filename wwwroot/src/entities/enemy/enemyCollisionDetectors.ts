@@ -7,8 +7,10 @@ import { IEnemyProps } from "../../interface/IEnemyProps";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
-import { TileDefinitions } from "../../level/TileDefinitions";
-import { isSolidTile, getTileProperties } from "../../utils/tileBlockHelpers";
+import { TileDefinitions } from "../../level-settings/TileDefinitions";
+import { gameAssets, gameState } from "../../state/gameState";
+import { isSolidTile, getTileProperties, getSurroundingTiles } from "../../utils/tileBlockHelpers";
+import { LevelEntity } from "../level/levelEntity";
 import { EnemyEntity } from "./enemyEntity";
 
 
@@ -16,8 +18,6 @@ export const enemyCollisionDetectors = [
     {
         targetName: "bulletBlock",
         detectorFn: (enemy: EnemyEntity, bullet: IGameEntity<IBulletProps>) => {
-
-            
 
             const collisionResults = new Array<ICollisionResult>();
 
@@ -34,8 +34,16 @@ export const enemyCollisionDetectors = [
             return collisionResults;
         },
 
-        onCollision: (selfProps: IEnemyProps, collisionData: ICollisionResult) => {
-            selfProps.health.health -= collisionData.targetEntity!.props.health.damage;
+        onCollision: (enemy: EnemyEntity, collisionData: ICollisionResult) => {
+
+            enemy.props.health.health -= collisionData.targetEntity!.props.health.damage;
+            gameState.removeEntityByUUID(collisionData.targetEntity!.uuid);
+
+            if (enemy.props.health.health <= 0) {
+                console.log("Enemy defeated, removing from game state");
+                gameState.removeEntityByUUID(enemy.uuid);
+
+            }
         }
     },
     {
@@ -62,13 +70,18 @@ export const enemyCollisionDetectors = [
     },
     {
         targetName: "tileBlock",
-        detectorFn: (enemy: EnemyEntity, tileEntity: IGameEntity<ILevelProps>) => {
+        detectorFn: (enemy: EnemyEntity, tileEntity: LevelEntity) => {
             const collisionResults = new Array<ICollisionResult>();
             const enemyBbox = enemy.props.positioned.getBoundingBox!();
+            //const indexedTiles = tileEntity.props.indexedTiles;
 
-            const indexedTiles = tileEntity.props.indexedTiles;
-            if (indexedTiles) {
-                for (const tile of indexedTiles) {
+
+            const nearbyTiles = getSurroundingTiles(tileEntity.tileSpatialGrid,
+                enemyBbox, 32);
+
+
+            if (nearbyTiles) {
+                for (const tile of nearbyTiles) {
                     if (isSolidTile(tile.type)) {
                         const tileProperties = getTileProperties(tile.type as keyof typeof TileDefinitions);
                         if (tileProperties) {
@@ -95,9 +108,7 @@ export const enemyCollisionDetectors = [
             return collisionResults;
         },
         onCollision: (enemy: EnemyEntity, collisionData: ICollisionResult) => {
-
             const selfProps = enemy.props;
-
             const tileBbox: IBoundingBox = {
                 x: collisionData.x,
                 y: collisionData.y,
@@ -113,9 +124,11 @@ export const enemyCollisionDetectors = [
 
             if (crossWidth > crossHeight) {
                 if (crossWidth > -crossHeight) {
+                    // Collision from above
                     selfProps.positioned.y = tileBbox.y + tileBbox.height;
                     selfProps.velY = 0;
                 } else {
+                    // Collision from left
                     selfProps.positioned.x = tileBbox.x - selfProps.positioned.width;
                     selfProps.velX = 0;
                 }
@@ -123,7 +136,9 @@ export const enemyCollisionDetectors = [
                 if (crossWidth > -crossHeight) {
                     selfProps.positioned.x = tileBbox.x + tileBbox.width;
                     selfProps.velX = 0;
+
                 } else {
+                    // Collision from below
                     selfProps.positioned.y = tileBbox.y - selfProps.positioned.height;
                     selfProps.velY = 0;
                     selfProps.isGrounded = true;

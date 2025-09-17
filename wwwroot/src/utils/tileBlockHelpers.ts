@@ -3,8 +3,8 @@ import { IBoundingBox } from "../interface/IBoundingBox";
 import { IGameEntity } from "../interface/IGameEntity";
 import { IIndexedTile } from "../interface/IIndexedTile";
 import { ILevelProps, ITileProps } from "../interface/ILevelProps";
-import { DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "../level/LEVEL_SAMPLE";
-import { TileDefinitions } from "../level/TileDefinitions";
+import { DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "../level-settings/LEVEL_SAMPLE";
+import { TileDefinitions } from "../level-settings/TileDefinitions";
 import { isEntityInView } from "./collitionHelpers";
 
 
@@ -21,7 +21,7 @@ export const isSolidTile = (tileType: number): boolean => {
 export const getTileImageDataAndProps = (tileImageData:Map<number, ImageData>,
         type: number): { props: ITileProps, data: ImageData } | null => {
         const props = getTileProperties(type);
-     
+      
         const data = tileImageData.get(type);
             
         if (props && data) {
@@ -264,15 +264,13 @@ export const calculateTileCoordinates = (tileMap: number[][]): IIndexedTile[] =>
  * @param worldY The y-coordinate in the game world.
  * @returns The indexed tile at the position, or null if no tile is found.
  */
-export const getTileAtPosition = (tileMap: number[][], worldX: number, worldY: number): IIndexedTile | null => {
-    // Get the properties of the first tile type to determine tile dimensions.
-    // This assumes all tiles have the same dimensions as the first tile type.
-    const firstTileProps = getTileProperties(tileMap[0][0] as keyof typeof TileDefinitions);
-    if (!firstTileProps) {
+export const getTileAtPoint = (tileMap: number[][], worldX: number, worldY: number): IIndexedTile | null => {
+    if(tileMap.length === 0 || tileMap[0].length === 0) {
         return null;
     }
-    const tileWidth = firstTileProps.width;
-    const tileHeight = firstTileProps.height;
+    // Use the default tile dimensions for calculation.
+    const tileWidth = DEFAULT_TILE_WIDTH;
+    const tileHeight = DEFULT_TILE_HEIGHT;
 
     // Convert world coordinates to tile grid coordinates
     const col = Math.floor(worldX / tileWidth);
@@ -290,6 +288,8 @@ export const getTileAtPosition = (tileMap: number[][], worldX: number, worldY: n
     }
     return null;
 }
+
+
 
 /**
  * Retrieves tiles from a spatial grid that are near a given bounding box.

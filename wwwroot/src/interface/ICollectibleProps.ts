@@ -1,12 +1,12 @@
 import { IGameEntityBase } from "./IGameEntity";
 import { IPositioned } from "./IPositioned";
+import { ISpriteAnimation } from "./ISpriteAnimation";
 
 
 export interface ICollectibleProps extends IGameEntityBase {
-    positioned: IPositioned; // Use IPositioned for position details
-    radius: number;
-    color: string;
-    uuid: string; // Unique identifier for the collectible
+    positioned: IPositioned; 
+    collitionRadius: number;    
+    animation: ISpriteAnimation
 }
 
 

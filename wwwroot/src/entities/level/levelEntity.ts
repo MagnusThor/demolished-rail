@@ -1,24 +1,21 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../../interface/IBoundingBox";
-import { ICollisionDetector } from "../../interface/ICollisionDetector";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { IIndexedTile } from "../../interface/IIndexedTile";
 import { ILevelProps } from "../../interface/ILevelProps";
-import { TileDefinitions } from "../../level/TileDefinitions";
+import { TileDefinitions } from "../../level-settings/TileDefinitions";
 import { gameState } from "../../state/gameState";
-import { calculateTileCoordinates, isSolidTile, getTileProperties, determineVisibleTiles, getTileXY, getTilesByType } from "../../utils/tileBlockHelpers";
+import { calculateTileCoordinates, isSolidTile, getTileProperties, determineVisibleTiles } from "../../utils/tileBlockHelpers";
 import { GameEntity } from "../GameEntity";
 import { StateHelper } from "../StateHelper";
-import { gameAssets } from "../../state/gameState";
 
-
-export class TileEntity extends GameEntity<ILevelProps> {
- 
-    public tileSpatialGrid: Map<string, IIndexedTile[]> = new Map();
+export class LevelEntity extends GameEntity<ILevelProps> {
     
-    // Updated to store an object with the tile type, original world coordinates, and logical row/col
+    public tileSpatialGrid: Map<string, IIndexedTile[]> = new Map();
     public logicalCollisionMap: { type: number, x: number, y: number, row: number, col: number }[][] = [];
     public tileImageData: Map<number, ImageData> = new Map();
+    public backgroundTiles: IIndexedTile[] = [];
+    public foregroundTiles: IIndexedTile[] = [];
 
     lifeTime: number = Infinity;
 
@@ -33,9 +30,6 @@ export class TileEntity extends GameEntity<ILevelProps> {
      * @param type The tile type number.
      * @returns An object containing the tile properties and its ImageData.
      */
-
-    
-
     private buildSpatialGrid(indexedTiles: IIndexedTile[], grid_size: number) {
         for (const tile of indexedTiles) {
             const gridX = Math.floor(tile.x / grid_size);
@@ -82,8 +76,20 @@ export class TileEntity extends GameEntity<ILevelProps> {
             }
         }
 
-        // Recalculate indexed tiles to be safe.
+        // Recalculate indexed tiles and sort into background and foreground.
         self.props.indexedTiles = calculateTileCoordinates(self.props.tileMap);
+        this.backgroundTiles = [];
+        this.foregroundTiles = [];
+        self.props.indexedTiles.forEach(tile => {
+            const tileProperties = getTileProperties(tile.type as keyof typeof TileDefinitions)!;
+            // Assuming the player's zIndex is 10, separate tiles into background and foreground.
+            if ((tileProperties.zIndex || 0) < 10) {
+                this.backgroundTiles.push(tile);
+            } else {
+                this.foregroundTiles.push(tile);
+            }
+        });
+
         // Build spatial grid with tile width for optimal performance.
         this.buildSpatialGrid(self.props.indexedTiles, self.props.tileWidth);
 
@@ -123,44 +129,55 @@ export class TileEntity extends GameEntity<ILevelProps> {
         const viewport = gameState.viewport;
     };
 
-    onDraw? = (self: IGameEntity<ILevelProps>, helper: CanvasHelper) => {
+    private drawTiles(self: IGameEntity<ILevelProps>, helper: CanvasHelper, tilesToDraw: IIndexedTile[]) {
         const props = self.props;
         const ctx = helper.ctx;
         const viewport = gameState.viewport;
         const screenWidth = viewport.viewportWidth;
         const screenHeight = viewport.viewportHeight;
 
-        // Iterate over the pre-calculated tiles. This is much faster.
-        self.props.indexedTiles.forEach(tile => {
+        tilesToDraw.forEach(tile => {
             const tileProperties = getTileProperties(tile.type as keyof typeof TileDefinitions)!;
             const isVisible = determineVisibleTiles(props, tile, viewport, screenWidth, screenHeight);
-            if (isVisible && isSolidTile(tile.type)) {
+            
+            if (isVisible && tileProperties.useLevelCreator) {
+                const offsetX = tileProperties?.offset?.x || 0;
+                const offsetY = tileProperties?.offset?.y || 0;
+                const drawX = tile.x + offsetX;
+                const drawY = tile.y + offsetY;
+
                 if (tileProperties.texture) {
                     const tileTexture = self.props.textures![tileProperties.texture!];
-                    if (tileTexture.texture) {                    
-                        // Use the full drawImage signature to specify source and destination rectangles
+                    if (tileTexture.texture) { 
                         ctx.drawImage(
-                            tileTexture.texture.src, // Source image
-                            tileTexture.x,           // Source x
-                            tileTexture.y,           // Source y
-                            tileTexture.width,       // Source width
-                            tileTexture.height,      // Source height
-                            tile.x,                  // Destination x
-                            tile.y,                  // Destination y
-                            tileProperties.width,    // Destination width
-                            tileProperties.height      // Destination height
+                            tileTexture.texture.src,
+                            tileTexture.x,
+                            tileTexture.y,
+                            tileTexture.width,
+                            tileTexture.height,
+                            drawX,
+                            drawY,
+                            tileProperties.width,
+                            tileProperties.height
                         );
-                    }else console.warn("texture is missing",tile.type)
+                    } else console.warn("texture is missing", tile.type)
                 } else {
                     ctx.fillStyle = "#8B4513";
-                    ctx.fillRect(tile.x, tile.y, tileProperties.width, tileProperties.height);
+                    ctx.fillRect(drawX, drawY, tileProperties.width, tileProperties.height);
                 }
             }
         });
+    }
+
+    onDrawBackground? = (self: IGameEntity<ILevelProps>, helper: CanvasHelper) => {
+        this.drawTiles(self, helper, this.backgroundTiles);
+    };
+
+    onDrawForeground? = (self: IGameEntity<ILevelProps>, helper: CanvasHelper) => {
+        this.drawTiles(self, helper, this.foregroundTiles);
     };
 
     getBoundingBox = (self: IGameEntity<ILevelProps>): IBoundingBox => {
-        // Correctly calculate the level's bounding box
         const width = self.props.tileMap[0].length * self.props.tileWidth;
         const height = self.props.tileMap.length * self.props.tileHeight;
         return { x: 0, y: 0, width, height };

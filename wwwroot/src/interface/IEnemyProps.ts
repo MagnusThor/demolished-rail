@@ -3,9 +3,10 @@ import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { IHealthProps } from "./IHealthProps";
 import { IBoundingBox } from "./IBoundingBox";
 import { IDynamicProps } from "./IDynamicProps";
-import { IPositioned } from "./IPositioned";
+import { IPositioned, Positioned } from "./IPositioned";
 import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
 import { IGameEntity, IGameEntityBase } from "./IGameEntity";
+import { ISpriteAnimation } from "./ISpriteAnimation";
 
 export interface IEnemyBehavior {
     name: string;
@@ -14,7 +15,7 @@ export interface IEnemyBehavior {
 }
 
 export interface IEnemyProps extends IGameEntityBase{
-    positioned: IPositioned;
+    positioned: Positioned;
     health: IHealthProps;
     velX: number; // Added for movement
     velY: number; // Added for movement
@@ -24,6 +25,9 @@ export interface IEnemyProps extends IGameEntityBase{
     // tileHeight: number; // The height of a tile
     behavior?: IEnemyBehavior[];
     direction: number; // Added to control patrol direction
+    animations: { [key: string]: ISpriteAnimation; }
+    currentAnimationKey: string;
+    flippedX: boolean;
 }
 
 export class EnemyHealth  implements IHealthProps

@@ -29,7 +29,12 @@ export interface ITileProps {
     height: number
     texture?: string
     isSolid: boolean
+    useLevelCreator: boolean
+    offset?: {
+        x:number,
+        y: number
+    }
+    zIndex: number
     creator?: (levelProps:ILevelProps,tile:IPoint2D) => IGameEntity<any> ;
 
-    
 }

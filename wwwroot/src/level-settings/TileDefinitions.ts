@@ -4,6 +4,8 @@ import { CollectibleEntity } from "../entities/collectible/CollectibleEntity";
 import { ILadderProps, LadderEntity } from "../entities/ladderEntity";
 import { PlatformEntity } from "../entities/platform/PlatformEntity";
 import { RopeEntity } from "../entities/platform/RopeEntity";
+import { InteractableEntity } from "../entities/triggerzone/InteractableEntity";
+import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
 import { IGameEntity } from "../interface/IGameEntity";
 import { ITileProps } from "../interface/ILevelProps";
 import { Positioned } from "../interface/IPositioned";
@@ -19,38 +21,53 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         width: 32,
         height: 32,
         isSolid: false,
+        useLevelCreator:false,
+        zIndex:1
       
     },
 
-    // Solid wall or block, collidable
+   
     0x01: {
         width: 32,
         height: 32,
-        texture: "solid-4",
-        isSolid: true,        
+        texture: "solid-1",
+        isSolid: true,      
+        useLevelCreator:true,  
+        zIndex:1  
     },
 
 
 
     0x02: {
         width: 32,
-        height: 32,
+        height: 16,
         isSolid: true,
-        texture:"solid-1"
+        texture:"bush-1",
+        offset: {
+            x:0,
+            y:0
+        },
+        useLevelCreator:true,
+        zIndex:100
     },
 
     0x03: {
         width: 32,
         height: 32,
         isSolid: true,
-        texture:"solid-2"
+        texture:"solid-3",
+        useLevelCreator:true,
+        zIndex:1
+        
     },
 
      0x04: {
         width: 32,
         height: 32,
         isSolid: true,
-        texture:"solid-3"
+        texture:"solid-4",
+        useLevelCreator:true,
+        zIndex:1
     },
     
     // platform
@@ -62,7 +79,9 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         isSolid: false,
         creator: (levelProps,tile) => {
                return new PlatformEntity(tile, levelProps, levelProps.textures!["platform-1"]);
-        }
+        },
+        useLevelCreator:false,
+        zIndex:1
     },
 
     0x50: {
@@ -70,6 +89,8 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         height: 64,
         texture: "pilar-1",
         isSolid: true,
+        useLevelCreator:true,
+        zIndex:1
         
     },
 
@@ -77,7 +98,9 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         width: 64,
         height: 64,
         isSolid:true,
-        texture:"bigblock-1"
+        texture:"bigblock-1",
+        useLevelCreator:true,
+        zIndex:1
     },
 
 
@@ -85,26 +108,34 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         width:16,
         height:16,
         texture:"stone-1",
-        isSolid:true
+        isSolid:true,
+        useLevelCreator:true,
+        zIndex:1
     },
     0x62:{
         width:16,
         height:16,
         texture:"stone-2",
-        isSolid:true
+        isSolid:true,
+        useLevelCreator:true,
+        zIndex:1
     },
     0x63:{
         width:16,
         height:16,
         texture:"stone-3",
-        isSolid:true
+        isSolid:true,
+        useLevelCreator:true,
+        zIndex:1
     },
 
     0x64:{
         width:16,
         height:16,
         texture:"stone-4",
-        isSolid:true
+        isSolid:true,
+        useLevelCreator:true,
+        zIndex:1
     },
 
        
@@ -128,7 +159,9 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
                       states:{}
                    });
 
-        }
+        },
+        useLevelCreator:false,
+        zIndex:1
     },
     0x43: {
         width: 16,
@@ -138,7 +171,9 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         creator: (levelProps,tile:IPoint2D) => {
                  const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x)
                  return new RopeEntity(x, y, 100, 80);
-        }
+        },
+        useLevelCreator:false,
+        zIndex:1
     },
 
   
@@ -155,7 +190,9 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
                             positioned: new Positioned(x, y, 16, 16)
                         }
                     };
-        }
+        },
+        useLevelCreator:false,
+        zIndex:1
     },  
 
     0xa1: {
@@ -166,7 +203,55 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
 
               const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
                     return new BeamEntity(x,y+16,-1);
-        }
+        },
+        useLevelCreator:false,
+        zIndex:1
+    },
+
+        0x80: {
+        width: 32,
+        height: 32,
+        isSolid: false,
+        useLevelCreator: false,
+        creator: (levelProps, tile) => {
+            const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
+            return new TriggerZoneEntity({
+                ...levelProps,
+                positioned: new Positioned(x, y, 32, 32),
+                isInitialized: false,
+                onTrigger: () => {
+                    console.log("Player has entered the trigger zone!");
+                    // Here you would add the logic to spawn an enemy.
+                },
+                states: {},
+            });
+        },
+        zIndex: 1
+    },
+
+    // An interactable lever that toggles a bridge on and off.
+    0x90: {
+        width: 32,
+        height: 32,
+        isSolid: true,
+        texture: "lever-1", // You would need to add this texture
+        useLevelCreator: false,
+        creator: (levelProps, tile) => {
+            const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
+            return new InteractableEntity({
+                ...levelProps,
+                positioned: new Positioned(x, y, 32, 32),
+                isInitialized: false,
+                proximityRadius: 50,
+                canInteract: true,             
+                onInteract: () => {
+                    console.log("You flipped the lever! The bridge has been toggled.");
+                    // Here you would add the logic to toggle a bridge, door, etc.
+                },
+                states: {}
+            });
+        },
+        zIndex: 10
     },
    
     // Player spawn point
@@ -174,6 +259,8 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         width: 32,
         height: 32,
         texture: "player",
-        isSolid: false
+        isSolid: false,
+        useLevelCreator: false,
+        zIndex:10
     }
 };

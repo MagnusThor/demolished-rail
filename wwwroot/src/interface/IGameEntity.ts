@@ -36,8 +36,6 @@ export interface IGameEntity<P extends IGameEntityBase>  {
   onDestroy?: ((self: IGameEntity<P>) => void);
 
   name: string; // Optional name for the entity
-  // key: string; // Unique key for the entity
-
   lifeTime: number; //
 
   getBoundingBox?: (self: IGameEntity<P>) => IBoundingBox;

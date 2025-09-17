@@ -1,7 +1,7 @@
 import { CollectibleEntity } from "../entities/collectible/CollectibleEntity";
 import { LadderEntity } from "../entities/ladderEntity";
 import { PlatformEntity } from "../entities/platform/PlatformEntity";
-import { TileEntity } from "../entities/tiles/tileEntity";
+import { LevelEntity  } from "../entities/level/levelEntity";
 import { IGameEntity } from "../interface/IGameEntity";
 import { ILevelProps } from "../interface/ILevelProps";
 import { Positioned } from "../interface/IPositioned";
@@ -13,7 +13,7 @@ export function createLevelEntities(levelProps: ILevelProps): IGameEntity<any>[]
     const entities: IGameEntity<any>[] = [];
 
     // Create the main tile entity
-    const tileEntity = new TileEntity(levelProps);
+    const tileEntity = new LevelEntity (levelProps);
     tileEntity.onInit!(tileEntity);
     entities.push(tileEntity);
 
