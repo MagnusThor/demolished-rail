@@ -26,11 +26,6 @@ export const playerCollisionDetectors =
                 const gridHeight = 32;
                 const logicalCollisionMap = tileEntity.logicalCollisionMap;
 
-                if (!logicalCollisionMap) {
-                    console.warn("Logical collision map not found.");
-                    return collisionResults;
-                }
-
                 const playerCircle: IBoundingCircle = {
                     x: playerProps.positioned.x + playerProps.positioned.width / 2,
                     y: playerProps.positioned.y + playerProps.positioned.height / 2,
@@ -40,7 +35,6 @@ export const playerCollisionDetectors =
                 const playerTileX = Math.floor(playerCircle.x / gridWidth);
                 const playerTileY = Math.floor(playerCircle.y / gridHeight);
 
-                // We will check in a small radius around the player's tile
                 const checkRadius = 1;
 
                 for (let row = playerTileY - checkRadius; row <= playerTileY + checkRadius; row++) {

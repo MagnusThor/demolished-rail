@@ -50,6 +50,7 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
             hue: 120, // Starting hue for a green color
             initialX: x,
             initialY: y - 5,
+            isCollidable: true
         };
         super("beam", props);
 

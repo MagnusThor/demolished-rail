@@ -47,7 +47,8 @@ export class RopeEntity extends GameEntity<IRopeProps> {
             angularAcceleration: 0,
             gravity: 0.0015,
             damping: 0.999,
-            useDamping: useDamping 
+            useDamping: useDamping, 
+            isCollidable: true
         };
         super("rope", props);
     }

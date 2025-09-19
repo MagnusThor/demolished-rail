@@ -1,6 +1,7 @@
 import { IEntity, ICompositeEntity } from "../../../src";
 import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
 import { EntityEvent } from "../entities/EntityEvent";
+import { GameEntity } from "../entities/GameEntity";
 
 import { StateHelper } from "../entities/StateHelper";
 import { IBoundingBox } from "./IBoundingBox";
@@ -8,41 +9,38 @@ import { ICollisionDetector } from "./ICollisionDetector";
 import { IEntityState } from "./IEntityState";
 import { IPositioned } from "./IPositioned";
 
+export interface IGameEntityBehavior {  
+    name: string;
+    onUpdate?: (self: any) => void;
+    onDraw?: (self: any, helper: CanvasHelper) => void;
+}
 
 export interface IGameEntityBase  {
   isInitialized: boolean
   positioned: IPositioned
   zIndex: number
   states: IEntityState  
+  isCollidable: boolean;
+  behaviors?: { [key: string]: IGameEntityBehavior  };
 }
-export interface IGameEntityProp {
-  isAlive?: boolean; // Optional property to indicate if the entity is alive
-}
-/**
- * A GameEntity is a composite entity with the added functionality of
- * collision detection. It can define its own collision detectors
- * which the WorldEntity will check on every frame.
- */
 export interface IGameEntity<P extends IGameEntityBase>  {
+  name: string; 
   collisionDetectors?: ICollisionDetector[];
+  props: P;
+  uuid: string; 
+  stateHelper: StateHelper<P>;
+  entityEvents?: EntityEvent;
 
   processCollisions?: (self: IGameEntity<P>, entities: IGameEntity<any>[]) => void;
+  getBoundingBox?: (self: IGameEntity<P>) => IBoundingBox;
 
   onInit?: (self: IGameEntity<P>) => void; // Optional initialization function
   onUpdate?: (self: IGameEntity<P>, timeStamp: number) => void // Optional update function
-  onDraw?: (self: IGameEntity<P>, helper: CanvasHelper) => void; // Optional draw function
-  
+  onDraw?: (self: IGameEntity<P>, helper: CanvasHelper) => void; // Optional draw function  
   onCreated?: ((self: IGameEntity<P>) => void);
   onDestroy?: ((self: IGameEntity<P>) => void);
 
-  name: string; // Optional name for the entity
-  lifeTime: number; //
 
-  getBoundingBox?: (self: IGameEntity<P>) => IBoundingBox;
-  props: P;
-  uuid: string; // Optional unique identifier for the entity
-  stateHelper: StateHelper<P>;
-  entityEvents?: EntityEvent;
   
 }
 

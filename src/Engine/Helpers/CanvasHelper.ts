@@ -39,7 +39,6 @@ export class CanvasHelper {
         this.ctx.drawImage(sprite, sx, sy, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
     }
 
-
     drawAnimatedSprite(
         animation: ISpriteAnimation,
         x: number,
@@ -85,8 +84,6 @@ export class CanvasHelper {
         this.ctx.restore();
     }
 
-
-
     public drawText(text: string, x: number, y: number, style: any): void {
         // Save the current canvas state before applying new styles.
         this.ctx.save();
@@ -102,6 +99,41 @@ export class CanvasHelper {
 
         // Restore the previous canvas state. This is crucial to prevent styles from "leaking"
         // and affecting other drawing operations.
+        this.ctx.restore();
+    }
+
+    /**
+     * Draws a rectangle with rotation around its center point.
+     * @param x The x-coordinate of the rectangle's top-left corner.
+     * @param y The y-coordinate of the rectangle's top-left corner.
+     * @param width The width of the rectangle.
+     * @param height The height of the rectangle.
+     * @param rotation The rotation in radians.
+     * @param style An object containing fillStyle and strokeStyle for the rectangle.
+     */
+    public drawRotatedRect(x: number, y: number, width: number, height: number, rotation: number, style: any): void {
+        const centerX = x + width / 2;
+        const centerY = y + height / 2;
+
+        this.ctx.save();
+        // Translate to the center of the rectangle
+        this.ctx.translate(centerX, centerY);
+        // Apply the rotation
+        this.ctx.rotate(rotation);
+        // Translate back and draw the rectangle from its top-left corner
+        this.ctx.translate(-centerX, -centerY);
+
+        if (style.fillStyle) {
+            this.ctx.fillStyle = style.fillStyle;
+            this.ctx.fillRect(x, y, width, height);
+        }
+
+        if (style.strokeStyle) {
+            this.ctx.strokeStyle = style.strokeStyle;
+            this.ctx.lineWidth = style.lineWidth || 1;
+            this.ctx.strokeRect(x, y, width, height);
+        }
+
         this.ctx.restore();
     }
 }

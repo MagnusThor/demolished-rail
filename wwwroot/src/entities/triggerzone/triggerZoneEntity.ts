@@ -54,7 +54,6 @@ export class TriggerZoneEntity extends GameEntity<ITriggerZoneProps>
                 // If the player is colliding, call the onTrigger function.
                 self.props.onTrigger(self);
                 stateHelper.set<number>("numOfHits", (stateHelper.get<number>("numOfHits") || 0) + 1);
-
                 // If it's a one-shot trigger, set isInitialized to true so it doesn't fire again.
                
             }

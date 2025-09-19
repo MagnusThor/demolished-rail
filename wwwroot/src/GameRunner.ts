@@ -120,7 +120,8 @@ export class RunWorld {
                 lastDirection: "right",
             },
             gadgets:{},
-            attachedTo:undefined
+            attachedTo:undefined,
+            isCollidable:true
         });
         gameState.player = player;
 
@@ -150,7 +151,10 @@ export class RunWorld {
                 "solid-2": gameAssets.createTexture("tileset_1", 64, 0, 32, 32,false)!, 
                 "solid-3": gameAssets.createTexture("tileset_1", 96, 0, 32, 32,false)!, 
                 "solid-4": gameAssets.createTexture("tileset_1", 129, 0, 32, 32,false)!, 
-                "bush-1": gameAssets.createTexture("bushes", 0, 0, 32, 16,false)!, 
+                "bush-1": gameAssets.createTexture("bush-1", 0, 0, 32, 16,false)!, 
+                "bush-2": gameAssets.createTexture("bush-2", 0, 0, 63, 28,false)!, 
+
+
 
                 "platform-1": gameAssets.createTexture("tileset_1", 0, 64, 32, 16,false)!, //30
                
@@ -168,7 +172,8 @@ export class RunWorld {
             },
             isInitialized: false,
             states:{},
-            zIndex:0
+            zIndex:0,
+            isCollidable:false
         };
 
         const staticLevelEntities = createLevelEntities(levelProps);
@@ -183,7 +188,8 @@ export class RunWorld {
             isInitialized:false,
             positioned : new Positioned(0,0,0,0),
             states:{},
-            zIndex:0
+            zIndex:0,
+            isCollidable:false
         }, this.screenCanvas.width, this.screenCanvas.height);
 
 

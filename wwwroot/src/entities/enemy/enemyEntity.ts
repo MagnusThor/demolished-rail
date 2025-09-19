@@ -4,8 +4,8 @@ import { IBoundingBox } from "../../interface/IBoundingBox";
 import { ICollisionDetector } from "../../interface/ICollisionDetector";
 import { ICollisionResult } from "../../interface/ICollisionResult";
 
-import { IEnemyProps, IEnemyBehavior } from "../../interface/IEnemyProps";
-import { IGameEntity } from "../../interface/IGameEntity";
+import { IEnemyProps } from "../../interface/IEnemyProps";
+import { IGameEntity, IGameEntityBehavior } from "../../interface/IGameEntity";
 import { IIndexedTile } from "../../interface/IIndexedTile";
 import { Positioned } from "../../interface/IPositioned";
 import { EnemyChasingBehavior } from "./behavior/EnemyChasingBehavior";
@@ -27,12 +27,12 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
         animations: { [key: string]: ISpriteAnimation; }
     ) {
 
-        let assignedBehavior: IEnemyBehavior[] = [];
+        let assignedBehavior: IGameEntityBehavior;
 
         if (Math.random() < 0.5) {
-            assignedBehavior.push(EnemyPatrollingBehavior());
+            assignedBehavior = EnemyPatrollingBehavior();
         } else {
-            assignedBehavior.push(EnemyChasingBehavior(startX, startY));
+            assignedBehavior = EnemyChasingBehavior(startX, startY);
         }
 
         this.uuid = crypto.randomUUID();
@@ -49,22 +49,23 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
             velY: 0,
             gravity: 0.35,
             isGrounded: false,
-            behavior: assignedBehavior,
+            behaviors: { main: assignedBehavior },
             direction: 1,
             flippedX: false,
             isInitialized: true,
             zIndex: 1,
             states: {},
             animations: animations,
-            currentAnimationKey: 'idle' // Set a default animation to start with
+            currentAnimationKey: 'idle', // Set a default animation to start with
+            isCollidable: true
         };
 
         this.stateHelper = new StateHelper(this.props);
         this.collisionDetectors = enemyCollisionDetectors;
 
-        this.lifeTime = 2000; // 2 seconds
+       
     }
-    lifeTime: number;
+   
     entityEvents?: EntityEvent | undefined;
 
     uuid: string;
@@ -107,8 +108,8 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
         // The behavior now sets the enemy's velocity for the next frame,
         // based on the updated state after collision resolution
-        if (props.behavior && props.behavior.length > 0) {
-            props.behavior[0].onUpdate!(self);
+        if (props.behaviors) {
+            props.behaviors.main.onUpdate!(self);
         }
 
         // --- ANIMATION UPDATE LOGIC ---

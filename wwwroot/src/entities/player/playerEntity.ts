@@ -9,16 +9,15 @@ import { runCollitionDetectors } from "../../utils/collitionHelpers";
 import { getSurroundingTiles } from "../../utils/tileBlockHelpers";
 
 import { GameEntity } from "../GameEntity";
-import { RopeEntity } from "../platform/RopeEntity";
 import { LevelEntity } from "../level/levelEntity";
 import { playerCollisionDetectors } from "./collisiondetectors/playerCollitionDetectors";
 import { EntityEvent } from "../EntityEvent";
 import { setupPlayerInput } from "./playerInput";
-import { allPlayerBehaviors, IPlayerBehavior } from "./playerBehaviors";
+import { allPlayerBehaviors } from "./playerBehaviors";
 import { BulletEntity } from "../bullet/BulletEntity";
 import { SmokeRingEntity } from "./SmokeRingEntity";
 
-export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidable, IGameEntity<IPlayerProps> {
+export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntity<IPlayerProps> {
     entityEvents: EntityEvent;
 
     constructor(props: IPlayerProps) {
@@ -34,14 +33,12 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements ICollidabl
     onCreated?: ((self: IGameEntity<IPlayerProps>) => void) | undefined;
     onDestroy?: ((self: IGameEntity<IPlayerProps>) => void) | undefined;
 
-
     getBoundingBox = (self: IGameEntity<IPlayerProps>): IBoundingBox => {
         return self.props.positioned.getBoundingBox!();
     }
 
     getSurroundingTilesOfPlayer(): IIndexedTile[] {
         const tileEntity = gameState.findEntities("tileBlock")[0] as unknown as LevelEntity;
-
         return getSurroundingTiles(tileEntity.tileSpatialGrid,
             this.props.positioned.getBoundingBox(), tileEntity.props.tileWidth);
     }

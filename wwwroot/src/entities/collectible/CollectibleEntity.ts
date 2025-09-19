@@ -40,6 +40,7 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> {
                     lastFrameChangeTime: 0,
                     spriteSheet: gameAssets.getSpriteSheet("coin", 10, 10, 4, 1)!
                 },
+                isCollidable:true
             }
 
 

@@ -1,19 +1,16 @@
+import { Point2D } from "../../../../src";
+import { IGameEntityBehavior } from "../../interface/IGameEntity";
+import { IPlayerBehavior } from "../../interface/IPlayerProps";
+import { Positioned } from "../../interface/IPositioned";
+import { gameState } from "../../state/gameState";
+import { getSurroundingTiles, getTileProperties, getTileXY } from "../../utils/tileBlockHelpers";
+import { LevelEntity } from "../level/levelEntity";
 import { RopeEntity } from "../platform/RopeEntity";
+import { InteractableEntity } from "../triggerzone/InteractableEntity";
+import { TriggerZoneEntity } from "../triggerzone/triggerZoneEntity";
+import { ExtendedCollisionHelper } from "./collisiondetectors/extendedCollitionHelper";
 import { PlayerEntity } from "./playerEntity";
 
-
-/**
- * Defines a behavior for a player state.
- * The criteria function checks if the behavior should be applied.
- */
-export interface IPlayerBehavior {
-    name: string;
-    order: number;
-    criteria: (player: PlayerEntity) => boolean;
-    onUpdate?: (player: PlayerEntity) => void;
-}
-
-// --- Individual Behaviors ---
 
 export const ResetState: IPlayerBehavior = {
     name:"reset",
@@ -26,6 +23,55 @@ export const ResetState: IPlayerBehavior = {
         stateHelper.set<boolean>("onPlatform", false); 
     }
 }
+
+
+
+export const CollisionBehavior: IPlayerBehavior = {
+    name: "player-entity-collition",
+    order: 65,
+    criteria: (player:PlayerEntity) => true,
+    onUpdate: (player:PlayerEntity) => {
+        const props = player.props;
+        const gameEntities = gameState.entities;       
+        const levelEntity = gameState.findEntities("tileBlock")[0] as LevelEntity;        
+        // Calculate the player's potential next position
+        const nextX = props.positioned.x + props.velX;
+        const nextY = props.positioned.y + props.velY
+        const nextBoundingBox = {
+            x: nextX,
+            y: nextY,
+            width: props.positioned.width,
+            height: props.positioned.height
+        };
+        // Get surrounding tiles based on the next position
+        const surroundingTiles = getSurroundingTiles(levelEntity.tileSpatialGrid,nextBoundingBox,32);
+        // Check collisions with surrounding tiles
+        for (const tile of surroundingTiles) {
+            // find the game entity that corresponds to this tile's coordinates            
+            const playerPosition = props.positioned;
+            gameEntities.forEach(entity => {
+                     const entityBBox = new Positioned(entity.props.positioned.x , entity.props.positioned.y,32,32).getBoundingBox(); // we use 32x32 as default tile size
+                     const playerBBox = playerPosition.getBoundingBox();
+                     if(ExtendedCollisionHelper.AABBColliding(playerBBox, entityBBox!)){
+                        if(entity.uuid !== player.uuid){
+                            // lets of we got and interactable entity  
+                            if(entity.name === "interactable"){
+                                const castedEntity = entity as InteractableEntity;
+                                // lets is just move it;
+                                castedEntity.props.positioned.x += props.velX;                             
+                            }
+                            else if(entity.name === "triggerZone"){
+                                // do ops
+                            }
+                        }
+                     }
+
+            });
+            
+           
+        }
+    }
+};
 
 export const JumpBehavior: IPlayerBehavior = {
     name: "jump",
@@ -166,5 +212,6 @@ export const allPlayerBehaviors = [
     GroundedBehavior,
     MovementBehavior,
     SwingingBehavior,
+    CollisionBehavior,
     UpdatePriorPositionBehavior
 ].sort((a, b) => a.order - b.order);

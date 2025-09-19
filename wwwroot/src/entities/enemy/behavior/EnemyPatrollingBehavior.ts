@@ -1,6 +1,8 @@
 import { CollisionHelper } from "../../../../../src/Engine/Helpers/CollisionHelper";
 import { IBoundingBox } from "../../../interface/IBoundingBox";
-import { IEnemyBehavior } from "../../../interface/IEnemyProps";
+import { IEnemyProps } from "../../../interface/IEnemyProps";
+import { IGameEntityBehavior } from "../../../interface/IGameEntity";
+
 import { TileDefinitions } from "../../../level-settings/TileDefinitions";
 import { gameState } from "../../../state/gameState";
 import { getSurroundingTiles, isSolidTile, getTileProperties } from "../../../utils/tileBlockHelpers";
@@ -13,7 +15,7 @@ import { EnemyEntity } from "../enemyEntity";
  * Patrolling behavior: moves the enemy back and forth.
  * This behavior includes look-ahead logic to turn the enemy around when it is about to hit a wall.
  */
-export const EnemyPatrollingBehavior = (): IEnemyBehavior => {
+export const EnemyPatrollingBehavior = (): IGameEntityBehavior => {
     return {
         name: "patrolling",
         onUpdate: (enemy: EnemyEntity) => {

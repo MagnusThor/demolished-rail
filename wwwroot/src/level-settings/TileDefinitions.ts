@@ -41,12 +41,13 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
     0x02: {
         width: 32,
         height: 16,
-        isSolid: true,
+        isSolid: false,
         texture:"bush-1",
         offset: {
             x:0,
             y:0
         },
+
         useLevelCreator:true,
         zIndex:100
     },
@@ -68,6 +69,20 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         texture:"solid-4",
         useLevelCreator:true,
         zIndex:1
+    },
+
+    0x05: {
+        width: 63,
+        height: 28,
+        isSolid: false,
+        texture:"bush-2",
+        offset: {
+            x:0,
+            y:0
+        },
+
+        useLevelCreator:true,
+        zIndex:2
     },
     
     // platform
@@ -229,31 +244,31 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         zIndex: 1
     },
 
-    // An interactable lever that toggles a bridge on and off.
     0x90: {
         width: 32,
         height: 32,
-        isSolid: true,
-        texture: "lever-1", // You would need to add this texture
+        isSolid: false,
         useLevelCreator: false,
+        zIndex: 1,
         creator: (levelProps, tile) => {
             const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
             return new InteractableEntity({
-                ...levelProps,
                 positioned: new Positioned(x, y, 32, 32),
-                isInitialized: false,
-                proximityRadius: 50,
-                canInteract: true,             
-                onInteract: () => {
-                    console.log("You flipped the lever! The bridge has been toggled.");
-                    // Here you would add the logic to toggle a bridge, door, etc.
-                },
-                states: {}
+                zIndex:10,
+                isInitialized: true,
+                states: {},
+                isCollidable:false,
+                gravity:0.5,
+                velY:0,
+                velX:0,
+                rotation:0,
+                rotationSpeed:10
+
             });
-        },
-        zIndex: 10
+        }
     },
-   
+
+
     // Player spawn point
     0xff: {
         width: 32,

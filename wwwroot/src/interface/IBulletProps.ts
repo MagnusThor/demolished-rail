@@ -1,12 +1,12 @@
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { IHealthProps } from "./IHealthProps";
-import { IGameEntityBase, IGameEntityProp } from "../interface/IGameEntity";
-import { IDynamicProps } from "./IDynamicProps";
+import { IGameEntityBase } from "../interface/IGameEntity";
+
 import { IPositioned } from "./IPositioned";
 
 
 
-export interface IBulletProps extends IDynamicProps {
+export interface IBulletProps extends IGameEntityBase {
 
     positioned: IPositioned; // The position of the bullet in the game world
     velX: number;
@@ -17,5 +17,6 @@ export interface IBulletProps extends IDynamicProps {
     health: IHealthProps // Health properties for the bullet, if applicable
     
     isInitialized: boolean;
+    isCollidable: boolean;
 
 }

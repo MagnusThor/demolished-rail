@@ -9,6 +9,7 @@ export interface ISmokeRingProps extends IGameEntityBase {
     positioned: IPositioned
     radius: number;
     lifespan: number; // in milliseconds
+    states: { [key: string]: any };
 }
 
 export class SmokeRingEntity extends GameEntity<ISmokeRingProps> implements IGameEntity<ISmokeRingProps> {
@@ -19,7 +20,9 @@ export class SmokeRingEntity extends GameEntity<ISmokeRingProps> implements IGam
 
 
 
-        super("smokeRing", { radius, lifespan, positioned: new Positioned(x - radius, y - radius, radius * 2, radius * 2), isInitialized: false, zIndex: 1, states: {} });
+        super("smokeRing", { 
+            isCollidable: false,
+            radius, lifespan, positioned: new Positioned(x - radius, y - radius, radius * 2, radius * 2), isInitialized: false, zIndex: 1, states: {} });
 
         this.initialLifespan = lifespan;
         this.createdAt = performance.now();

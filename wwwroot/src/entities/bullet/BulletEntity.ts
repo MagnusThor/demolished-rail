@@ -11,6 +11,7 @@ import { isSolidTile } from "../../utils/tileBlockHelpers";
 import { GameEntity } from "../GameEntity";
 import { IEnemyProps } from "../../interface/IEnemyProps";
 import { StateHelper } from "../StateHelper";
+import { EnemyEntity } from "../enemy/enemyEntity";
 
 const BULLET_SPEED = 10;
 
@@ -29,7 +30,8 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
                 lifeTime: 2000,
                 isInitialized: true,
                 zIndex:1,
-                states:{}
+                states:{},
+                isCollidable: true
             }
 
         super(
@@ -47,7 +49,7 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
             // Collision detector for the enemy entity
             {
                 targetName: "enemyBlock",
-                detectorFn: (bulletEntity: BulletEntity, enemyEntity: IGameEntity<IEnemyProps>) => {
+                detectorFn: (bulletEntity: BulletEntity, enemyEntity: EnemyEntity) => {
                     const bulletProps = bulletEntity.props;
 
                     const collisionResults = new Array<ICollisionResult>();

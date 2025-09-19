@@ -13,7 +13,8 @@ export const gameAssetsToPreload = [
     { key: "tileset_1", url: "/wwwroot/assets/images/tilesets/Inca_front_by_Kronbits-extended.png" },
 
     { key: "dev_tiles", url: "/wwwroot/assets/images/tilesets/dev_tile.png" },
-    { key: "bushes", url: "/wwwroot/assets/images/tilesets/bush-1.png" },
+    { key: "bush-1", url: "/wwwroot/assets/images/tilesets/bush-1.png" },
+    { key: "bush-2", url: "/wwwroot/assets/images/tilesets/bush-2.png" },
     { key: "coin", url: "/wwwroot/assets/images/sprites/spritesheet_coin.png" },
    
     { key: "backgroundlayer_1", url: "/wwwroot/assets/images/backgrounds/1.png" },

@@ -38,7 +38,8 @@ export class PlatformEntity extends GameEntity<IPlatformProps>{
                 oldY: tile.y * props.tileHeight,
                 isInitialized: false,
                 zIndex:1,
-                states:{}
+                states:{},
+                isCollidable: true
             }
         );
 

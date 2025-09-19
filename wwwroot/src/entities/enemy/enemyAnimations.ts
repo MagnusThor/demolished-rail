@@ -16,7 +16,9 @@ export const enemyAnimations = (): { [key: string]: ISpriteAnimation; } => {
             frameRate: 10,
             currentFrameIndex: 0,
             lastFrameChangeTime: 0,
-            spriteSheet: spriteSheetIdle
+            spriteSheet: spriteSheetIdle,
+            flippedX: false,
+            flippedY:false
         },
         "walk": {
             name: 'walk',
@@ -24,7 +26,9 @@ export const enemyAnimations = (): { [key: string]: ISpriteAnimation; } => {
             frameRate: 10,
             currentFrameIndex: 0,
             lastFrameChangeTime: 0,
-            spriteSheet: spriteSheetWalk
+            spriteSheet: spriteSheetWalk,
+            flippedX: false,
+            flippedY:false
         },
         "attack": {
             name: 'attack',
@@ -33,6 +37,8 @@ export const enemyAnimations = (): { [key: string]: ISpriteAnimation; } => {
             currentFrameIndex: 0,
             lastFrameChangeTime: 0,
             spriteSheet: spriteSheetAttack
+            ,flippedX: false,
+            flippedY:false
         }
     };
     return animations;
