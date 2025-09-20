@@ -24,6 +24,13 @@ export interface ILevelProps extends IGameEntityBase  {
 }
 
 
+export interface ITileSettings {
+    tileIndex:number
+    x?: number
+    y?:number
+    settingsBag: {}
+}
+
 export interface ITileProps {
     width: number
     height: number
@@ -36,5 +43,5 @@ export interface ITileProps {
     }
     zIndex: number
     creator?: (levelProps:ILevelProps,tile:IPoint2D) => IGameEntity<any> ;
-
 }
+

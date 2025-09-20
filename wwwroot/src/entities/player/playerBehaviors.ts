@@ -7,7 +7,7 @@ import { getSurroundingTiles, getTileProperties, getTileXY } from "../../utils/t
 import { LevelEntity } from "../level/levelEntity";
 import { RopeEntity } from "../platform/RopeEntity";
 import { InteractableEntity } from "../triggerzone/InteractableEntity";
-import { TriggerZoneEntity } from "../triggerzone/triggerZoneEntity";
+
 import { ExtendedCollisionHelper } from "./collisiondetectors/extendedCollitionHelper";
 import { PlayerEntity } from "./playerEntity";
 

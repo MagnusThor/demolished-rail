@@ -29,11 +29,11 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
         let assignedBehavior: IGameEntityBehavior;
 
-        if (Math.random() < 0.5) {
+       // if (Math.random() < 0.5) {
             assignedBehavior = EnemyPatrollingBehavior();
-        } else {
-            assignedBehavior = EnemyChasingBehavior(startX, startY);
-        }
+       // } else {
+        //    assignedBehavior = EnemyChasingBehavior(startX, startY);
+        //}
 
         this.uuid = crypto.randomUUID();
         this.name = `enemy-${crypto.randomUUID()}`;

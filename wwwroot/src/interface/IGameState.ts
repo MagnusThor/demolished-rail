@@ -8,6 +8,8 @@ import { InputHelper } from "../../../src";
 import { IGameEntity } from "./IGameEntity";
 import { IViewport } from "./IViewport";
 import { IPlayerProps } from "./IPlayerProps";
+import { IParticle } from "./IParticle";
+
 
 export interface IGameState {
     showImageDataOverlay:boolean
@@ -34,4 +36,7 @@ export interface IGameState {
     
     findEntities(key: string): IGameEntity<any>[]; // A method to find entities by their key or name
     removeEntityByUUID: (uuid:string) => void; // Optional method to remove an entity by its UUID
+
+    particles:IParticle[];
+
 }

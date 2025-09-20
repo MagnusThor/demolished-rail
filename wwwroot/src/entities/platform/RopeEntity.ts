@@ -37,7 +37,7 @@ export class RopeEntity extends GameEntity<IRopeProps> {
         const initialAngle = (initialAngleDeg * Math.PI) / 180;
 
         const props: IRopeProps = {
-            positioned: new Positioned(x - 16, y+16, 10, lengthOfRope),
+            positioned: new Positioned(x - 16, y-32, 10, lengthOfRope),
             zIndex: 10,
             isInitialized: true,
             states: {},

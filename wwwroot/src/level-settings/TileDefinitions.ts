@@ -6,12 +6,59 @@ import { PlatformEntity } from "../entities/platform/PlatformEntity";
 import { RopeEntity } from "../entities/platform/RopeEntity";
 import { InteractableEntity } from "../entities/triggerzone/InteractableEntity";
 import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
+
 import { IGameEntity } from "../interface/IGameEntity";
-import { ITileProps } from "../interface/ILevelProps";
+import { ITileProps, ITileSettings } from "../interface/ILevelProps";
 import { Positioned } from "../interface/IPositioned";
 import { getTileXY } from "../utils/tileBlockHelpers";
+import { LEVEL_SAMPLE } from "./LEVEL_SAMPLE";
 
 
+export function findPosition(level: string | any[], target: any) {
+  for (let y = 0; y < level.length; y++) {
+    for (let x = 0; x < level[y].length; x++) {
+      if (level[y][x] === target) {
+        return { x, y };
+      }
+    }
+  }
+  return null; // not found
+}
+
+export function findAllPositions(level: string | any[], target: number) {
+  const results = [];
+  for (let y = 0; y < level.length; y++) {
+    for (let x = 0; x < level[y].length; x++) {
+      if (level[y][x] === target) {
+        results.push({ x, y });
+      }
+    }
+  }
+  return results;
+}
+
+
+
+
+const firstTileOfType0xa1 = findPosition(LEVEL_SAMPLE,0xa1)!;
+
+
+
+export const TileSettingBags:ITileSettings[]  =  [
+    {
+        tileIndex:66,
+        x: firstTileOfType0xa1.x,
+        y: firstTileOfType0xa1.y,
+        settingsBag: {
+            textId:"welcome-message"
+        }
+
+    }
+]
+
+export function getSettigsBag(tileIndex:number){
+        return TileSettingBags.find( pre => pre.tileIndex === tileIndex);
+}
 
 
 
@@ -239,6 +286,7 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
                     // Here you would add the logic to spawn an enemy.
                 },
                 states: {},
+                textId:"welcome_message"
             });
         },
         zIndex: 1

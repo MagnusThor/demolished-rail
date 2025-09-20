@@ -37,6 +37,10 @@ export const gameState: IGameState = {
     findEntities: (name: string): IGameEntity<any>[] => {
         const foundEntities = gameState.entities.filter(entity => entity.name === name);
         return foundEntities;
-    }
+    },
+
+    particles: []
 };
+
+// const debrisParticles: typeof DebrisHelper.DebrisParticle[] = [];
 export const gameAssets = new GameAssetsManager();

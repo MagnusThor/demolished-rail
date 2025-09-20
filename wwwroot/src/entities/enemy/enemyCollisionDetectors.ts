@@ -9,18 +9,36 @@ import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
 import { TileDefinitions } from "../../level-settings/TileDefinitions";
 import { gameAssets, gameState } from "../../state/gameState";
+import { DebrisHelper } from "../../utils/debrisHelper";
 import { isSolidTile, getTileProperties, getSurroundingTiles } from "../../utils/tileBlockHelpers";
 import { LevelEntity } from "../level/levelEntity";
 import { EnemyEntity } from "./enemyEntity";
+
+/**
+ * Generates debris particles from a destroyed enemy and adds them to the game state's particle system.
+ *
+ * This function extracts the enemy's current sprite sheet image, calculates the center position of the enemy,
+ * and uses the DebrisHelper to create debris particles at that location. The generated particles are then
+ * pushed into the global game state's particle array.
+ *
+ * @param enemy - The enemy entity from which to generate debris particles.
+ */
+const generateDebrisFromEnemy = (enemy: EnemyEntity) => {
+    const sourceImage = 
+    enemy.props.animations[
+    enemy.props.currentAnimationKey].spriteSheet.src;
+    const centerX = enemy.props.positioned.x + enemy.props.positioned.width / 2;
+    const centerY = enemy.props.positioned.y + enemy.props.positioned.height / 2;
+    const particleCanvas = DebrisHelper.generateDebris(sourceImage, 25,centerX,centerY,0.25,1);
+    gameState.particles.push(...particleCanvas);  
+};
 
 
 export const enemyCollisionDetectors = [
     {
         targetName: "bulletBlock",
         detectorFn: (enemy: EnemyEntity, bullet: IGameEntity<IBulletProps>) => {
-
             const collisionResults = new Array<ICollisionResult>();
-
             if (CollisionHelper.AABBColliding(enemy.getBoundingBox!(enemy), bullet.getBoundingBox!(bullet))) {
                 collisionResults.push({
                     x: bullet.props.positioned.x,
@@ -33,14 +51,11 @@ export const enemyCollisionDetectors = [
             }
             return collisionResults;
         },
-
         onCollision: (enemy: EnemyEntity, collisionData: ICollisionResult) => {
-
             enemy.props.health.health -= collisionData.targetEntity!.props.health.damage;
             gameState.removeEntityByUUID(collisionData.targetEntity!.uuid);
-
             if (enemy.props.health.health <= 0) {
-                console.log("Enemy defeated, removing from game state");
+                generateDebrisFromEnemy(enemy);
                 gameState.removeEntityByUUID(enemy.uuid);
 
             }

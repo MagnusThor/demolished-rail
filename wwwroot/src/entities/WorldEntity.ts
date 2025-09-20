@@ -6,7 +6,7 @@ import { IGameEntity, IGameEntityBase } from '../interface/IGameEntity';
 import { IPlayerProps } from '../interface/IPlayerProps';
 import { isEntityInView } from '../utils/collitionHelpers';
 import { StateHelper } from './StateHelper';
-import { LevelEntity  } from './level/levelEntity';
+import { LevelEntity } from './level/levelEntity';
 
 
 /**
@@ -19,7 +19,7 @@ export interface IWorldProps extends IGameEntityBase {
     viewportY: number;
     viewportWidth: number;
     viewportHeight: number;
- 
+
 }
 
 
@@ -29,7 +29,7 @@ export interface IWorldProps extends IGameEntityBase {
  */
 export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEntity<IWorldProps> {
     private followTarget?: IGameEntity<any>;
- 
+
     stateHelper: StateHelper<IWorldProps>;
 
     get key() {
@@ -83,14 +83,14 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
         const allEntities = [...gameState.entities];
 
         allEntities.sort((a, b) => (a.props.zIndex || 0) - (b.props.zIndex || 0));
-        
+
         allEntities.forEach(entity => {
-            if(entity.onUpdate)
+            if (entity.onUpdate)
                 entity.onUpdate!(entity, ts);
 
             if (entity.processCollisions) {
                 entity.processCollisions(entity, allEntities);
-            }  
+            }
         });
 
         if (this.followTarget) {
@@ -137,16 +137,16 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
         ctx.translate(-this.props.viewportX, -this.props.viewportY);
 
         // Find the TileEntity and separate it from the rest.
-        let tileEntity: LevelEntity  | undefined;
+        let tileEntity: LevelEntity | undefined;
         const otherEntities: IGameEntity<any>[] = [];
         for (const entity of gameState.entities) {
-            if (entity instanceof LevelEntity ) {
+            if (entity instanceof LevelEntity) {
                 tileEntity = entity;
             } else {
                 otherEntities.push(entity);
             }
         }
-        
+
         // Step 1: Draw the background tiles first.
         if (tileEntity && tileEntity.onDrawBackground) {
             tileEntity.onDrawBackground(tileEntity, canvasHelper);
@@ -156,7 +156,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
         otherEntities.sort((a, b) => (a.props.zIndex || 0) - (b.props.zIndex || 0));
         for (const entity of otherEntities) {
             if (entity.onDraw && isEntityInView(entity, {
-                 x: this.props.viewportX, y: this.props.viewportY
+                x: this.props.viewportX, y: this.props.viewportY
             }, this.props.viewportWidth, this.props.viewportHeight)) {
                 entity.onDraw(entity, canvasHelper);
             }
@@ -167,7 +167,19 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
             tileEntity.onDrawForeground(tileEntity, canvasHelper);
         }
 
+        // draw particle if they exists;
+
+        gameState.particles = gameState.particles.filter(particle => {
+            // We update the particle and check if it's still alive in one go
+            const isStillAlive = particle.update!(gameState.ctx!.canvas.height);
+            if (isStillAlive) {
+                particle.draw!(gameState.ctx!);
+            }
+            return isStillAlive;
+        });
+
+
         ctx.restore();
     };
- 
+
 }
