@@ -28,7 +28,9 @@ export interface ITileSettings {
     tileIndex:number
     x?: number
     y?:number
-    settingsBag: {}
+    bag: {
+        [key:string] : any
+    }
 }
 
 export interface ITileProps {

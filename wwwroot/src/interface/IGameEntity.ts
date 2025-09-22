@@ -7,12 +7,15 @@ import { StateHelper } from "../entities/StateHelper";
 import { IBoundingBox } from "./IBoundingBox";
 import { ICollisionDetector } from "./ICollisionDetector";
 import { IEntityState } from "./IEntityState";
+import { ITileSettings } from "./ILevelProps";
 import { IPositioned } from "./IPositioned";
 
 export interface IGameEntityBehavior {  
     name: string;
-    onUpdate?: (self: any) => void;
+    onUpdate?: (self: any,timeStamp:number) => void;
     onDraw?: (self: any, helper: CanvasHelper) => void;
+    onInit?: (self:any) => void;
+    _isInitialized?:boolean
 }
 
 export interface IGameEntityBase  {
@@ -22,6 +25,7 @@ export interface IGameEntityBase  {
   states: IEntityState  
   isCollidable: boolean;
   behaviors?: { [key: string]: IGameEntityBehavior  };
+  settings?: ITileSettings 
 }
 export interface IGameEntity<P extends IGameEntityBase>  {
   name: string; 
@@ -41,6 +45,5 @@ export interface IGameEntity<P extends IGameEntityBase>  {
   onDestroy?: ((self: IGameEntity<P>) => void);
 
 
-  
 }
 

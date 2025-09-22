@@ -25,6 +25,8 @@ export interface IEnemyProps extends IGameEntityBase{
     animations: { [key: string]: ISpriteAnimation; }
     currentAnimationKey: string;
     flippedX: boolean;
+    currentBehavior:IGameEntityBehavior
+
 }
 
 export class EnemyHealth  implements IHealthProps

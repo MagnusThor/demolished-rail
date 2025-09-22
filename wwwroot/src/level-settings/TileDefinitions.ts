@@ -2,6 +2,8 @@ import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { BeamEntity } from "../entities/beams/beamEntity";
 import { CollectibleEntity } from "../entities/collectible/CollectibleEntity";
 import { ILadderProps, LadderEntity } from "../entities/ladderEntity";
+import { TextOverlayManager } from "../entities/overlaytext/TextOverManager";
+
 import { PlatformEntity } from "../entities/platform/PlatformEntity";
 import { RopeEntity } from "../entities/platform/RopeEntity";
 import { InteractableEntity } from "../entities/triggerzone/InteractableEntity";
@@ -39,9 +41,7 @@ export function findAllPositions(level: string | any[], target: number) {
 
 
 
-
 const firstTileOfType0xa1 = findPosition(LEVEL_SAMPLE,0xa1)!;
-
 
 
 export const TileSettingBags:ITileSettings[]  =  [
@@ -49,15 +49,16 @@ export const TileSettingBags:ITileSettings[]  =  [
         tileIndex:66,
         x: firstTileOfType0xa1.x,
         y: firstTileOfType0xa1.y,
-        settingsBag: {
-            textId:"welcome-message"
+        bag: {
+            textId:"welcome_message"
         }
 
     }
 ]
 
-export function getSettigsBag(tileIndex:number){
-        return TileSettingBags.find( pre => pre.tileIndex === tileIndex);
+export function getSettigsBag(tileIndex: number, x: number, y: number) {
+    return TileSettingBags.find(pre => pre.tileIndex === tileIndex );
+    // && pre.x === x && pre.y === y
 }
 
 
@@ -270,23 +271,37 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         zIndex:1
     },
 
-        0x80: {
+   0x80: {
         width: 32,
         height: 32,
         isSolid: false,
         useLevelCreator: false,
         creator: (levelProps, tile) => {
             const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
+            const tileSettings = getSettigsBag(66,tile.x,tile.y);
+
+            console.log("tileSettings",tileSettings)
+
+            const textId = tileSettings?.bag["textId"];
+
             return new TriggerZoneEntity({
                 ...levelProps,
                 positioned: new Positioned(x, y, 32, 32),
                 isInitialized: false,
                 onTrigger: () => {
-                    console.log("Player has entered the trigger zone!");
-                    // Here you would add the logic to spawn an enemy.
+                    // Trigger the TextOverlayManager to show the text
+                    if (textId) {
+                        TextOverlayManager.getInstance().showText(textId);
+                    }
+                },
+                onLeave: () => {
+                    // Trigger the TextOverlayManager to hide the text
+                    TextOverlayManager.getInstance().hideText();
                 },
                 states: {},
-                textId:"welcome_message"
+                settings: tileSettings
+
+                
             });
         },
         zIndex: 1

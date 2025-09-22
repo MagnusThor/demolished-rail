@@ -15,28 +15,25 @@ import { StateHelper } from "../StateHelper";
 import { EntityEvent } from "../EntityEvent";
 import { ISpriteAnimation } from "../../interface/ISpriteAnimation";
 import { IGameAsset } from "../../interface/IGameAsset";
+import { EnemyGuardingBehavior } from "./behavior/EnemyGuardingBehavior";
 
 
 export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
     stateHelper: StateHelper<IEnemyProps>;
+    private _currentBehavior: IGameEntityBehavior;
 
-    constructor(startX: number,
+    constructor(
+        startX: number,
         startY: number,
         indexedTiles: IIndexedTile[],
         animations: { [key: string]: ISpriteAnimation; }
     ) {
-
-        let assignedBehavior: IGameEntityBehavior;
-
-       // if (Math.random() < 0.5) {
-            assignedBehavior = EnemyPatrollingBehavior();
-       // } else {
-        //    assignedBehavior = EnemyChasingBehavior(startX, startY);
-        //}
-
         this.uuid = crypto.randomUUID();
         this.name = `enemy-${crypto.randomUUID()}`;
+
+        // Initialize with a default behavior
+        this._currentBehavior = EnemyPatrollingBehavior();
 
         this.props = {
             // The position is now set directly with world coordinates
@@ -49,7 +46,8 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
             velY: 0,
             gravity: 0.35,
             isGrounded: false,
-            behaviors: { main: assignedBehavior },
+            // A single property for the current behavior
+            currentBehavior: this._currentBehavior,
             direction: 1,
             flippedX: false,
             isInitialized: true,
@@ -62,16 +60,28 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
         this.stateHelper = new StateHelper(this.props);
         this.collisionDetectors = enemyCollisionDetectors;
-
-       
+        this.switchBehavior(this._currentBehavior);
     }
-   
-    entityEvents?: EntityEvent | undefined;
 
+    entityEvents?: EntityEvent | undefined;
     uuid: string;
     name: string;
     props: IEnemyProps;
     collisionDetectors?: ICollisionDetector[] | undefined;
+
+    /**
+     * Helper method to switch and initialize a new behavior.
+     * @param newBehavior The behavior to switch to.
+     */
+    private switchBehavior(newBehavior: IGameEntityBehavior): void {
+        if (!newBehavior._isInitialized) {
+            if (newBehavior.onInit) {
+                newBehavior.onInit(this);
+            }
+            newBehavior._isInitialized = true;
+        }
+        this._currentBehavior = newBehavior;
+    }
 
     processCollisions? = (self: IGameEntity<IEnemyProps>, entities: IGameEntity<any>[]) => {
         for (const detector of self.collisionDetectors!) {
@@ -96,6 +106,37 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
     onUpdate? = (self: IGameEntity<IEnemyProps>, timeStamp: number) => {
         const props = self.props;
 
+        // --- BEHAVIOR MANAGER LOGIC ---
+        const player = gameState.player;
+        if (player) {
+            const playerPos = player.props.positioned.toPoint2D();
+            const enemyPos = props.positioned.toPoint2D();
+            const distance = playerPos.distanceTo(enemyPos);
+
+            // Set a placeholder for the next behavior to apply
+            let nextBehavior: IGameEntityBehavior = this._currentBehavior;
+
+            if (distance < 200) {
+                // Player is within range, switch to chasing behavior
+                // Only create a new behavior instance if it's different from the current one
+                if (this._currentBehavior.name !== "chasing") {
+                    nextBehavior = EnemyChasingBehavior(props.positioned.x, props.positioned.y);
+                }
+            } else {
+                // Player is too far, revert to patrolling/guarding behavior
+                if (this._currentBehavior.name !== "patrolling") {
+                    nextBehavior = EnemyPatrollingBehavior();
+                }
+            }
+
+            // If the next behavior is different, switch to it.
+            if (nextBehavior !== this._currentBehavior) {
+                this.switchBehavior(nextBehavior);
+            }
+        }
+        // --- END BEHAVIOR MANAGER LOGIC ---
+
+
         // Apply gravity and movement to the enemy's position
         props.velY += props.gravity;
         props.positioned.x += props.velX;
@@ -103,13 +144,11 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
         props.isGrounded = false;
 
         // After moving, process collisions to resolve any overlaps
-        // This will correct the position and may flip the direction
         this.processCollisions!(self, gameState.findEntities("tileBlock"));
 
-        // The behavior now sets the enemy's velocity for the next frame,
-        // based on the updated state after collision resolution
-        if (props.behaviors) {
-            props.behaviors.main.onUpdate!(self);
+        // The behavior now sets the enemy's velocity for the next frame
+        if (this._currentBehavior) {
+            this._currentBehavior.onUpdate!(self, timeStamp);
         }
 
         // --- ANIMATION UPDATE LOGIC ---
