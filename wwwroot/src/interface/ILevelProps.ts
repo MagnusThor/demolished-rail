@@ -4,6 +4,7 @@ import { IGameEntity, IGameEntityBase } from "./IGameEntity";
 import { IGameTexture } from "./ITexture";
 import { IPositioned } from "./IPositioned";
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
+import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
 
 
 
@@ -31,6 +32,9 @@ export interface ITileSettings {
     bag: {
         [key:string] : any
     }
+    activate?: (self: TriggerZoneEntity, other?: IGameEntity<any>) => void;
+    deactivate?: (self: TriggerZoneEntity, other?: IGameEntity<any>) => void;
+    
 }
 
 export interface ITileProps {

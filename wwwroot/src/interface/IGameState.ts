@@ -26,16 +26,14 @@ export interface IGameState {
     worldWidth: number; // The width of the game world
     worldHeight: number; // The height of the game world
 
-    // An array to hold all the game entities, like the player, tiles, and enemies.
-    // This allows for a generic update and draw loop.
     entities: IGameEntity<any>[];
 
-    //dynamicEntities: IGameEntity<any>[]; // New dedicated list for bullets
-
-    //removeDynamicEntity: (entity: IGameEntity<any>) => void; // Method to remove a dynamic entity by its UUID
+    findEntities(key: string): IGameEntity<any>[]; 
+    removeEntityByUUID: (uuid:string) => void; 
+    addEntity: (entity:IGameEntity<any>) => void; 
     
-    findEntities(key: string): IGameEntity<any>[]; // A method to find entities by their key or name
-    removeEntityByUUID: (uuid:string) => void; // Optional method to remove an entity by its UUID
+
+    
 
     particles:IParticle[];
 

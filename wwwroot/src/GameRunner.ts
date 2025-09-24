@@ -1,13 +1,10 @@
 import { Sequence, InputHelper, DefaultAudioLoader, SceneBuilder, IEntity } from "../../src";
 import { gameAssetsToPreload } from "./assets/assetsToLoad";
 import { BackgroundEntity } from "./entities/BackgroundEntity";
-import { CollectibleEntity } from "./entities/collectible/CollectibleEntity";
 import { EnemyEntity } from "./entities/enemy/enemyEntity";
 import { enemyAnimations } from "./entities/enemy/enemyAnimations";
-import { PlatformEntity } from "./entities/platform/PlatformEntity";
 import { playerAnimations } from "./entities/player/animations/playerAnimations";
 import { PlayerEntity } from "./entities/player/playerEntity";
-import { LevelEntity  } from "./entities/level/levelEntity";
 import { WorldEntity } from "./entities/WorldEntity";
 import { gameState, gameAssets } from "./state/gameState";
 
@@ -218,7 +215,6 @@ export class RunWorld {
 document.addEventListener("DOMContentLoaded", async () => {
     const canvas = document.querySelector("canvas#main-canvas") as HTMLCanvasElement;
     await gameAssets.loadImages(gameAssetsToPreload);
-
 
     const runner = new RunWorld(canvas, 110);
 

@@ -1,6 +1,7 @@
 import { Positioned } from "../../interface/IPositioned";
 import { gameState } from "../../state/gameState";
-import { OverlayTextEntity, TEXT_MAP } from "./OverlayTextEntity";
+import { messageLibrary } from "./messageLibrary";
+import { OverlayTextEntity } from "./OverlayTextEntity";
 
 export class TextOverlayManager {
     private static instance: TextOverlayManager;
@@ -23,18 +24,22 @@ export class TextOverlayManager {
     public showText(textId: string) {
         if (this._isShowing) {
             // If already showing, update the text instead of creating a new entity
-            this._overlayTextEntity?.resetText(TEXT_MAP[textId] || "Text not found.");
+            this._overlayTextEntity?.resetText(messageLibrary.get(textId)?.text || "Text not found.");
             return;
         }
 
         // Create or get the single entity instance
         if (!this._overlayTextEntity) {
+
+            const bag =messageLibrary.get(textId)!;
+         
+
             this._overlayTextEntity = new OverlayTextEntity({
         
-                text: TEXT_MAP[textId] || "Text not found.",
-                speed: 10, // words per second
-                font: "Arial",
-                color: "255, 255, 255", // RGB values
+                text: bag.text || "Text not found.",
+                speed: bag.speed, // words per second
+                font: bag.font,
+                color: bag.color,
                 onComplete: undefined,
                 isOneShot: false,
                 isInitialized: true,
@@ -47,7 +52,7 @@ export class TextOverlayManager {
             gameState.entities.push(this._overlayTextEntity);
         } else {
             // Update the existing entity's text
-            this._overlayTextEntity.resetText(TEXT_MAP[textId] || "Text not found.");
+            this._overlayTextEntity.resetText(messageLibrary.get(textId)?.text || "Text not found.");
         }
         this._isShowing = true;
     }

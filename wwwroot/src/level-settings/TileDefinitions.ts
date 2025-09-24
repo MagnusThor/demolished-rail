@@ -2,7 +2,7 @@ import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { BeamEntity } from "../entities/beams/beamEntity";
 import { CollectibleEntity } from "../entities/collectible/CollectibleEntity";
 import { ILadderProps, LadderEntity } from "../entities/ladderEntity";
-import { TextOverlayManager } from "../entities/overlaytext/TextOverManager";
+import { TextOverlayManager } from "../entities/overlaytext/TextOverlayManager";
 
 import { PlatformEntity } from "../entities/platform/PlatformEntity";
 import { RopeEntity } from "../entities/platform/RopeEntity";
@@ -12,6 +12,7 @@ import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
 import { IGameEntity } from "../interface/IGameEntity";
 import { ITileProps, ITileSettings } from "../interface/ILevelProps";
 import { Positioned } from "../interface/IPositioned";
+import { gameState } from "../state/gameState";
 import { getTileXY } from "../utils/tileBlockHelpers";
 import { LEVEL_SAMPLE } from "./LEVEL_SAMPLE";
 
@@ -41,19 +42,34 @@ export function findAllPositions(level: string | any[], target: number) {
 
 
 
-const firstTileOfType0xa1 = findPosition(LEVEL_SAMPLE,0xa1)!;
+
+export const textTriggerSettings: ITileSettings = {
+    tileIndex: 66,
+    bag: {
+        textId: "welcome_message"
+    },
+    activate: (self, player) => {
+        // This function is the action to perform on collision.
+        // It's a placeholder for your TextOverlayManager.
+        const textId = self.props.settings!.bag["textId"];
+        console.log(`Triggering text overlay with ID: ${textId}`);
+
+           TextOverlayManager.getInstance().showText(textId);
+        
+
+        // Example: you would call your TextOverlayManager here.
+        // TextOverlayManager.getInstance().showText(textId);
+    },deactivate(self, other) {
+           const textId = self.props.settings!.bag["textId"];
+          console.log(`Triggering text overlay with ID: ${textId}`);
+              TextOverlayManager.getInstance().hideText();
+
+    },
+};
 
 
 export const TileSettingBags:ITileSettings[]  =  [
-    {
-        tileIndex:66,
-        x: firstTileOfType0xa1.x,
-        y: firstTileOfType0xa1.y,
-        bag: {
-            textId:"welcome_message"
-        }
-
-    }
+    textTriggerSettings
 ]
 
 export function getSettigsBag(tileIndex: number, x: number, y: number) {
@@ -278,25 +294,19 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
         useLevelCreator: false,
         creator: (levelProps, tile) => {
             const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
-            const tileSettings = getSettigsBag(66,tile.x,tile.y);
-
-            console.log("tileSettings",tileSettings)
-
-            const textId = tileSettings?.bag["textId"];
-
+            const tileSettings = getSettigsBag(66,tile.x,tile.y);           
             return new TriggerZoneEntity({
                 ...levelProps,
                 positioned: new Positioned(x, y, 32, 32),
                 isInitialized: false,
-                onTrigger: () => {
-                    // Trigger the TextOverlayManager to show the text
-                    if (textId) {
-                        TextOverlayManager.getInstance().showText(textId);
-                    }
+                onTrigger: (triggerZone) => {
+                    if(tileSettings?.activate)
+                             tileSettings.activate(triggerZone,gameState.player!)
+                    
                 },
-                onLeave: () => {
-                    // Trigger the TextOverlayManager to hide the text
-                    TextOverlayManager.getInstance().hideText();
+                onLeave: (triggerZone) => {    
+                    if(tileSettings?.deactivate)
+                            tileSettings.deactivate(triggerZone);             
                 },
                 states: {},
                 settings: tileSettings

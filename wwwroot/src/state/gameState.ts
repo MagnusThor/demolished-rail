@@ -39,7 +39,13 @@ export const gameState: IGameState = {
         return foundEntities;
     },
 
-    particles: []
+    particles: [],
+    
+    addEntity(entity:IGameEntity<any>):void {
+        this.entities.push(entity);
+    }
+
+
 };
 
 // const debrisParticles: typeof DebrisHelper.DebrisParticle[] = [];
