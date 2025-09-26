@@ -6,7 +6,7 @@ import { IIndexedTile } from "../../interface/IIndexedTile";
 import { IPlayerProps } from "../../interface/IPlayerProps";
 import { gameState } from "../../state/gameState";
 import { runCollitionDetectors } from "../../utils/collitionHelpers";
-import { getSurroundingTiles } from "../../utils/tileBlockHelpers";
+import { getSurroundingTiles } from "../../utils/tileEntityHelpers";
 
 import { GameEntity } from "../GameEntity";
 import { LevelEntity } from "../level/levelEntity";

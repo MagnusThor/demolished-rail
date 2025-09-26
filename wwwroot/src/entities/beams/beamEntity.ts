@@ -6,7 +6,7 @@ import { GameEntity } from "../GameEntity";
 import { CollisionHelper } from "../../../../src/Engine/Helpers/CollisionHelper";
 import { ICollisionResult } from "../../interface/ICollisionResult";
 import { CollisionAxis } from "../../enums/CollisionAxis";
-import { isSolidTile, getTileProperties } from "../../utils/tileBlockHelpers";
+import { isSolidTile, getTileProperties } from "../../utils/tileEntityHelpers";
 import { runCollitionDetectors } from "../../utils/collitionHelpers";
 import { LevelEntity  } from "../level/levelEntity";
 import { PlayerEntity } from "../player/playerEntity";

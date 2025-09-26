@@ -1,4 +1,5 @@
 import { IEntity, ICompositeEntity, InputHelper } from "../../../src";
+import { LevelEntity } from "../entities/level/levelEntity";
 import { IGameEntity } from "../interface/IGameEntity";
 import { IGameState } from "../interface/IGameState";
 import { GameAssetsManager } from "../utils/GameAssets";
@@ -37,6 +38,12 @@ export const gameState: IGameState = {
     findEntities: (name: string): IGameEntity<any>[] => {
         const foundEntities = gameState.entities.filter(entity => entity.name === name);
         return foundEntities;
+    },
+
+    get currentLevel() {
+        const level = this.entities.find(pre => pre instanceof LevelEntity);
+        if(!level) throw "Cannot find a LevelEntity instance";
+        return level;
     },
 
     particles: [],

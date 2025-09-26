@@ -7,7 +7,7 @@ import { ICollisionResult } from "../../interface/ICollisionResult";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { ILevelProps } from "../../interface/ILevelProps";
 import { Positioned } from "../../interface/IPositioned";
-import { isSolidTile } from "../../utils/tileBlockHelpers";
+import { isSolidTile } from "../../utils/tileEntityHelpers";
 import { GameEntity } from "../GameEntity";
 import { IEnemyProps } from "../../interface/IEnemyProps";
 import { StateHelper } from "../StateHelper";

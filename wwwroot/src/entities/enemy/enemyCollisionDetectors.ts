@@ -10,7 +10,7 @@ import { IPlayerProps } from "../../interface/IPlayerProps";
 import { TileDefinitions } from "../../level-settings/TileDefinitions";
 import { gameAssets, gameState } from "../../state/gameState";
 import { DebrisHelper } from "../../utils/debrisHelper";
-import { isSolidTile, getTileProperties, getSurroundingTiles } from "../../utils/tileBlockHelpers";
+import { isSolidTile, getTileProperties, getSurroundingTiles } from "../../utils/tileEntityHelpers";
 import { LevelEntity } from "../level/levelEntity";
 import { EnemyEntity } from "./enemyEntity";
 

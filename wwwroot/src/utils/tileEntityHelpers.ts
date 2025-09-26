@@ -133,6 +133,29 @@ export const getTileXY = (tileMap: number[][], row: number, col: number): IPoint
 };
 
 
+export interface IRowCol {
+    row: number;
+    col: number;
+}
+
+/**
+ * Converts world coordinates (x, y) into tile map coordinates (row, col).
+ * This is the reverse of the getTileXY function.
+ * @param {IPoint2D} pos - The world position to convert.
+ * @param {number} tileWidth - The width of a single tile in pixels.
+ * @param {number} tileHeight - The height of a single tile in pixels.
+ * @returns {IRowCol} The row and column of the tile at the given position.
+ */
+export const getTileRowCol = (pos: IPoint2D, tileWidth: number, tileHeight: number): IRowCol => {
+    // We simply use Math.floor to get the integer row and column from the floating-point coordinates.
+    // This assumes a grid-like structure where each tile occupies a full cell.
+    const col = Math.floor(pos.x / tileWidth);
+    const row = Math.floor(pos.y / tileHeight);
+    
+    return { row, col };
+};
+
+
 /**
  * Determines which tiles are visible within the viewport.
  * @param props The level properties.

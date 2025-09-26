@@ -9,6 +9,7 @@ import { IGameEntity } from "./IGameEntity";
 import { IViewport } from "./IViewport";
 import { IPlayerProps } from "./IPlayerProps";
 import { IParticle } from "./IParticle";
+import { LevelEntity } from "../entities/level/levelEntity";
 
 
 export interface IGameState {
@@ -33,7 +34,7 @@ export interface IGameState {
     addEntity: (entity:IGameEntity<any>) => void; 
     
 
-    
+    get currentLevel(): LevelEntity
 
     particles:IParticle[];
 

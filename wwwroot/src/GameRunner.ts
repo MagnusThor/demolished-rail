@@ -13,7 +13,7 @@ import { ILevelProps } from "./interface/ILevelProps";
 import { IPlayerProps } from "./interface/IPlayerProps";
 import { Positioned } from "./interface/IPositioned";
 import { LEVEL_SAMPLE, DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "./level-settings/LEVEL_SAMPLE";
-import { getTilesByType, getTileXY, calculateWorldDimensions, getTileProperties, calculateTileCoordinates } from "./utils/tileBlockHelpers";
+import { getTilesByType, getTileXY, calculateWorldDimensions, getTileProperties, calculateTileCoordinates } from "./utils/tileEntityHelpers";
 import { createLevelEntities } from "./level-settings/LevelFactory";
 import { IEnemyProps } from "./interface/IEnemyProps";
 

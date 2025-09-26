@@ -5,7 +5,7 @@ import { LevelEntity  } from "../entities/level/levelEntity";
 import { IGameEntity } from "../interface/IGameEntity";
 import { ILevelProps } from "../interface/ILevelProps";
 import { Positioned } from "../interface/IPositioned";
-import { getTilesByType, getTileXY } from "../utils/tileBlockHelpers";
+import { getTilesByType, getTileXY } from "../utils/tileEntityHelpers";
 import { TileDefinitions } from "./TileDefinitions";
 
 

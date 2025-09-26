@@ -9,7 +9,7 @@ import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlatformProps } from "../../interface/IPlatformProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
 import { Positioned } from "../../interface/IPositioned";
-import { findClosestSolidTile, getTileProperties } from "../../utils/tileBlockHelpers";
+import { findClosestSolidTile, getTileProperties } from "../../utils/tileEntityHelpers";
 import { GameEntity } from "../GameEntity";
 
 

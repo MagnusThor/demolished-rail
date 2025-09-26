@@ -3,7 +3,7 @@ import { CollisionAxis } from "../../../enums/CollisionAxis";
 import { IBoundingCircle } from "../../../interface/IBoundingBox";
 import { ICollisionResult } from "../../../interface/ICollisionResult";
 import { gameState } from "../../../state/gameState";
-import { getTileProperties, getTileImageDataAndProps } from "../../../utils/tileBlockHelpers";
+import { getTileProperties, getTileImageDataAndProps } from "../../../utils/tileEntityHelpers";
 import { CollectibleEntity } from "../../collectible/CollectibleEntity";
 import { LadderEntity } from "../../ladderEntity";
 import { PlatformEntity } from "../../platform/PlatformEntity";

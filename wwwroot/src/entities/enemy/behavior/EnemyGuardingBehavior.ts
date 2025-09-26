@@ -3,7 +3,7 @@ import { IBoundingBox } from "../../../interface/IBoundingBox";
 import { IGameEntityBehavior } from "../../../interface/IGameEntity";
 import { TileDefinitions } from "../../../level-settings/TileDefinitions";
 import { gameState } from "../../../state/gameState";
-import { getSurroundingTiles, isSolidTile, getTileProperties } from "../../../utils/tileBlockHelpers";
+import { getSurroundingTiles, isSolidTile, getTileProperties } from "../../../utils/tileEntityHelpers";
 import { LevelEntity } from "../../level/levelEntity";
 import { EnemyEntity } from "../enemyEntity";
 

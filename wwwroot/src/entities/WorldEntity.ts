@@ -149,7 +149,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
 
         // Step 1: Draw the background tiles first.
         if (tileEntity && tileEntity.onDrawBackground) {
-            tileEntity.onDrawBackground(tileEntity, canvasHelper);
+            tileEntity.onDrawBackground(tileEntity, canvasHelper,ts);
         }
 
         // Step 2: Draw all other entities in their correct zIndex order.
@@ -164,7 +164,7 @@ export class WorldEntity extends Canvas2DEntity<IWorldProps> implements IGameEnt
 
         // Step 3: Draw the foreground tiles last.
         if (tileEntity && tileEntity.onDrawForeground) {
-            tileEntity.onDrawForeground(tileEntity, canvasHelper);
+            tileEntity.onDrawForeground(tileEntity, canvasHelper,ts);
         }
 
         // draw particle if they exists;

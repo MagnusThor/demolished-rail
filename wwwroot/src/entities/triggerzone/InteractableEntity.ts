@@ -3,7 +3,7 @@ import { CollisionAxis } from "../../enums/CollisionAxis";
 import { ICollisionResult } from "../../interface/ICollisionResult";
 import { IGameEntityBase, IGameEntity } from "../../interface/IGameEntity";
 import { gameState } from "../../state/gameState";
-import { getSurroundingTiles, getTileProperties } from "../../utils/tileBlockHelpers";
+import { getSurroundingTiles, getTileProperties } from "../../utils/tileEntityHelpers";
 import { GameEntity } from "../GameEntity";
 import { LevelEntity } from "../level/levelEntity";
 import { ExtendedCollisionHelper } from "../player/collisiondetectors/extendedCollitionHelper";

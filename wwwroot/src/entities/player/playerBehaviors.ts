@@ -3,7 +3,7 @@ import { IGameEntityBehavior } from "../../interface/IGameEntity";
 import { IPlayerBehavior } from "../../interface/IPlayerProps";
 import { Positioned } from "../../interface/IPositioned";
 import { gameState } from "../../state/gameState";
-import { getSurroundingTiles, getTileProperties, getTileXY } from "../../utils/tileBlockHelpers";
+import { getSurroundingTiles, getTileProperties, getTileXY } from "../../utils/tileEntityHelpers";
 import { LevelEntity } from "../level/levelEntity";
 import { RopeEntity } from "../platform/RopeEntity";
 import { InteractableEntity } from "../triggerzone/InteractableEntity";
