@@ -1,0 +1,58 @@
+  /* Set font and ensure the app is centered */
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .designer-container { max-width: 1400px; margin: 2rem auto; padding: 1rem; }
+        
+        /* Fixed viewport canvas size */
+        #design-canvas {
+            border: 4px solid #4f46e5;
+            cursor: crosshair;
+            /* Prevent default browser behavior on drag */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            touch-action: none;
+            background-color: #1e293b;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Palette Styling */
+        .tile-option {
+            min-width: 32px;
+            min-height: 32px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.1s;
+        }
+    
+        .tile-option:hover {
+            transform: scale(1.1);
+        }
+        .tile-option.selected {
+            border-color: #facc15;
+            border-width: 4px;
+            box-shadow: 0 0 10px #facc15;
+            transform: scale(1.1);
+        }
+
+        .tile-option img {
+            width: 100%;
+        }
+
+        .resize-control button {
+            transition: all 0.2s;
+        }
+        .resize-control button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Hide scrollbars but allow scrolling for touch accessibility */
+        .palette-scroll {
+             overflow-x: auto;
+             overflow-y: hidden;
+             white-space: nowrap;
+             padding-bottom: 1rem; /* Space for the scroll bar */
+        }
+
+        

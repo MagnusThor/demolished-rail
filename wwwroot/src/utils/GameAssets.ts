@@ -85,7 +85,8 @@ export class GameAssetsManager {
         srcX: number,
         srcY: number,
         srcWidth: number,
-        srcHeight: number, createImageData: boolean
+        srcHeight: number, createImageData: boolean,
+
     ): IGameTexture | undefined {
         const asset = this.getAsset(assetKey);
 
@@ -94,9 +95,36 @@ export class GameAssetsManager {
             return undefined;
         }
 
+
+
         const textureKey = `${assetKey}_${srcX}_${srcY}_${srcWidth}_${srcHeight}`;
 
+        console.log(`${assetKey}_${srcX}_${srcY}_${srcWidth}_${srcHeight}`);
+
+
+        const canvas = document.createElement("canvas");
+        canvas.width = srcWidth;
+        canvas.height = srcHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+            console.error("Could not get 2D context.");
+            return undefined;
+        }
+
+        // Draw cropped part of the source image into canvas
+        ctx.drawImage(
+            asset.src,
+            srcX, srcY, srcWidth, srcHeight, // source rect
+            0, 0, srcWidth, srcHeight        // destination rect
+        );
+
+        const generatedTexture = new Image();
+    generatedTexture.src = canvas.toDataURL(); // base64 encoded PNG
+
+
         const properties: IGameTexture = {
+
+           generatedTexture,
             texture: asset,
             key: textureKey,
             imageData:

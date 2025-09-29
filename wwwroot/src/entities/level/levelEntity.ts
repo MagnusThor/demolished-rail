@@ -67,7 +67,7 @@ export class LevelEntity extends GameEntity<ILevelProps> {
     onInit? = (self: IGameEntity<ILevelProps>) => {
         const tileTypes = Object.keys(TileDefinitions);
         for (const key of tileTypes) {
-            const tileTypeProperties = TileDefinitions[key];
+            const tileTypeProperties = TileDefinitions[parseInt(key)];
             if (tileTypeProperties.texture && tileTypeProperties.isSolid) {
                 const texture = self.props.textures![tileTypeProperties.texture!];
 

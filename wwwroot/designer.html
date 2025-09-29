@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Tile-Based Level Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="assets/css/designer.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+
+    <div class="designer-container rounded-xl bg-gray-800 shadow-2xl">
+        <h1 class="text-3xl font-bold text-indigo-400 mb-6">Level Designer Prototype</h1>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+
+            <!-- Left Column: Canvas and Controls -->
+            <div class="flex-grow">
+                <!-- Canvas Display Area -->
+                <div class="relative bg-gray-900 p-4 rounded-xl">
+                    <canvas id="design-canvas" class="rounded-lg"></canvas>
+                    <div class="absolute top-6 right-6 bg-gray-700 text-sm font-mono px-3 py-1 rounded-full shadow-lg">
+                        <span id="dims-display">0 x 0</span>
+                    </div>
+                </div>
+
+                <!-- Panning Instructions -->
+                <p class="text-sm text-gray-400 mt-3">
+                    Use <span class="font-mono bg-gray-700 px-1 rounded">W/A/S/D</span> or <span
+                        class="font-mono bg-gray-700 px-1 rounded">Arrow Keys</span> to pan the map. Left click to
+                    paint.
+                </p>
+
+                <!-- Action Buttons -->
+                <div class="mt-6 flex justify-between gap-4">
+                    <button id="save-button"
+                        class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition duration-150">
+                        Export Level (JSON)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Palette and Dimensions -->
+            <div class="w-full lg:w-96 space-y-6">
+
+                <!-- Selected Tile -->
+                <div class="bg-gray-700 p-4 rounded-lg shadow-lg">
+                    <h2 class="text-xl font-semibold mb-2 text-yellow-300">Selected Tile</h2>
+                    <div class="flex items-center gap-4">
+                        <div id="selected-tile-display"
+                            class="w-10 h-10 rounded-md border-4 border-yellow-300 shadow-inner"></div>
+                        <span class="text-lg font-medium" id="selected-tile-name">Empty</span>
+                    </div>
+                </div>
+
+                <!-- Tile Palette -->
+                <div class="bg-gray-700 p-4 rounded-lg shadow-lg">
+                    <h2 class="text-xl font-semibold mb-3 text-cyan-300">Tile Palette</h2>
+                    <div id="palette-options" class="flex gap-3 palette-scroll">
+                        <!-- Tile options will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Resize Controls -->
+                <div class="bg-gray-700 p-4 rounded-lg shadow-lg">
+                    <h2 class="text-xl font-semibold mb-3 text-purple-300">Resize Map (by 5 tiles)</h2>
+
+                    <div class="resize-control resize-control-row space-y-2">
+                        <button data-direction="up" data-count="5"
+                            class="w-full py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium shadow-md">
+                            +5 Rows Up (Prepend)
+                        </button>
+                    </div>
+
+                    <div class="flex my-2 gap-2 resize-control resize-control-col">
+                        <button data-direction="left" data-count="5"
+                            class="flex-1 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium shadow-md">
+                            +5 Cols Left
+                        </button>
+                        <button data-direction="right" data-count="5"
+                            class="flex-1 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium shadow-md">
+                            +5 Cols Right
+                        </button>
+                    </div>
+
+                    <div class="resize-control resize-control-row space-y-2">
+                        <button data-direction="down" data-count="5"
+                            class="w-full py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium shadow-md">
+                            +5 Rows Down (Append)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <script src="js/designer-bundle.js"></script>
+
+
+
+</body>

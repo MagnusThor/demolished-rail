@@ -19,7 +19,7 @@ export function createLevelEntities(levelProps: ILevelProps): IGameEntity<any>[]
 
 
     Object.keys(TileDefinitions).forEach(key => {
-        const definition = TileDefinitions[key];
+        const definition = TileDefinitions[parseInt(key)];
         const tilesOfType = getTilesByType(levelProps.tileMap, parseInt(key));
 
         if (definition && definition.creator) {

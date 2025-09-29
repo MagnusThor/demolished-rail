@@ -42,6 +42,9 @@ export interface ITileSettings {
 }
 
     export interface ITileProps {
+        id:number
+        name?: string,
+        color?:string,
         width: number
         height: number
         texture?: string
