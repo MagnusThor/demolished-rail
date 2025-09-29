@@ -2,7 +2,7 @@ import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { IGameEntity, IGameEntityBase } from "../../interface/IGameEntity";
 import { IPositioned, Positioned } from "../../interface/IPositioned";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
 import { GameEntity } from "../GameEntity";
 
 export interface ISmokeRingProps extends IGameEntityBase {
@@ -43,7 +43,7 @@ export class SmokeRingEntity extends GameEntity<ISmokeRingProps> implements IGam
 
         // If the ring's lifespan is over, mark it for removal
         if (progress >= 1) {
-            gameState.removeEntityByUUID(self.uuid);
+            GameState.removeEntityByUUID(self.uuid);
         }
 
         // Gradually shrink and fade the ring

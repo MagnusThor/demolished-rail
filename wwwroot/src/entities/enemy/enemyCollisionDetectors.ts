@@ -7,8 +7,9 @@ import { IEnemyProps } from "../../interface/IEnemyProps";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
-import { TileDefinitions } from "../../level-settings/TileDefinitions";
-import { gameAssets, gameState } from "../../state/gameState";
+import { TileDefinitions } from "../../factory/TileDefinitions";
+import { GameAssets } from "../../global/GameAssets";
+import { GameState } from "../../global/GameState";
 import { DebrisHelper } from "../../utils/debrisHelper";
 import { isSolidTile, getTileProperties, getSurroundingTiles } from "../../utils/tileEntityHelpers";
 import { LevelEntity } from "../level/levelEntity";
@@ -30,7 +31,7 @@ const generateDebrisFromEnemy = (enemy: EnemyEntity) => {
     const centerX = enemy.props.positioned.x + enemy.props.positioned.width / 2;
     const centerY = enemy.props.positioned.y + enemy.props.positioned.height / 2;
     const particleCanvas = DebrisHelper.generateDebris(sourceImage, 25,centerX,centerY,0.25,1);
-    gameState.particles.push(...particleCanvas);  
+    GameState.particles.push(...particleCanvas);  
 };
 
 
@@ -53,10 +54,10 @@ export const enemyCollisionDetectors = [
         },
         onCollision: (enemy: EnemyEntity, collisionData: ICollisionResult) => {
             enemy.props.health.health -= collisionData.targetEntity!.props.health.damage;
-            gameState.removeEntityByUUID(collisionData.targetEntity!.uuid);
+            GameState.removeEntityByUUID(collisionData.targetEntity!.uuid);
             if (enemy.props.health.health <= 0) {
                 generateDebrisFromEnemy(enemy);
-                gameState.removeEntityByUUID(enemy.uuid);
+                GameState.removeEntityByUUID(enemy.uuid);
 
             }
         }

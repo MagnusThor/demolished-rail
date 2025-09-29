@@ -1,13 +1,13 @@
 import { ISpriteAnimation } from "../../interface/ISpriteAnimation";
-import { gameAssets } from "../../state/gameState";
+import { GameAssets } from "../../global/GameAssets";
 
 
 
 export const enemyAnimations = (): { [key: string]: ISpriteAnimation; } => {
 
-    const spriteSheetIdle = gameAssets.getSpriteSheet("enemy-1-idle", 128, 128, 10, 1)!;
-    const spriteSheetAttack = gameAssets.getSpriteSheet("enemy-1-attack", 128, 128, 4, 1)!;
-     const spriteSheetWalk = gameAssets.getSpriteSheet("enemy-1-walk", 128, 128, 10, 1)!;
+    const spriteSheetIdle = GameAssets.getSpriteSheet("enemy-1-idle", 128, 128, 10, 1)!;
+    const spriteSheetAttack = GameAssets.getSpriteSheet("enemy-1-attack", 128, 128, 4, 1)!;
+     const spriteSheetWalk = GameAssets.getSpriteSheet("enemy-1-walk", 128, 128, 10, 1)!;
 
     const animations: { [key: string]: ISpriteAnimation; } = {
          "idle": {

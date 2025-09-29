@@ -11,69 +11,45 @@ import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
 import { IGameEntity } from "../interface/IGameEntity";
 import { ITileProps, ITileSettings } from "../interface/ILevelProps";
 import { Positioned } from "../interface/IPositioned";
-import { gameState } from "../state/gameState";
+import { GameState } from "../global/GameState";
 import { getTileRowCol, getTileXY } from "../utils/tileEntityHelpers";
-import { bridgeCreatorSettings } from "./bridgeCreatorSettings";
-import { DoorTogglerCreator } from "./DoorTogglerCreator";
-import { LEVEL_SAMPLE } from "./LEVEL_SAMPLE";
-import { textCreatorSettings } from "./textCreatorSettings";
+import { bridgeCreator } from "../creators/bridgeCreator";
+import { doorTogglerCreator } from "../creators/doorTogglerCreator";
+import { getSettigsBag } from "./LevelGraph";
+
+import { textCreatorSettings } from "../creators/textCreatorS";
 
 
-export function findPosition(level: string | any[], target: any) {
-    for (let y = 0; y < level.length; y++) {
-        for (let x = 0; x < level[y].length; x++) {
-            if (level[y][x] === target) {
-                return { x, y };
-            }
-        }
-    }
-    return null; // not found
-}
-
-export function findAllPositions(level: string | any[], target: number) {
-    const results = [];
-    for (let y = 0; y < level.length; y++) {
-        for (let x = 0; x < level[y].length; x++) {
-            if (level[y][x] === target) {
-                results.push({ x, y });
-            }
-        }
-    }
-    return results;
-}
 
 
-export const TileSettingBags: ITileSettings[] = [
-    textCreatorSettings({ 
-        x: 288,
-        y: 224,
-        textId: "welcome_message"
-    }),
-    bridgeCreatorSettings({
-        x: 1056,
-        y: 320,
-        direction: "right", // Can be "left" or "right"
-        bridgeTileIndex: 0x01, // The tile ID for the bridge (e.g., a wood plank tile)
-        wallTileIndex: 1, // The tile ID for a solid wall, to know when to stop
-    }),
-    DoorTogglerCreator({
-        x: 192,
-        y: 320,
-        doorX: 148,
-        doorY: 320,
-        closedTileType: 0x03,
-        openTileType: 0x00,
-        durationInSeconds: 3,
-    }),
-    // You would also have other properties here, like x, y, etc.
+// export const TileSettingBags: ITileSettings[] = [
+//     textCreatorSettings({ 
+//         x: 288,
+//         y: 224,
+//         textId: "welcome_message"
+//     }),
+//     bridgeCreator({
+//         x: 1056,
+//         y: 320,
+//         direction: "right", // Can be "left" or "right"
+//         bridgeTileIndex: 0x01, // The tile ID for the bridge (e.g., a wood plank tile)
+//         wallTileIndex: 1, // The tile ID for a solid wall, to know when to stop
+//     }),
+//     doorTogglerCreator({
+//         x: 192,
+//         y: 320,
+//         doorX: 148,
+//         doorY: 320,
+//         closedTileType: 0x03,
+//         openTileType: 0x00,
+//         durationInSeconds: 3,
+//     }),
+//     // You would also have other properties here, like x, y, etc.
 
 
-]
+// ]
 
-export function getSettigsBag(x: number, y: number) {
-    return TileSettingBags.find(pre => pre.x === x && pre.y === y);
 
-}
 
 
 
@@ -299,7 +275,7 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
             //const {row,col} = getTileRowCol(tile.x,tile.y,32);
 
 
-            const tileSettings = getSettigsBag(x, y);
+            const tileSettings = getSettigsBag(levelProps.level.settings,x, y);
 
             console.log(tileSettings);
 
@@ -309,7 +285,7 @@ export const TileDefinitions: { [key: string]: ITileProps; } = {
                 isInitialized: false,
                 onTrigger: (triggerZone) => {
                     if (tileSettings?.activate)
-                        tileSettings.activate(triggerZone, gameState.player!)
+                        tileSettings.activate(triggerZone, GameState.player!)
 
                 },
                 onLeave: (triggerZone) => {

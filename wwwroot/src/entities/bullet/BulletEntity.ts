@@ -12,33 +12,42 @@ import { GameEntity } from "../GameEntity";
 import { IEnemyProps } from "../../interface/IEnemyProps";
 import { StateHelper } from "../StateHelper";
 import { EnemyEntity } from "../enemy/enemyEntity";
+import { LevelEntity } from "../level/levelEntity"; // Ensure this import is available for LevelEntity type
 
 const BULLET_SPEED = 10;
 
-export class BulletEntity extends GameEntity<IBulletProps>  {
+// Type assertion for accessing the LevelEntity's internal collision map
+// since IGameEntity<ILevelProps> does not expose it directly.
+type LevelEntityWithMap = IGameEntity<ILevelProps> & { 
+    logicalCollisionMap: { type: number, x: number, y: number, row: number, col: number }[][], 
+    tileWidth: number, 
+    tileHeight: number 
+};
+
+export class BulletEntity extends GameEntity<IBulletProps> {
     
     constructor(startX: number, startY: number, direction: string) {
-         const props = {
-                health: {
-                    health: 100,
-                    damage: 10
-                },
-                positioned: new Positioned(startX, startY, 8, 8),
-                velX: direction === "right" ? BULLET_SPEED : -BULLET_SPEED,
-                velY: 0,
-                isAlive: true,
-                lifeTime: 2000,
-                isInitialized: true,
-                zIndex:1,
-                states:{},
-                isCollidable: true
-            }
+        const props = {
+            health: {
+                health: 100,
+                damage: 10
+            },
+            positioned: new Positioned(startX, startY, 8, 8),
+            velX: direction === "right" ? BULLET_SPEED : -BULLET_SPEED,
+            velY: 0,
+            isAlive: true,
+            lifeTime: 2000,
+            isInitialized: true,
+            zIndex: 1,
+            states: {},
+            isCollidable: true
+        }
 
         super(
             "bulletBlock",
-            props   
+            props  
         );
-       
+        
         
         this.collisionDetectors = [
             {
@@ -82,10 +91,13 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
     }
     
     onUpdate? =(self: IGameEntity<IBulletProps>, timeStamp: number): void => {
+        // Simple linear movement
         self.props.positioned.x += self.props.velX;
+        
+        // Decrement life time and check for death
         self.props.lifeTime -= timeStamp;
         if (self.props.lifeTime <= 0) {
-            self.props.isAlive = false;
+       //     self.props.isAlive = false;
         }
     }
     
@@ -96,6 +108,7 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
         const props = self.props;
         const ctx = helper.ctx;
         
+        // Draw the bullet as a small filled rectangle
         ctx.fillStyle = "#FFC107";
         ctx.fillRect(
             props.positioned.x,
@@ -107,51 +120,73 @@ export class BulletEntity extends GameEntity<IBulletProps>  {
     
     public onInit(): void { }
     
+    /**
+     * Detects collision with solid tiles in the level map.
+     * Rewritten to efficiently check only the tiles the bullet currently overlaps
+     * by using the LevelEntity's pre-calculated logicalCollisionMap.
+     */
     private detectTileCollision(bulletEntity: BulletEntity, tileEntity: IGameEntity<ILevelProps>): ICollisionResult[] | false {
 
         const bulletProps = bulletEntity.props;
-
-        const tileProps = tileEntity.props;
         const collisionResults = new Array<ICollisionResult>();
         const bulletBBox = bulletProps.positioned.getBoundingBox!();
 
-        const bulletTileX = Math.floor(bulletProps.positioned.x / tileProps.tileWidth);
-        const bulletTileY = Math.floor(bulletProps.positioned.y / tileProps.tileHeight);
-        
-        // Dynamically adjust the collision check radius based on bullet speed
-        const checkRadius = Math.ceil(Math.abs(bulletProps.velX) / tileProps.tileWidth) + 1;
+        // Safely cast the IGameEntity to the expected LevelEntity type to access its internal maps
+        const levelEntity = tileEntity as unknown as LevelEntityWithMap; 
 
-        for (let row = bulletTileY - checkRadius; row <= bulletTileY + checkRadius; row++) {
-            for (let col = bulletTileX - checkRadius; col <= bulletTileX + checkRadius; col++) {
-                if (row >= 0 && row < tileProps.tileMap.length && col >= 0 && col < tileProps.tileMap[0].length) {
-                    const tileType = tileProps.tileMap[row][col];
-                    if (isSolidTile(tileType)) {
-                        const tileX = col * tileProps.tileWidth;
-                        const tileY = row * tileProps.tileHeight;
+        // Ensure we have access to the collision data
+        if (!levelEntity.logicalCollisionMap) {
+            console.error("LevelEntity logicalCollisionMap not initialized.");
+            return false;
+        }
 
+        const tileWidth = levelEntity.tileWidth;
+        const tileHeight = levelEntity.tileHeight;
+
+        // Determine the range of tile columns and rows the bullet overlaps with its current position
+        const startCol = Math.floor(bulletBBox.x / tileWidth);
+        const endCol = Math.floor((bulletBBox.x + bulletBBox.width) / tileWidth);
+        const startRow = Math.floor(bulletBBox.y / tileHeight);
+        const endRow = Math.floor((bulletBBox.y + bulletBBox.height) / tileHeight);
+
+        // Iterate through all potentially overlapping tiles
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                
+                // Check map bounds
+                if (row >= 0 && row < levelEntity.logicalCollisionMap.length && col >= 0 && col < levelEntity.logicalCollisionMap[0].length) {
+                    
+                    const collisionTile = levelEntity.logicalCollisionMap[row][col];
+                    
+                    // Check if the tile is marked as solid (not null and not empty/0x00)
+                    if (collisionTile && collisionTile.type !== 0x00) { 
+                        
                         const tileBBox: IBoundingBox = {
-                            x: tileX,
-                            y: tileY,
-                            width: tileProps.tileWidth,
-                            height: tileProps.tileHeight
+                            x: collisionTile.x,
+                            y: collisionTile.y,
+                            width: tileWidth,
+                            height: tileHeight
                         };
-
+                        
+                        // Perform the final precise collision check against the solid tile's bounding box
                         if (CollisionHelper.AABBColliding(bulletBBox, tileBBox)) {
                             collisionResults.push({
-                                x: tileX, y: tileY, width: tileProps.tileWidth, height: tileProps.tileHeight, axis: CollisionAxis.X,
+                                x: tileBBox.x, y: tileBBox.y, width: tileBBox.width, height: tileBBox.height, axis: CollisionAxis.X,
                                 targetEntity: tileEntity,
                             });
+                            // Return immediately upon first collision to destroy the bullet.
+                            return collisionResults; 
                         }
                     }
                 }
             }
         }
-        return collisionResults;
+        return collisionResults.length > 0 ? collisionResults : false;
     }
 
     private handleTileCollision(bulletEntity: BulletEntity, collisionData: ICollisionResult): void {
 
-        bulletEntity.props.isAlive = false;
+        //bulletEntity.props.isAlive = false;
         
     }
 }

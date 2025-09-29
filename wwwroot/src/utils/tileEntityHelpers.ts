@@ -3,8 +3,8 @@ import { IBoundingBox } from "../interface/IBoundingBox";
 import { IGameEntity } from "../interface/IGameEntity";
 import { IIndexedTile } from "../interface/IIndexedTile";
 import { ILevelProps, ITileProps } from "../interface/ILevelProps";
-import { DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "../level-settings/LEVEL_SAMPLE";
-import { TileDefinitions } from "../level-settings/TileDefinitions";
+import { DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "../factory/LevelGraph";
+import { TileDefinitions } from "../factory/TileDefinitions";
 import { isEntityInView } from "./collitionHelpers";
 
 

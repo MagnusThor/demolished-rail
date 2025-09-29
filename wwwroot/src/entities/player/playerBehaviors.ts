@@ -2,7 +2,7 @@ import { Point2D } from "../../../../src";
 import { IGameEntityBehavior } from "../../interface/IGameEntity";
 import { IPlayerBehavior } from "../../interface/IPlayerProps";
 import { Positioned } from "../../interface/IPositioned";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
 import { getSurroundingTiles, getTileProperties, getTileXY } from "../../utils/tileEntityHelpers";
 import { LevelEntity } from "../level/levelEntity";
 import { RopeEntity } from "../platform/RopeEntity";
@@ -32,8 +32,8 @@ export const CollisionBehavior: IPlayerBehavior = {
     criteria: (player:PlayerEntity) => true,
     onUpdate: (player:PlayerEntity) => {
         const props = player.props;
-        const gameEntities = gameState.entities;       
-        const levelEntity = gameState.findEntities("tileBlock")[0] as LevelEntity;        
+        const gameEntities = GameState.entities;       
+        const levelEntity = GameState.findEntities("tileBlock")[0] as LevelEntity;        
         // Calculate the player's potential next position
         const nextX = props.positioned.x + props.velX;
         const nextY = props.positioned.y + props.velY

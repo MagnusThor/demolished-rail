@@ -1,4 +1,4 @@
-import { gameAssets } from "../../../state/gameState";
+import { GameAssets } from "../../../global/GameAssets";
 import { ISpriteAnimation } from "../../../interface/ISpriteAnimation";
 
 export const playerAnimations = (): { [key: string]: ISpriteAnimation; } => {
@@ -9,7 +9,7 @@ export const playerAnimations = (): { [key: string]: ISpriteAnimation; } => {
             frameRate: 10,
             currentFrameIndex: 0,
             lastFrameChangeTime: 0,
-            spriteSheet: gameAssets.getSpriteSheet("player_walk", 32, 32, 3, 2)!
+            spriteSheet: GameAssets.getSpriteSheet("player_walk", 32, 32, 3, 2)!
         },
         idle: {
             name: 'idle',
@@ -17,7 +17,7 @@ export const playerAnimations = (): { [key: string]: ISpriteAnimation; } => {
             frameRate: 1, // Can be a slow rate or 0
             currentFrameIndex: 0,
             lastFrameChangeTime: 0,
-            spriteSheet: gameAssets.getSpriteSheet("player_idle", 32, 32, 3, 2)!
+            spriteSheet: GameAssets.getSpriteSheet("player_idle", 32, 32, 3, 2)!
         },
         jump: {
             name: 'jump',
@@ -25,7 +25,7 @@ export const playerAnimations = (): { [key: string]: ISpriteAnimation; } => {
             frameRate: 10,
             currentFrameIndex: 0,
             lastFrameChangeTime: 0,
-            spriteSheet: gameAssets.getSpriteSheet("player_jump", 32, 32, 3, 3)!
+            spriteSheet: GameAssets.getSpriteSheet("player_jump", 32, 32, 3, 3)!
         },
     };
 

@@ -4,7 +4,7 @@ import { IGameState } from "../interface/IGameState";
 import { ICollidable, ICollisionDetector } from "../interface/ICollisionDetector";
 import { CollisionHelper } from "../../../src/Engine/Helpers/CollisionHelper";
 import { IPositioned } from "../interface/IPositioned";
-import { gameState } from "../state/gameState";
+import { GameState } from "../global/GameState";
 
 /**
  * Checks if an entity's bounding box is within the viewport, plus an optional buffer.
@@ -45,7 +45,7 @@ export const isEntityInView = (
 export const runCollitionDetectors = <T>(
         entity: IGameEntity<any>,detectors: ICollisionDetector[],_gameState?:IGameState,) => {
 
-        if(!_gameState) _gameState = gameState; // no state provided use global
+        if(!_gameState) _gameState = GameState; // no state provided use global
 
         detectors.forEach(detector => {
             const targetEntities =  getFilteredAndSortedEntities(_gameState,entity, detector.targetName)

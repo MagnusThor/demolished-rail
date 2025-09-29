@@ -1,6 +1,6 @@
 import { Canvas2DEntity, ITexture } from "../../../src";
 import { IGameTexture } from "../interface/ITexture";
-import { gameAssets } from "../state/gameState";
+import { GameAssets } from "../global/GameAssets";
 
 export class BackgroundEntity extends Canvas2DEntity<{}> {
     private layers: { texture: IGameTexture; scrollFactor: number; }[];
@@ -26,9 +26,9 @@ export class BackgroundEntity extends Canvas2DEntity<{}> {
 
         // Define the parallax layers with the loaded textures and scroll speeds
         this.layers = [
-            { texture: gameAssets.createTexture("backgroundlayer_1",0,0,576,324,false)!, scrollFactor: 0.1 },
-            { texture: gameAssets.createTexture("backgroundlayer_2",0,0,576,324,false)!, scrollFactor: 0.3 },
-            { texture: gameAssets.createTexture("backgroundlayer_3",0,0,576,324,false)!, scrollFactor: 0.5 },
+            { texture: GameAssets.createTexture("backgroundlayer_1",0,0,576,324,false)!, scrollFactor: 0.1 },
+            { texture: GameAssets.createTexture("backgroundlayer_2",0,0,576,324,false)!, scrollFactor: 0.3 },
+            { texture: GameAssets.createTexture("backgroundlayer_3",0,0,576,324,false)!, scrollFactor: 0.5 },
         ];
     }
 

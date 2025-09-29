@@ -4,8 +4,8 @@ import { IGameEntity } from "../../interface/IGameEntity";
 import { IIndexedTile } from "../../interface/IIndexedTile";
 import { IAnimatedTileInstance, ILevelProps } from "../../interface/ILevelProps";
 import { ISpriteAnimation } from "../../interface/ISpriteAnimation";
-import { TileDefinitions } from "../../level-settings/TileDefinitions";
-import { gameState } from "../../state/gameState";
+import { TileDefinitions } from "../../factory/TileDefinitions";
+import { GameState } from "../../global/GameState";
 import { calculateTileCoordinates, isSolidTile, getTileProperties, determineVisibleTiles } from "../../utils/tileEntityHelpers";
 import { GameEntity } from "../GameEntity";
 import { StateHelper } from "../StateHelper";
@@ -149,7 +149,7 @@ export class LevelEntity extends GameEntity<ILevelProps> {
     }
 
     onUpdate? = (self: IGameEntity<ILevelProps>, timeStamp: number) => {
-        const viewport = gameState.viewport;
+        const viewport = GameState.viewport;
     };
 
     /**
@@ -162,7 +162,7 @@ export class LevelEntity extends GameEntity<ILevelProps> {
     private drawAnimatedTiles(self: IGameEntity<ILevelProps>, helper: CanvasHelper, tilesToDraw: IAnimatedTileInstance[], timeStamp: number) {
         const props = self.props;
         const ctx = helper.ctx;
-        const viewport = gameState.viewport;
+        const viewport = GameState.viewport;
         const screenWidth = viewport.viewportWidth;
         const screenHeight = viewport.viewportHeight;
 
@@ -210,7 +210,7 @@ export class LevelEntity extends GameEntity<ILevelProps> {
     private drawTiles(self: IGameEntity<ILevelProps>, helper: CanvasHelper, tilesToDraw: IIndexedTile[]) {
         const props = self.props;
         const ctx = helper.ctx;
-        const viewport = gameState.viewport;
+        const viewport = GameState.viewport;
         const screenWidth = viewport.viewportWidth;
         const screenHeight = viewport.viewportHeight;
 

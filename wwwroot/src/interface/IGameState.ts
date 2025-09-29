@@ -4,7 +4,7 @@
  * This is the central repository for all game-wide data.
  */
 
-import { InputHelper } from "../../../src";
+import { InputHelper, Sequence } from "../../../src";
 import { IGameEntity } from "./IGameEntity";
 import { IViewport } from "./IViewport";
 import { IPlayerProps } from "./IPlayerProps";
@@ -13,29 +13,26 @@ import { LevelEntity } from "../entities/level/levelEntity";
 
 
 export interface IGameState {
-    showImageDataOverlay:boolean
+
+ 
+    sequence?: Sequence,  
     ctx: CanvasRenderingContext2D | undefined
-    // The game's viewport, controlling what part of the world is visible on screen
     viewport: IViewport;
-
     input: InputHelper | undefined
-
     gameCanvas?: HTMLCanvasElement
-
-    player?: IGameEntity<IPlayerProps>; // The player entity in the game
-    
-    worldWidth: number; // The width of the game world
-    worldHeight: number; // The height of the game world
+    player?: IGameEntity<IPlayerProps>; 
+    worldWidth: number; 
+    worldHeight: number;
 
     entities: IGameEntity<any>[];
+    particles:IParticle[];
 
     findEntities(key: string): IGameEntity<any>[]; 
     removeEntityByUUID: (uuid:string) => void; 
-    addEntity: (entity:IGameEntity<any>) => void; 
-    
+    addEntity: (entity:IGameEntity<any>) => void;     
 
     get currentLevel(): LevelEntity
 
-    particles:IParticle[];
+
 
 }

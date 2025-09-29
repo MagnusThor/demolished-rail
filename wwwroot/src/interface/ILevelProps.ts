@@ -6,6 +6,7 @@ import { IPositioned } from "./IPositioned";
 import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
 import { ISpriteAnimation } from "./ISpriteAnimation";
+import { ILevelGraph } from "../factory/LevelGraph";
 
 
 
@@ -19,6 +20,7 @@ export interface ILevelProps extends IGameEntityBase  {
     textures?: {
         [key:string]: IGameTexture
     },
+    level: ILevelGraph
 
 
     

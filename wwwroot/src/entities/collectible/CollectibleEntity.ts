@@ -1,7 +1,8 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { CollisionHelper } from "../../../../src/Engine/Helpers/CollisionHelper";
 import { CollisionAxis } from "../../enums/CollisionAxis";
-import { gameAssets, gameState } from "../../state/gameState";
+import { GameAssets } from "../../global/GameAssets";
+import { GameState } from "../../global/GameState";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { ICollectibleProps } from "../../interface/ICollectibleProps";
 import { ICollisionResult } from "../../interface/ICollisionResult";
@@ -38,7 +39,7 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> {
                     frameRate: 15,
                     currentFrameIndex: 0,
                     lastFrameChangeTime: 0,
-                    spriteSheet: gameAssets.getSpriteSheet("coin", 10, 10, 4, 1)!
+                    spriteSheet: GameAssets.getSpriteSheet("coin", 10, 10, 4, 1)!
                 },
                 isCollidable:true
             }

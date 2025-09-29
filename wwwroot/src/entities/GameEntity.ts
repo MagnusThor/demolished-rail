@@ -3,14 +3,14 @@ import { IBoundingBox } from "../interface/IBoundingBox";
 import { ICollisionDetector } from "../interface/ICollisionDetector";
 import { IGameEntityBase } from "../interface/IGameEntity";
 import { IGameState } from "../interface/IGameState";
-import { gameState } from "../state/gameState";
+import { GameState } from "../global/GameState";
 import { getFilteredAndSortedEntities } from "../utils/collitionHelpers";
 import { StateHelper } from "./StateHelper";
 
 
 
 
-export class GameEntity<T extends IGameEntityBase> implements IGameEntity<T> {
+export abstract class GameEntity<T extends IGameEntityBase> implements IGameEntity<T> {
     collisionDetectors: ICollisionDetector[];
     key: string;
     uuid: string
@@ -28,12 +28,14 @@ export class GameEntity<T extends IGameEntityBase> implements IGameEntity<T> {
 
 
 
+    
+
     runCollitionDetectors():void{
         
         const detectors = this.collisionDetectors;
 
         detectors.forEach(detector => {
-            const targetEntities = getFilteredAndSortedEntities(gameState, this, detector.targetName)
+            const targetEntities = getFilteredAndSortedEntities(GameState, this, detector.targetName)
 
             if (targetEntities && targetEntities.length > 0) {
                 targetEntities.forEach((targetEntity: any) => {

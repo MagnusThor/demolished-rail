@@ -5,22 +5,32 @@ import { EnemyEntity } from "./entities/enemy/enemyEntity";
 import { enemyAnimations } from "./entities/enemy/enemyAnimations";
 import { playerAnimations } from "./entities/player/animations/playerAnimations";
 import { PlayerEntity } from "./entities/player/playerEntity";
-import { WorldEntity } from "./entities/WorldEntity";
-import { gameState, gameAssets } from "./state/gameState";
+import { WorldManager } from "./entities/WorldManager";
+import { GameAssets } from "./global/GameAssets";
+import { GameState } from "./global/GameState";
 
 import { IGameEntity } from "./interface/IGameEntity";
 import { ILevelProps } from "./interface/ILevelProps";
 import { IPlayerProps } from "./interface/IPlayerProps";
 import { Positioned } from "./interface/IPositioned";
-import { LEVEL_SAMPLE, DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "./level-settings/LEVEL_SAMPLE";
-import { getTilesByType, getTileXY, calculateWorldDimensions, getTileProperties, calculateTileCoordinates } from "./utils/tileEntityHelpers";
-import { createLevelEntities } from "./level-settings/LevelFactory";
-import { IEnemyProps } from "./interface/IEnemyProps";
 
-export class RunWorld {
+import { getTilesByType, getTileXY, calculateWorldDimensions, getTileProperties, calculateTileCoordinates } from "./utils/tileEntityHelpers";
+import { createLevelEntities } from "./factory/LevelFactory";
+import { IEnemyProps } from "./interface/IEnemyProps";
+import { DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT, Level } from "./factory/LevelGraph";
+import { bridgeCreator } from "./creators/bridgeCreator";
+import { doorTogglerCreator } from "./creators/doorTogglerCreator";
+import { textCreatorSettings } from "./creators/textCreatorS";
+import { tunnelEntranceCreator, tunnelExitCreator } from "./creators/tunnelEntranceCreator";
+import { createFlashlightPostProcessor } from "./postprocessors/createFlashlightPostProcessor";
+
+
+
+export class RunGame {
     screenCanvas: HTMLCanvasElement;
     sequence!: Sequence;
     inputHelper: InputHelper;
+    currentLevel: Level | undefined;
 
     constructor(target: HTMLCanvasElement, public bmp: number) {
         this.screenCanvas = target;
@@ -30,7 +40,7 @@ export class RunWorld {
 
         this.handleResize();
 
-        gameState.gameCanvas = target;
+        GameState.gameCanvas = target;
     }
 
     private handleResize = () => {
@@ -46,68 +56,145 @@ export class RunWorld {
 
         // Update the global game state viewport to reflect the new dimensions.
         // All other game logic should read from this state.
-        gameState.viewport.viewportWidth = actualWidth;
-        gameState.viewport.viewportHeight = actualHeight;
+        GameState.viewport.viewportWidth = actualWidth;
+        GameState.viewport.viewportHeight = actualHeight;
 
-        gameState.input = new InputHelper(this.screenCanvas);
+        GameState.input = new InputHelper(this.screenCanvas);
 
     }
 
+
+
     async initializeGame(): Promise<Sequence> {
+
+
+        this.currentLevel = new Level(
+            {
+
+                name: "DEL_LEVEL",
+                tiles: [
+                    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x02, 0x00, 0x70, 0x70, 0x90, 0x02, 0x05, 0x80, 0x00, 0x70, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x02, 0xa0, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x30, 0x00, 0x03, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x51, 0x00, 0x51, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x40, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x00, 0x00, 0x00, 0x51, 0x00, 0x51, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa1, 0x42, 0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x01],
+                    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01],
+                ],
+                settings:
+
+
+                    [
+                        tunnelExitCreator({
+                            x: 1728,
+                            y: 448,
+                            destinationX: 1216 - 64,
+                            destinationY: 448
+                        }),
+                        tunnelEntranceCreator({
+                            x: 1216,
+                            y: 416,
+                            destinationX: 1728 - 128,
+                            destinationY: 448
+                        })
+                        ,
+                        textCreatorSettings({
+                            x: 288,
+                            y: 224,
+                            textId: "welcome_message"
+                        }),
+                        bridgeCreator({
+                            x: 1056,
+                            y: 320,
+                            direction: "right",
+                            bridgeTileIndex: 0x01,
+                            wallTileIndex: 1,
+                        }),
+                        doorTogglerCreator({
+                            x: 192,
+                            y: 320,
+                            doorX: 148,
+                            doorY: 320,
+                            closedTileType: 0x03,
+                            openTileType: 0x00,
+                            durationInSeconds: 3,
+                        }),
+                    ]
+
+            }
+        );
+
         const instance = new Sequence(this.screenCanvas, this.bmp, 4, 4, new DefaultAudioLoader("/wwwroot/assets/music/music.mp3"));
         const sequence = await instance.initialize();
 
         // Set the gameState viewport to match the screen canvas size
-        gameState.viewport.viewportWidth = this.screenCanvas.width;
-        gameState.viewport.viewportHeight = this.screenCanvas.height;
+        GameState.viewport.viewportWidth = this.screenCanvas.width;
+        GameState.viewport.viewportHeight = this.screenCanvas.height;
 
         const sb = new SceneBuilder(sequence.audioBuffer.duration * 1000);
         sb.durationUntilEndInMs("scene0");
 
         const gameBackground = new BackgroundEntity("background", {}, this.screenCanvas.width, this.screenCanvas.height,
-            gameState
+            GameState
         );
         (sb.getScenes())[0]!.addEntity(gameBackground);
         (sb.getScenes())[0]!.addEntities(...await this.createLevel(sequence));
 
         sequence.addScenes(...sb.getScenes());
 
+        
+
+        sequence.addPostProcessor(createFlashlightPostProcessor())
+
         this.sequence = sequence;
         return sequence;
     }
 
     async createLevel(sequence: Sequence): Promise<Array<IEntity>> {
-        const { width: worldWidth, height: worldHeight } = calculateWorldDimensions(LEVEL_SAMPLE);
+
+
+        const LEVELTILES = this.currentLevel!.tiles;
+
+        const { width: worldWidth, height: worldHeight } = calculateWorldDimensions(LEVELTILES);
 
         // Find the player's starting grid coordinates (row and column)
-        const playerStartTileFromMap = getTilesByType(LEVEL_SAMPLE, 0xFF)[0];
+        const playerStartTileFromMap = getTilesByType(LEVELTILES, 0xFF)[0];
 
         // Convert the grid coordinates to a world position
-        const playerStartTile = getTileXY(LEVEL_SAMPLE, playerStartTileFromMap.y, playerStartTileFromMap.x);
+        const playerStartTile = getTileXY(LEVELTILES, playerStartTileFromMap.y, playerStartTileFromMap.x);
         const playerProps = getTileProperties(0xFF);
 
         // Find all enemy start positions and convert their grid coordinates to world positions
-        const enemyStartTiles = getTilesByType(LEVEL_SAMPLE, 0xa0);
+        const enemyStartTiles = getTilesByType(LEVELTILES, 0xa0);
 
         if (!playerStartTile || !playerProps) {
             console.error("Player start position not found in the tile map!");
             return [];
         }
-      
+
 
         const player = new PlayerEntity({
             positioned: new Positioned(playerStartTile.x, playerStartTile.y, playerProps.width, playerProps.height),
             velX: 0,
-            velY: 0,          
+            velY: 0,
             gravity: 0.3,
-            isInitialized: false,        
+            isInitialized: false,
             health: {
                 health: 100,
                 damage: 0
             },
             animations: playerAnimations(),
-            zIndex:10,
-            states:{
+            zIndex: 10,
+            states: {
                 onLadder: false,
                 isJumping: false,
                 onPlatform: false,
@@ -116,21 +203,21 @@ export class RunWorld {
                 isMovingRight: false,
                 lastDirection: "right",
             },
-            gadgets:{},
-            attachedTo:undefined,
-            isCollidable:true
+            gadgets: {},
+            attachedTo: undefined,
+            isCollidable: true
         });
-        gameState.player = player;
+        GameState.player = player;
 
-        gameState.entities.push(player);
-    
+        GameState.entities.push(player);
 
-        let indexedTiles =  calculateTileCoordinates(LEVEL_SAMPLE);
+
+        let indexedTiles = calculateTileCoordinates(LEVELTILES);
 
         // Map the enemy grid coordinates to enemy entities
         const enemies: IGameEntity<IEnemyProps>[] = enemyStartTiles.map(tile => {
 
-            const { x, y } = getTileXY(LEVEL_SAMPLE, tile.y, tile.x);
+            const { x, y } = getTileXY(LEVELTILES, tile.y, tile.x);
 
             return new EnemyEntity(x, y, indexedTiles, enemyAnimations());
 
@@ -138,73 +225,68 @@ export class RunWorld {
 
         // Use the new LevelInitializer to create the level's static entities
         const levelProps: ILevelProps = {
-            positioned: new Positioned(0,0,0,0), // not used
-            tileMap: LEVEL_SAMPLE,
+            level: this.currentLevel!,
+            positioned: new Positioned(0, 0, worldWidth, worldHeight),
+            tileMap: LEVELTILES,
             tileWidth: DEFAULT_TILE_WIDTH,
             tileHeight: DEFULT_TILE_HEIGHT,
-            indexedTiles: calculateTileCoordinates(LEVEL_SAMPLE),
+            indexedTiles: calculateTileCoordinates(LEVELTILES),
             textures: {
-                "solid-1": gameAssets.createTexture("tileset_1", 0, 0, 32, 32,false)!, 
-                "solid-2": gameAssets.createTexture("tileset_1", 64, 0, 32, 32,false)!, 
-                "solid-3": gameAssets.createTexture("tileset_1", 96, 0, 32, 32,false)!, 
-                "solid-4": gameAssets.createTexture("tileset_1", 129, 0, 32, 32,false)!, 
-                "bush-1": gameAssets.createTexture("bush-1", 0, 0, 32, 16,false)!, 
-                "bush-2": gameAssets.createTexture("bush-2", 0, 0, 63, 28,false)!, 
-
-
-
-                "platform-1": gameAssets.createTexture("tileset_1", 0, 64, 32, 16,false)!, //30
-               
-               
-                "stone-1": gameAssets.createTexture("tileset_1",0,112,16,16,false)!,  // 60
-                "stone-2": gameAssets.createTexture("tileset_1",16,112,16,16,false)!, 
-                "stone-3": gameAssets.createTexture("tileset_1",32,112,16,16,false)!,
-                "stone-4": gameAssets.createTexture("tileset_1",0,128,16,16,false)!,
-                
-                "ladder-1": gameAssets.createTexture("tileset_1",48,160,16,16,false)!,
-               
-                "pilar-1": gameAssets.createTexture("tileset_1", 0, 160, 16, 64,true)!,
-
-                "bigblock-1": gameAssets.createTexture("tileset_1",160,0,64,64,true)!
+                "solid-1": GameAssets.createTexture("tileset_1", 0, 0, 32, 32, false)!,
+                "solid-2": GameAssets.createTexture("tileset_1", 64, 0, 32, 32, false)!,
+                "solid-3": GameAssets.createTexture("tileset_1", 96, 0, 32, 32, false)!,
+                "solid-4": GameAssets.createTexture("tileset_1", 129, 0, 32, 32, false)!,
+                "bush-1": GameAssets.createTexture("bush-1", 0, 0, 32, 16, false)!,
+                "bush-2": GameAssets.createTexture("bush-2", 0, 0, 63, 28, false)!,
+                "platform-1": GameAssets.createTexture("tileset_1", 0, 64, 32, 16, false)!, //30               
+                "stone-1": GameAssets.createTexture("tileset_1", 0, 112, 16, 16, false)!,  // 60
+                "stone-2": GameAssets.createTexture("tileset_1", 16, 112, 16, 16, false)!,
+                "stone-3": GameAssets.createTexture("tileset_1", 32, 112, 16, 16, false)!,
+                "stone-4": GameAssets.createTexture("tileset_1", 0, 128, 16, 16, false)!,
+                "ladder-1": GameAssets.createTexture("tileset_1", 48, 160, 16, 16, false)!,
+                "pilar-1": GameAssets.createTexture("tileset_1", 0, 160, 16, 64, true)!,
+                "bigblock-1": GameAssets.createTexture("tileset_1", 160, 0, 64, 64, true)!
             },
             isInitialized: false,
-            states:{},
-            zIndex:0,
-            isCollidable:false
+            states: {},
+            zIndex: 0,
+            isCollidable: false
         };
 
         const staticLevelEntities = createLevelEntities(levelProps);
 
-        const world = new WorldEntity("our-world", {
+        const world = new WorldManager("our-world", {
             worldHeight: worldHeight,
             worldWidth: worldWidth,
             viewportWidth: this.screenCanvas.width,
             viewportHeight: this.screenCanvas.height,
             viewportX: 0,
             viewportY: 0,
-            isInitialized:false,
-            positioned : new Positioned(0,0,0,0),
-            states:{},
-            zIndex:0,
-            isCollidable:false
+            isInitialized: false,
+            positioned: new Positioned(0, 0, 0, 0),
+            states: {},
+            zIndex: 0,
+            isCollidable: false
         }, this.screenCanvas.width, this.screenCanvas.height);
 
-
-
         // Add all entities to the world
-        staticLevelEntities.forEach(entity => gameState.entities.push(entity));
-        
+        staticLevelEntities.forEach(entity => GameState.entities.push(entity));
+
         //world.addBlock(player as IGameEntity<IPlayerProps>);
-        enemies.forEach(enemy => gameState.entities.push(enemy));
+        enemies.forEach(enemy => GameState.entities.push(enemy));
 
         // Follow the player with the camera
-        world.follow(player as IGameEntity<IPlayerProps>);
 
-      
-        gameState.entities.push(world);
+        world.camera.follow(player as IGameEntity<IPlayerProps>)
 
-        sequence.onFrame((ts) => {
-            world.updateBlocks(ts);
+      //  world.follow(player as IGameEntity<IPlayerProps>);
+
+
+        GameState.entities.push(world);
+
+        sequence.onFrame((sceneNumber,time,deltaTime) => {
+         
+            world.updateEntities(time,deltaTime);
         });
 
         return [world];
@@ -214,13 +296,14 @@ export class RunWorld {
 
 document.addEventListener("DOMContentLoaded", async () => {
     const canvas = document.querySelector("canvas#main-canvas") as HTMLCanvasElement;
-    await gameAssets.loadImages(gameAssetsToPreload);
+    await GameAssets.loadImages(gameAssetsToPreload);
 
-    const runner = new RunWorld(canvas, 110);
+    const runner = new RunGame(canvas, 110);
 
 
     const sequence = await runner.initializeGame();
-        gameState.ctx= sequence.targetCtx!
+    GameState.ctx = sequence.targetCtx!
+    GameState.sequence = sequence;
 
 
 
@@ -235,3 +318,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         sequence.play();
     });
 });
+
+

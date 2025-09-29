@@ -2,12 +2,16 @@ import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { CollisionAxis } from "../../enums/CollisionAxis";
 import { ICollisionResult } from "../../interface/ICollisionResult";
 import { IGameEntityBase, IGameEntity } from "../../interface/IGameEntity";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
+import { isHardImpact } from "../../utils/impactHelpers";
 import { getSurroundingTiles, getTileProperties } from "../../utils/tileEntityHelpers";
 import { GameEntity } from "../GameEntity";
 import { LevelEntity } from "../level/levelEntity";
 import { ExtendedCollisionHelper } from "../player/collisiondetectors/extendedCollitionHelper";
 import { PlayerEntity } from "../player/playerEntity";
+import { WorldManager } from "../WorldManager";
+
+// Minimum downward velocity required to trigger a screen shake upon hard landing.
 
 export interface IInteractableProps extends IGameEntityBase {
     velX: number; // Horizontal velocity
@@ -62,6 +66,9 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
             onCollision: (interactableEntity: InteractableEntity, result: ICollisionResult, tileEntity: LevelEntity) => {
                 const interactableProps = interactableEntity.props;
                 const snapTo = result.snapTo;
+                
+                // Track the velocity before snapping/resetting. This is crucial for detecting impact.
+                const previousVelY = interactableProps.velY; 
 
                 if (!snapTo) {
                     return;
@@ -69,18 +76,28 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
 
                 if (result.axis === CollisionAxis.Y) {
                     // Check if the entity is falling or jumping
-                    if (interactableProps.velY > 0) {
+                    if (previousVelY > 0) { // Falling and hitting floor
                         // Snap to the top of the object
                         interactableProps.positioned.y = snapTo.y - interactableProps.positioned.height;
                         // Reset rotation when it lands
                         interactableProps.rotation = 0;
-                    } else if (interactableProps.velY < 0) {
+
+                        // Add Screen Shake on hard impact (landing)
+                        // This check prevents constant shaking when the entity is resting (velY near 0).
+                        if (isHardImpact(previousVelY)) {
+                            WorldManager.getCamera()?.runEffect('shake', 8.0);
+                        }
+                        
+                    } else if (previousVelY < 0) { // Jumping and hitting ceiling
                         // Snap to the bottom of the object
                         interactableProps.positioned.y = snapTo.y + snapTo.height;
                     }
                     interactableProps.velY = 0;
                 } else if (result.axis === CollisionAxis.X) {
                     // Check if the entity is moving right or left
+
+              
+
                     if (interactableProps.velX > 0) {
                         // Snap to the left side of the object
                         interactableProps.positioned.x = snapTo.x - interactableProps.positioned.width;
@@ -88,6 +105,8 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
                         // Snap to the right side of the object
                         interactableProps.positioned.x = snapTo.x + snapTo.width;
                     }
+
+                    
                     interactableProps.velX = 0;
                 }
             }

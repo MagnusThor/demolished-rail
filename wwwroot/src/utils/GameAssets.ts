@@ -1,5 +1,5 @@
 
-import { gameAssets } from "../state/gameState";
+import { GameAssets } from "../global/GameAssets";
 import { IGameAsset } from "../interface/IGameAsset";
 import { IGameTexture } from "../interface/ITexture";
 import { ISpriteSheetAsset } from "../interface/ISpriteSheetAsset";

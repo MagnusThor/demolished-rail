@@ -12,7 +12,7 @@ export {
   IGLSLShaderRenderBuffer,
 } from './Engine/Entity/GLSLShaderEntity';
 export { Scene } from './Engine/Scene';
-export { Sequence } from './Engine/Sequence';
+export { Sequence,IPostProcessor } from './Engine/Sequence';
 export {
   GLSLShaderRenderer,
   IGLSLTexture as ITexture,

@@ -1,5 +1,5 @@
 import { IPoint2D, Point2D } from "../../../src/Engine/Helpers/Math/Point2D";
-import { gameState } from "../state/gameState";
+import { GameState } from "../global/GameState";
 import { IBoundingBox } from "./IBoundingBox";
 
 export interface IPositioned {

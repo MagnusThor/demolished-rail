@@ -4,7 +4,7 @@ import { ICollidable } from "../../interface/ICollisionDetector";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { IIndexedTile } from "../../interface/IIndexedTile";
 import { IPlayerProps } from "../../interface/IPlayerProps";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
 import { runCollitionDetectors } from "../../utils/collitionHelpers";
 import { getSurroundingTiles } from "../../utils/tileEntityHelpers";
 
@@ -38,7 +38,7 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
     }
 
     getSurroundingTilesOfPlayer(): IIndexedTile[] {
-        const tileEntity = gameState.findEntities("tileBlock")[0] as unknown as LevelEntity;
+        const tileEntity = GameState.findEntities("tileBlock")[0] as unknown as LevelEntity;
         return getSurroundingTiles(tileEntity.tileSpatialGrid,
             this.props.positioned.getBoundingBox(), tileEntity.props.tileWidth);
     }
@@ -66,9 +66,6 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
             const velY = results.velY;
             self.props.velY = velY;
             self.stateHelper.set<boolean>("isGrounded", false);
-
-
-
         });
 
         self.entityEvents!.subscribe("playerClimb", (self, results) => {
@@ -91,7 +88,7 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
             const direction = results.direction;
             const bullet = new BulletEntity(
                 this.props.positioned.x, self.props.positioned.y, direction);
-            gameState.entities.push(bullet);
+            GameState.entities.push(bullet);
 
         });
     }
@@ -124,7 +121,7 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
         if (this.stateHelper.get<boolean>("isJetpacking")) {
             const ring = new SmokeRingEntity(self.props.positioned.x+self.props.positioned.width / 2, self.props.positioned.y + self.props.positioned.height);
 
-            gameState.entities.push(ring);
+            GameState.entities.push(ring);
         }
     }
 

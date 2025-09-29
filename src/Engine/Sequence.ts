@@ -2,6 +2,22 @@ import { IAudioLoader } from './Audio/AudioLoader';
 
 import { Scene } from './Scene';
 
+/**
+ * Represents a post-processing effect that can be applied to a rendering sequence.
+ *
+ * @property name - The unique name of the post-processor.
+ * @property isActive - Indicates whether the post-processor is currently active.
+ * @method update - Updates the post-processor state and applies its effect.
+ * @param ctx - The canvas rendering context to apply the effect on.
+ * @param sequence - (Optional) The sequence being processed.
+ * @param delta - (Optional) The time elapsed since the last update, in milliseconds.
+ */
+export interface IPostProcessor {
+    name:string,
+    isActive:boolean
+    update(ctx: CanvasRenderingContext2D, sequence?: Sequence, delta?: number): void
+}
+
 export class Sequence {
 
     public durationMs: number = 0;
@@ -11,6 +27,9 @@ export class Sequence {
     public requestAnimationFrameID!: number;
     private startTime: number = 0;
     public currentTime: number = 0;
+
+
+    
 
     public bpm: number = 0;
     public ticksPerBeat: number = 0;
@@ -29,7 +48,7 @@ export class Sequence {
     private beatListeners: ((scene: number, time: number, count: number) => void)[] = [];
     private tickListeners: ((scene: number, time: number, count: number) => void)[] = [];
     private barListeners: ((bar: number) => void)[] = [];
-    private frameListeners: ((scene: number, time: number) => void)[] = [];
+    private frameListeners: ((scene: number, time: number,deltaTime:number) => void)[] = [];
 
 
     public audioContext!: AudioContext;
@@ -39,13 +58,16 @@ export class Sequence {
     public fftData!: Uint8Array;
     private audioLoader: IAudioLoader;
 
+
+    private lastTime: number = 0;
+    private deltaTime: number = 0;
+
     public targetCtx!: CanvasRenderingContext2D | null;
 
-    private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
-    private wgslPostProcessors: { scene: Scene, device:GPUDevice, processor: (ctx: CanvasRenderingContext2D, scene: Scene, device: GPUDevice) => void }[] = [];
+    public postProcessors: IPostProcessor[] = [];
+    public wgslPostProcessors: { scene: Scene, device:GPUDevice, processor: (ctx: CanvasRenderingContext2D, scene: Scene, device: GPUDevice) => void }[] = [];
 
     private lowFrameRateListeners: ((fps: number) => void)[] = [];
-
 
     private sceneTransitionInListeners: { scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void }[] = [];
     private sceneTransitionOutListeners: { scene: Scene, startTime: number, duration: number, listener: (ctx: CanvasRenderingContext2D, scene: Scene, progress: number) => void }[] = [];
@@ -107,8 +129,38 @@ export class Sequence {
      * Adds a post-processing function to the sequence.
      * @param processor - The post-processing function to add.
      */
-    addPostProcessor(processor: (ctx: CanvasRenderingContext2D, sequence: Sequence) => void) {
+    addPostProcessor(processor:IPostProcessor) {
         this.postProcessors.push(processor);
+    }
+
+    /**
+     * Sets the active state of a post processor by its name.
+     *
+     * Searches for a post processor in the `postProcessors` array with the specified name.
+     * If found, updates its `isActive` property to the provided state.
+     * Throws an error if no post processor with the given name is found.
+     *
+     * @param name - The name of the post processor to update.
+     * @param state - The desired active state (`true` to activate, `false` to deactivate).
+     * @throws Will throw an error if the post processor with the specified name is not found.
+     */
+    setPostProcessorState(name:string,state:boolean):void{
+         const processor = this.postProcessors.find(pre => pre.name === name);
+         if(!processor) throw `Cant find a post processor ${name} `
+            processor.isActive = state;
+    }
+
+    /**
+     * Removes a post processor from the list by its name.
+     *
+     * @param name - The name of the post processor to remove.
+     * @remarks
+     * If no post processor with the specified name is found, no item will be removed.
+     */
+    removePostProcessor(name:string){
+            const processor = this.postProcessors.findIndex(pre => pre.name === name);
+
+            this.postProcessors.splice(processor,1);
     }
 
     /**
@@ -170,7 +222,7 @@ export class Sequence {
      * Adds an event listener for each frame.
      * @param listener - The function to call on each frame.
      */
-    onFrame(listener: (scene: number, time: number) => void) {
+    onFrame(listener: (scene: number, time: number,deltaTime:number) => void) {
         this.frameListeners.push(listener);
     }
 
@@ -287,7 +339,7 @@ export class Sequence {
 
             // Apply post-processing
             if (this.targetCtx) {
-                this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
+                this.postProcessors.forEach(processor => processor.update(this.targetCtx!, this,elapsedTime));
             }
 
             this.triggerEventsForTime(time);
@@ -327,7 +379,7 @@ export class Sequence {
         }
 
         // Trigger frame listeners
-        this.frameListeners.forEach(listener => listener(this.currentSceneIndex, time));
+        this.frameListeners.forEach(listener => listener(this.currentSceneIndex, time,this.deltaTime));
     }
 
     /**
@@ -356,6 +408,8 @@ export class Sequence {
         const animate = (ts: number) => {
             const now = performance.now();
             const delta = now - then;
+
+        
 
             if (delta > interval) {
                 then = now - (delta % interval);
@@ -423,7 +477,9 @@ export class Sequence {
         if (!this.isPlaying) {
             return;
         }
-        this.currentTime = timeStamp; // Update currentTime
+       
+        this.deltaTime = timeStamp - this.lastTime;
+        this.lastTime = timeStamp;
 
         // Determine the current scene based on timeStamp
         let currentSceneIndex = this.scenes.findIndex(scene =>
@@ -460,7 +516,7 @@ export class Sequence {
         }
         // FFT analysis (if analyser is available)
         if (this.analyser) {
-            this.analyser.getByteFrequencyData(this.fftData);
+            this.analyser.getByteFrequencyData(this.fftData as any);
         }
         // Clear the target canvas and update/draw entities
         this.targetCtx?.clearRect(0, 0, this.target.width, this.target.height);
@@ -518,7 +574,10 @@ export class Sequence {
 
         // Apply post-processing effects
         if (this.targetCtx) {
-            this.postProcessors.forEach(processor => processor(this.targetCtx!, this));
+            this.postProcessors.forEach(processor => {
+                if(processor.isActive)
+                        processor.update(this.targetCtx!, this,timeStamp)
+             });
         }
 
           // Apply WGSL post-processing effects
@@ -534,7 +593,7 @@ export class Sequence {
 
         this.handleBeatAndTickEvents(timeStamp); // Handle beat and tick events
         // Trigger frame listeners
-        this.frameListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp));
+        this.frameListeners.forEach(listener => listener(this.currentSceneIndex, timeStamp,this.deltaTime));
 
     }
 

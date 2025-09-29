@@ -2,24 +2,24 @@ import { Point2D } from "../../../../../src";
 import { CollisionAxis } from "../../../enums/CollisionAxis";
 import { IBoundingCircle } from "../../../interface/IBoundingBox";
 import { ICollisionResult } from "../../../interface/ICollisionResult";
-import { gameState } from "../../../state/gameState";
+import { GameState } from "../../../global/GameState";
 import { getTileProperties, getTileImageDataAndProps } from "../../../utils/tileEntityHelpers";
 import { CollectibleEntity } from "../../collectible/CollectibleEntity";
 import { LadderEntity } from "../../ladderEntity";
 import { PlatformEntity } from "../../platform/PlatformEntity";
 import { RopeEntity } from "../../platform/RopeEntity";
-import { LevelEntity  } from "../../level/levelEntity";
+import { LevelEntity } from "../../level/levelEntity";
 import { PlayerEntity } from "../playerEntity";
 import { ExtendedCollisionHelper } from "./extendedCollitionHelper";
-
+import { WorldManager } from "../../WorldManager";
+import { isHardImpact, calculateShakeIntensity } from "../../../utils/impactHelpers";
 
 
 export const playerCollisionDetectors =
     [
-        // Collision detector for static tile blocks
         {
             targetName: "tileBlock",
-            detectorFn: (playerEntity: PlayerEntity, tileEntity: LevelEntity ) => {
+            detectorFn: (playerEntity: PlayerEntity, tileEntity: LevelEntity) => {
                 const playerProps = playerEntity.props;
                 const collisionResults = new Array<ICollisionResult>();
                 const gridWidth = 32;
@@ -57,22 +57,19 @@ export const playerCollisionDetectors =
 
                                 const tileTexture = getTileImageDataAndProps(tileEntity.tileImageData, tileType);
 
-                                // Perform the pixel-perfect check if we have texture data
                                 if (tileTexture && tileTexture.data) {
                                     const collisionResult = ExtendedCollisionHelper.isCirclePixelColliding(
                                         playerCircle,
                                         tileBox,
-                                    
+
                                         tileTexture.data
                                     );
-                                    // If a collision is detected, add it to the results
                                     if (collisionResult) {
                                         collisionResult.targetEntity = tileEntity;
                                         collisionResults.push(collisionResult);
                                         return collisionResults;
                                     }
                                 } else {
-                                    // Fallback to plain AABB if pixel data is not available
                                     const collisionResult = ExtendedCollisionHelper.isRectRectColliding(
                                         playerProps.positioned.x, playerProps.positioned.y, playerProps.positioned.width, playerProps.positioned.height,
                                         tileBox.x, tileBox.y, tileBox.width, tileBox.height
@@ -95,8 +92,6 @@ export const playerCollisionDetectors =
                 }
                 const { x: tileX, y: tileY, width: tileWidth, height: tileHeight, axis } = collisionData;
 
-                // Use velocity to determine which side of the tile the player hit and snap their position.
-                // This is more reliable than using floating-point normal vectors.
                 if (axis === CollisionAxis.X) {
                     if (playerProps.velX > 0) {
                         playerProps.positioned.x = tileX - playerProps.positioned.width;
@@ -106,17 +101,47 @@ export const playerCollisionDetectors =
                     playerProps.velX = 0;
                 } else if (axis === CollisionAxis.Y) {
                     if (playerProps.velY > 0) {
+                        const impactVelocity = playerProps.velY;
+
+                        if (isHardImpact(impactVelocity)) {
+                            const shakeIntensity = calculateShakeIntensity(impactVelocity);
+
+                            if (shakeIntensity > 0) {
+                                const camera = WorldManager.getCamera();
+                                if (camera) {
+                                    camera.runEffect('shake', shakeIntensity);
+                                }
+                            }
+                        }
+
                         playerProps.positioned.y = tileY - playerProps.positioned.height;
                         playerEntity.stateHelper.set<boolean>("isGrounded", true);
+                        playerProps.velY = 0;
+
+
                     } else if (playerProps.velY < 0) {
                         playerProps.positioned.y = tileY + tileHeight;
                         playerEntity.stateHelper.set<boolean>("isGrounded", false);
+
+                        const impactVelocity = playerProps.velY;
+
+                        const impactMagnitude = Math.abs(impactVelocity);
+
+                        if (isHardImpact(impactMagnitude)) {
+                            let shakeIntensity = calculateShakeIntensity(impactMagnitude);
+
+                            shakeIntensity *= 0.6;
+
+                            if (shakeIntensity > 0) {
+                                WorldManager.getCamera()?.runEffect('shake', shakeIntensity);
+                            }
+                        }
+
                     }
                     playerProps.velY = 0;
                 }
             }
         },
-        // Collision detector for collectibles
         {
             targetName: "collectibleBlock",
             detectorFn: (playerEntity: PlayerEntity, collectibleEntity: CollectibleEntity) => {
@@ -132,13 +157,10 @@ export const playerCollisionDetectors =
                 }
                 return collisionResults;
             },
-            // The onCollision logic for collectibles is now handled centrally in the playerUpdate function.
-            // This detector only needs to return a collision result for the game loop to process.
             onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, collectibleEntity: CollectibleEntity) => {
-                gameState.removeEntityByUUID(collectibleEntity.uuid);
+                GameState.removeEntityByUUID(collectibleEntity.uuid);
             }
         },
-        // Collision detector for platforms
         {
             targetName: "platformBlock",
             detectorFn: (playerEntity: PlayerEntity, platformEntity: PlatformEntity) => {
@@ -155,8 +177,6 @@ export const playerCollisionDetectors =
                 return collisionResults;
             },
             onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, platformEntity: PlatformEntity) => {
-                // To prevent the player from "snapping" to the top of a platform when hitting it from below,
-                // we only apply the collision resolution if the player is moving downwards.
                 if (playerEntity.props.velY >= 0) {
                     playerEntity.props.positioned.y = platformEntity.props.positioned.y - playerEntity.props.positioned.height;
                     playerEntity.props.velY = 0;
@@ -166,7 +186,6 @@ export const playerCollisionDetectors =
                 }
             }
         },
-        // Collision detector for ladders
         {
             targetName: "ladder",
             detectorFn: (playerEntity: PlayerEntity, ladderEntity: LadderEntity) => {
@@ -185,23 +204,20 @@ export const playerCollisionDetectors =
             },
             onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, ladderEntity: LadderEntity) => {
                 playerEntity.stateHelper.set("onLadder", true);
-            
+
             }
         },
-        // Collision detector for the rope
         {
             targetName: "rope",
             detectorFn: (playerEntity: PlayerEntity, ropeEntity: RopeEntity) => {
                 const playerProps = playerEntity.props;
                 const collisionResults = new Array<ICollisionResult>();
 
-                // Get the start, control, and end points of the rope's Bézier curve
                 const ropeStart = new Point2D(ropeEntity.props.positioned.x, ropeEntity.props.positioned.y);
-                const ropeEnd = new Point2D(ropeEntity.endX - (playerProps.positioned.width / 2), 
-                            ropeEntity.endY - ( playerProps.positioned.height / 2));
+                const ropeEnd = new Point2D(ropeEntity.endX - (playerProps.positioned.width / 2),
+                    ropeEntity.endY - (playerProps.positioned.height / 2));
                 const ropeControl = new Point2D(ropeEntity.controlX, ropeEntity.controlY);
 
-                // Use the new helper function to check for collision with the rope's curve
                 const collisionResult = ExtendedCollisionHelper.isRectCurveColliding(
                     playerEntity.props.positioned.getBoundingBox!(),
                     ropeStart,
@@ -215,15 +231,13 @@ export const playerCollisionDetectors =
                 return collisionResults;
             },
             onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, ropeEntity: RopeEntity) => {
-                // When the player collides with the rope, we "latch" them to it
-                // We'll handle the physics of swinging in the player's update function
                 playerEntity.stateHelper.set("isSwinging", true);
                 playerEntity.stateHelper.set("onLadder", false);
                 playerEntity.stateHelper.set("isGrounded", false);
-                // Store a reference to the rope entity so the player can follow its movement
-                 playerEntity.props.attachedTo = ropeEntity;
+                playerEntity.props.attachedTo = ropeEntity;
 
-                // Stop any other movement
+                WorldManager.getCamera()?.runEffect("zoom",2.5);
+
                 playerEntity.props.velX = 0;
                 playerEntity.props.velY = 0;
 

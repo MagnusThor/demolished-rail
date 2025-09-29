@@ -2,7 +2,7 @@ import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { ITileSettings } from "../../interface/ILevelProps";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
 import { GameEntity } from "../GameEntity";
 import { ExtendedCollisionHelper } from "../player/collisiondetectors/extendedCollitionHelper";
 import { ITriggerZoneProps } from "./ITriggerZoneProps";
@@ -31,7 +31,7 @@ export class TriggerZoneEntity extends GameEntity<ITriggerZoneProps> implements 
      */
     onUpdate? = (self: IGameEntity<ITriggerZoneProps>, timeStamp: number) => {
         const stateHelper = self.stateHelper;
-        const player = gameState.player;
+        const player = GameState.player;
         if (!player) return;
 
         // Check if a collision is currently happening with the player.

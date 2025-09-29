@@ -1,5 +1,5 @@
 import { Positioned } from "../../interface/IPositioned";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
 import { messageLibrary } from "./messageLibrary";
 import { OverlayTextEntity } from "./OverlayTextEntity";
 
@@ -49,7 +49,7 @@ export class TextOverlayManager {
                 isCollidable: false
             });
             // Add the entity to the game state to be updated and drawn
-            gameState.entities.push(this._overlayTextEntity);
+            GameState.entities.push(this._overlayTextEntity);
         } else {
             // Update the existing entity's text
             this._overlayTextEntity.resetText(messageLibrary.get(textId)?.text || "Text not found.");

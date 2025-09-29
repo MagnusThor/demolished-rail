@@ -1,5 +1,5 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { ICollisionDetector } from "../../interface/ICollisionDetector";
 import { ICollisionResult } from "../../interface/ICollisionResult";
@@ -107,7 +107,7 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
         const props = self.props;
 
         // --- BEHAVIOR MANAGER LOGIC ---
-        const player = gameState.player;
+        const player = GameState.player;
         if (player) {
             const playerPos = player.props.positioned.toPoint2D();
             const enemyPos = props.positioned.toPoint2D();
@@ -144,7 +144,7 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
         props.isGrounded = false;
 
         // After moving, process collisions to resolve any overlaps
-        this.processCollisions!(self, gameState.findEntities("tileBlock"));
+        this.processCollisions!(self, GameState.findEntities("tileBlock"));
 
         // The behavior now sets the enemy's velocity for the next frame
         if (this._currentBehavior) {
@@ -166,7 +166,7 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
     };
     onDraw? = (self: IGameEntity<IEnemyProps>, helper: CanvasHelper) => {
-        if (!gameState || !gameState.viewport) {
+        if (!GameState || !GameState.viewport) {
             console.warn("gameState or viewport not initialized, skipping enemy drawing.");
             return;
         }

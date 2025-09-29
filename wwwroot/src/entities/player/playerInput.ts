@@ -1,5 +1,5 @@
 import { KeyCode } from "../../enums/KeyCode";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { IPlayerProps } from "../../interface/IPlayerProps";
 import { BulletEntity } from "../bullet/BulletEntity";
@@ -13,7 +13,7 @@ import { PlayerEntity } from "./playerEntity";
 export const setupPlayerInput = (player: PlayerEntity) => {
     const props = player.props;
     const stateHelper = player.stateHelper;
-    const input = gameState.input!;
+    const input = GameState.input!;
     const MOVE_SPEED = 4;
     const JUMP_SPEED = 8;
 

@@ -3,8 +3,8 @@ import { IBoundingBox } from "../../../interface/IBoundingBox";
 import { IEnemyProps } from "../../../interface/IEnemyProps";
 import { IGameEntityBehavior } from "../../../interface/IGameEntity";
 
-import { TileDefinitions } from "../../../level-settings/TileDefinitions";
-import { gameState } from "../../../state/gameState";
+import { TileDefinitions } from "../../../factory/TileDefinitions";
+import { GameState } from "../../../global/GameState";
 import { getSurroundingTiles, isSolidTile, getTileProperties } from "../../../utils/tileEntityHelpers";
 import { LevelEntity } from "../../level/levelEntity";
 import { PlayerEntity } from "../../player/playerEntity";
@@ -22,7 +22,7 @@ export const EnemyPatrollingBehavior = (): IGameEntityBehavior => {
             const props = enemy.props
 
             // Get the player entity and calculate distance
-            const player = gameState.player! as PlayerEntity
+            const player = GameState.player! as PlayerEntity
             const playerPos = player.props.positioned.toPoint2D()
             const enemyPos = enemy.props.positioned.toPoint2D();
             const distance = playerPos.distanceTo(enemyPos);
@@ -48,7 +48,7 @@ export const EnemyPatrollingBehavior = (): IGameEntityBehavior => {
             } else {
                 // Otherwise, continue patrolling
                 // Get the level entity to access the spatial grid for look-ahead checks
-                const levelEntity = gameState.findEntities("tileBlock")[0] as LevelEntity;
+                const levelEntity = GameState.findEntities("tileBlock")[0] as LevelEntity;
                 if (!levelEntity) {
                     console.error("Level entity not found in game state.");
                     return;

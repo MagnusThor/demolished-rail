@@ -1,6 +1,6 @@
 import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
 import { ITileSettings } from "../interface/ILevelProps";
-import { gameState } from "../state/gameState";
+import { GameState } from "../global/GameState";
 import { getTileRowCol } from "../utils/tileEntityHelpers";
 
 
@@ -29,7 +29,7 @@ const doorTimers: Map<string, NodeJS.Timeout> = new Map();
  * - Manual activation on an open door will close it and clear any auto-close timer.
  * - Logs actions and warnings to the console for debugging.
  */
-export const DoorTogglerCreator = (bag: any): ITileSettings => {
+export const doorTogglerCreator = (bag: any): ITileSettings => {
     return {
 
         bag: bag,
@@ -51,7 +51,7 @@ export const DoorTogglerCreator = (bag: any): ITileSettings => {
             const { doorX, doorY, closedTileType, openTileType, durationInSeconds } = settings;
 
             // Ensure the game state and level entity are available.
-            const levelEntity = gameState.currentLevel;
+            const levelEntity = GameState.currentLevel;
             if (!levelEntity || typeof levelEntity.updateTileAt !== 'function') {
                 console.error("LevelEntity not found or updateTileAt method is missing.");
                 return;

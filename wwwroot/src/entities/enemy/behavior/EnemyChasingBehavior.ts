@@ -1,4 +1,4 @@
-import { gameState } from "../../../state/gameState";
+import { GameState } from "../../../global/GameState";
 
 import { IGameEntity, IGameEntityBehavior } from "../../../interface/IGameEntity";
 import { IPlayerProps } from "../../../interface/IPlayerProps";
@@ -16,7 +16,7 @@ export const EnemyChasingBehavior = (startX:number,startY:number):IGameEntityBeh
             const props = enemy.props;
 
             // Check if the player exists in the game state before attempting to chase
-            const playerEntity = gameState.player as IGameEntity<IPlayerProps>;
+            const playerEntity = GameState.player as IGameEntity<IPlayerProps>;
             if (!playerEntity) {
                 // If the player is not found, do nothing.
                 props.velX = 0;

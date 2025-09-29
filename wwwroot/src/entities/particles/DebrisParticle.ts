@@ -1,6 +1,6 @@
 import { IParticle } from "../../interface/IParticle";
 import { IPositioned, Positioned } from "../../interface/IPositioned";
-import { gameState } from "../../state/gameState";
+import { GameState } from "../../global/GameState";
 
 export class DebrisParticle implements IParticle {
     uuid: string;
@@ -78,7 +78,7 @@ export class DebrisParticle implements IParticle {
             if (Math.abs(this.velY) < 0.1) this.velY = 0;
         }
 
-        const { width, height } = gameState.gameCanvas!;
+        const { width, height } = GameState.gameCanvas!;
 
         // Check if the particle is outside the canvas and mark as not alive.
         if (

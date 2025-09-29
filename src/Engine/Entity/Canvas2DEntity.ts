@@ -24,10 +24,10 @@ export interface IEntity {
   onBar(listener?: (time: number, count: number, propertyBag: any) => void): void;
 }
 
-export class Canvas2DEntity<T> implements IEntity {
+export abstract class Canvas2DEntity<T> implements IEntity {
   canvas: HTMLCanvasElement;
   ctx!: CanvasRenderingContext2D;
-  private postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
+  public postProcessors: ((ctx: CanvasRenderingContext2D, sequence: Sequence) => void)[] = [];
 
   scene?: Scene | undefined;
 
@@ -112,7 +112,7 @@ export class Canvas2DEntity<T> implements IEntity {
    * @param targetCanvas - The target canvas to copy to.
    * @param sequence - The Sequence instance.
    */
-  copyToCanvas(targetCanvas: HTMLCanvasElement, sequence: Sequence) {
+   copyToCanvas(targetCanvas: HTMLCanvasElement, sequence: Sequence) {
     const targetCtx = targetCanvas.getContext("2d");
     if (targetCtx) {
       // Calculate the elapsed time for the entity

@@ -1,8 +1,8 @@
 import { CollisionHelper } from "../../../../../src/Engine/Helpers/CollisionHelper";
 import { IBoundingBox } from "../../../interface/IBoundingBox";
 import { IGameEntityBehavior } from "../../../interface/IGameEntity";
-import { TileDefinitions } from "../../../level-settings/TileDefinitions";
-import { gameState } from "../../../state/gameState";
+import { TileDefinitions } from "../../../factory/TileDefinitions";
+import { GameState } from "../../../global/GameState";
 import { getSurroundingTiles, isSolidTile, getTileProperties } from "../../../utils/tileEntityHelpers";
 import { LevelEntity } from "../../level/levelEntity";
 import { EnemyEntity } from "../enemyEntity";
@@ -29,7 +29,7 @@ export const EnemyGuardingBehavior = (waitTimeInSeconds: number): IGameEntityBeh
             const currentState = stateHelper.get<string>("state");
 
             // Look for a player to see if we should override the behavior.
-            const player = gameState.player!;
+            const player = GameState.player!;
             const distance = player.props.positioned.toPoint2D().distanceTo(props.positioned.toPoint2D());
             if (distance < 200) {
                 // Here, you could transition to a "chasing" or "attacking" behavior
@@ -42,7 +42,7 @@ export const EnemyGuardingBehavior = (waitTimeInSeconds: number): IGameEntityBeh
             switch (currentState) {
                 case "patrolling": {
                     // Get the level entity for tile look-ups
-                    const levelEntity = gameState.findEntities("tileBlock")[0] as LevelEntity;
+                    const levelEntity = GameState.findEntities("tileBlock")[0] as LevelEntity;
                     if (!levelEntity) {
                         console.error("Level entity not found in game state.");
                         return;
