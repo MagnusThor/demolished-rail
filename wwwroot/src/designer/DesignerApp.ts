@@ -1,4 +1,4 @@
-import { $D } from "dathor-helpers"; // Assuming this helper provides typed DOM access
+import { $D } from "dathor-helpers";
 
 import { GameAssets } from "../global/GameAssets";
 
@@ -6,21 +6,22 @@ import { TILE_BLUEPRINTS } from "./TileBluePrints";
 import { getTileProperties } from "../utils/tileEntityHelpers";
 import { IGameAsset } from "../interface/IGameAsset";
 import { IGameTexture } from "../interface/ITexture";
+import { getSettigsBag } from "../factory/LevelGraph";
 
 
-function areRowsSameSize(matrix: any[]) {
-    // 1. Handle edge cases: If the matrix is empty or null, it technically
-    // doesn't violate the "same size" rule for its rows.
+export function valieDateLevel(
+    level: ILevelData
+) {
+
+    const matrix = level.map;
+
     if (!Array.isArray(matrix) || matrix.length === 0) {
         console.log("Input is empty or not an array. Returning true.");
         return true;
     }
 
-    // 2. Get the expected size from the first row.
     const expectedSize = matrix[0].length;
 
-    // 3. Iterate over the rest of the rows and check their length.
-    // We use Array.prototype.every() for a concise check.
     const allSameSize = matrix.every((row, index) => {
         const isSame = row.length === expectedSize;
         if (!isSame) {
@@ -35,47 +36,141 @@ function areRowsSameSize(matrix: any[]) {
 }
 
 
-// Global Grid Constants
+
 const TILE_SIZE = 32;
 const INITIAL_COLS = 60;
 const INITIAL_ROWS = 16;
-const PANNING_STEP = TILE_SIZE * 2; // Pan by 2 tiles at a time
+const PANNING_STEP = TILE_SIZE * 2;
 
-// Fixed Viewport Constants (What the user sees)
 const VIEWPORT_WIDTH_TILES = 30;
 const VIEWPORT_HEIGHT_TILES = 20;
-const VIEWPORT_WIDTH = VIEWPORT_WIDTH_TILES * TILE_SIZE; // 960px
-const VIEWPORT_HEIGHT = VIEWPORT_HEIGHT_TILES * TILE_SIZE; // 640px
+const VIEWPORT_WIDTH = VIEWPORT_WIDTH_TILES * TILE_SIZE;
+const VIEWPORT_HEIGHT = VIEWPORT_HEIGHT_TILES * TILE_SIZE;
+
+export interface ISettingsBagItem {
+    x: number;
+    y: number;
+    action: string;
+    props: { [key: string]: any };
+}
+export interface ISettingsSerialized {
+    [key: string]: ISettingsBagItem;
+}
+
+export interface ILevelData {
+    metadata: {
+        name: string,
+        description: string,
+        tileSize: number,
+        columns: number,
+        rows: number
+        width: number,
+        height: number
+    }
+    map: number[][],
+    settings?: ISettingsSerialized
+}
+
+
+const mockedTileSettings: ISettingsSerialized = {
+    "a2dsdsd": {
+        x: 1728,
+        y: 448,
+        action: "tunnelExitCreator",
+        props: {
+            x: 1728,
+            y: 448,
+            destinationX: 1216 - 64,
+            destinationY: 448
+        },
+    },
+    "axdj22": {
+        action: "tunnelEntranceCreator",
+        x: 1216,
+        y: 416,
+        props: {
+            x: 1216,
+            y: 416,
+            destinationX: 1728 - 128,
+            destinationY: 448
+        }
+
+    },
+    "ds0321": {
+        action: "textCreatorSettings",
+        x: 288,
+        y: 224,
+        props: {
+            x: 288,
+            y: 224,
+            textId: "welcome_message"
+        }
+    },
+    "a232323": {
+        action: "bridgeCreator",
+        x: 1056,
+        y: 320,
+        props: {
+            x: 1056,
+            y: 320,
+            direction: "right",
+            bridgeTileIndex: 0x01,
+            wallTileIndex: 1,
+        }
+    },
+    "ldpo02": {
+        action: "doorTogglerCreator",
+        x: 192,
+        y: 320,
+        props: {
+            x: 192,
+            y: 320,
+            doorX: 148,
+            doorY: 320,
+            closedTileType: 0x03,
+            openTileType: 0x00,
+            durationInSeconds: 3,
+        },
+    }
+}
 
 
 
 const preloaded = [
-                    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x02, 0x00, 0x70, 0x70, 0x90, 0x02, 0x05, 0x80, 0x00, 0x70, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x02, 0xa0, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x30, 0x00, 0x03, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x51, 0x00, 0x51, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x40, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x00, 0x00, 0x00, 0x51, 0x00, 0x51, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa1, 0x42, 0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01],
-                ];
+    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x02, 0x00, 0x70, 0x70, 0x90, 0x02, 0x05, 0x80, 0x00, 0x70, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x02, 0xa0, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x30, 0x00, 0x03, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x51, 0x00, 0x51, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x40, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x00, 0x00, 0x00, 0x51, 0x00, 0x51, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xa1, 0x42, 0x00, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x01],
+    [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01],
+];
 
 export class DesignerApp {
-    canvas;
-    ctx;
-    paletteOptions;
-    selectedTileDisplay;
-    saveButton;
-    dimsDisplay;
-    selectedTileNameDisplay;
+    canvas: HTMLCanvasElement | null;
+    ctx: CanvasRenderingContext2D | null;
+    paletteOptions: HTMLElement | null;
+    selectedTileDisplay: HTMLElement | null;
+    saveButton: HTMLElement | null;
+    dimsDisplay: HTMLElement | null;
+    selectedTileNameDisplay: HTMLElement | null;
+
+    tileSettingsPanel: HTMLElement | null;
+    closeSettingsButton: HTMLButtonElement | null;
+    gridLinesCheckbox: HTMLInputElement | null;
+    tileSizeDisplay: HTMLElement | null;
+    viewportWDisplay: HTMLElement | null;
+    viewportHDisplay: HTMLElement | null;
+
     levelMap: number[][] = [];
     selectedTileId: number | undefined;
     isDrawing = false;
@@ -83,15 +178,12 @@ export class DesignerApp {
     rows = INITIAL_ROWS;
     viewPort = { x: 0, y: 0 };
     assets: { [key: string]: IGameTexture; } | undefined;
-    gridLines: any;
-
-
-
+    gridLines: boolean;
+    tileSettings: ISettingsSerialized | undefined;
 
 
     getAssets(): void {
 
-        // temporary setup, should be fetched from resource storage
 
         this.assets = {
             "solid-1": GameAssets.createTexture("tileset_1", 0, 0, 32, 32, false)!,
@@ -100,14 +192,14 @@ export class DesignerApp {
             "solid-4": GameAssets.createTexture("tileset_1", 129, 0, 32, 32, false)!,
             "bush-1": GameAssets.createTexture("bush-1", 0, 0, 32, 16, false)!,
             "bush-2": GameAssets.createTexture("bush-2", 0, 0, 63, 28, false)!,
-            "platform-1": GameAssets.createTexture("tileset_1", 0, 64, 32, 16, false)!, //30               
-            "stone-1": GameAssets.createTexture("tileset_1", 0, 112, 16, 16, false)!,  // 60
+            "platform-1": GameAssets.createTexture("platform-1", 0, 64, 32, 16, false)!,
+            "stone-1": GameAssets.createTexture("tileset_1", 0, 112, 16, 16, false)!,
             "stone-2": GameAssets.createTexture("tileset_1", 16, 112, 16, 16, false)!,
             "stone-3": GameAssets.createTexture("tileset_1", 32, 112, 16, 16, false)!,
             "stone-4": GameAssets.createTexture("tileset_1", 0, 128, 16, 16, false)!,
-            "ladder-1": GameAssets.createTexture("tileset_1", 48, 160, 16, 16, false)!,
+            "ladder-1": GameAssets.createTexture("ladder-1", 48, 160, 16, 16, false)!,
             "pilar-1": GameAssets.createTexture("tileset_1", 0, 160, 16, 64, true)!,
-            "bigblock-1": GameAssets.createTexture("tileset_1", 160, 0, 64, 64, true)!
+            "bigblock-1": GameAssets.createTexture("bigblock-1", 160, 0, 64, 64, true)!
         }
 
 
@@ -115,14 +207,10 @@ export class DesignerApp {
 
     constructor() {
         this.viewPort = { x: 0, y: 0 };
-
         this.gridLines = true;
 
         this.getAssets();
 
-       // this.levelMap = preloaded;
-
-        console.log("is level array okey",areRowsSameSize(this.levelMap));
 
         this.canvas = $D.get<HTMLCanvasElement>("#design-canvas");
         this.ctx = this.canvas?.getContext("2d") || null;
@@ -133,9 +221,20 @@ export class DesignerApp {
         this.saveButton = $D.get('#save-button');
         this.dimsDisplay = $D.get('#dims-display');
 
-        if (this.canvas && this.ctx && this.paletteOptions && this.selectedTileDisplay) {
+
+        this.tileSettingsPanel = $D.get('#tile-settings-panel');
+        this.closeSettingsButton = $D.get<HTMLButtonElement>('#close-settings-panel');
+
+        this.gridLinesCheckbox = $D.get<HTMLInputElement>('#toggle-grid-lines');
+        this.tileSizeDisplay = $D.get('#tile-size-display');
+        this.viewportWDisplay = $D.get('#viewport-w-display');
+        this.viewportHDisplay = $D.get('#viewport-h-display');
+
+
+        if (this.canvas && this.ctx && this.paletteOptions && this.selectedTileDisplay && this.tileSettingsPanel) {
             this.initializeCanvas();
             this.initializePalette();
+            this.initializeRenderingSettings();
             this.setSelectedTile(1);
             this.setupEventListeners();
         } else {
@@ -144,21 +243,19 @@ export class DesignerApp {
     }
 
     /**
-    * Initializes canvas to a fixed viewport size and creates the initial level map.
-    */
+     * Initializes canvas to a fixed viewport size and creates the initial level map.
+     */
     initializeCanvas() {
         if (this.canvas && this.ctx) {
-            // Set canvas element size to the fixed viewport size
             this.canvas.width = VIEWPORT_WIDTH;
             this.canvas.height = VIEWPORT_HEIGHT;
 
+            this.levelMap = preloaded;
 
+            this.tileSettings = mockedTileSettings;
 
-
-
-            // Initialize map array
-            this.levelMap = preloaded;// Array(this.rows).fill(0).map(() => Array(this.cols).fill(0));
-
+            this.rows = this.levelMap.length;
+            this.cols = this.levelMap.length > 0 ? this.levelMap[0].length : INITIAL_COLS;
 
 
             this.updateDimensionDisplay();
@@ -167,45 +264,67 @@ export class DesignerApp {
     }
 
     /**
-    * Finds a tile blueprint by its numerical ID.
-    * @param {number} tileId - The numerical ID of the tile to retrieve.
-    * @returns {ITileProps} The tile properties object, or the 'Empty' tile (ID 0) as a fallback.
-    */
+     * Initializes the state and event listeners for the Rendering Settings panel.
+     * Assumes the following IDs exist in the HTML: 
+     * #toggle-grid-lines, #tile-size-display, #viewport-w-display, #viewport-h-display
+     */
+    initializeRenderingSettings() {
+        if (this.gridLinesCheckbox) {
+            this.gridLinesCheckbox.checked = this.gridLines;
+
+            this.gridLinesCheckbox.addEventListener('change', () => {
+                this.gridLines = this.gridLinesCheckbox!.checked;
+                this.drawGrid();
+            });
+        } else {
+            console.warn("Grid lines checkbox (#toggle-grid-lines) not found.");
+        }
+
+        if (this.tileSizeDisplay) {
+            this.tileSizeDisplay.textContent = `${TILE_SIZE}px`;
+        }
+        if (this.viewportWDisplay) {
+            this.viewportWDisplay.textContent = `${VIEWPORT_WIDTH_TILES} tiles (${VIEWPORT_WIDTH}px)`;
+        }
+        if (this.viewportHDisplay) {
+            this.viewportHDisplay.textContent = `${VIEWPORT_HEIGHT_TILES} tiles (${VIEWPORT_HEIGHT}px)`;
+        }
+    }
+
+    /**
+     * Finds a tile blueprint by its numerical ID.
+     * @param {number} tileId - The numerical ID of the tile to retrieve.
+     * @returns {ITileProps} The tile properties object, or the 'Empty' tile (ID 0) as a fallback.
+     */
     getTile(tileId: number) {
-        // FIX: Access the tile using the numerical ID directly. Fallback to ID 0 if not found.
         const tile = TILE_BLUEPRINTS[tileId];
         const emptyTile = TILE_BLUEPRINTS[0];
         return tile || emptyTile;
     }
 
     /**
-    * Renders only the visible portion of the grid based on the viewport.
-    */
+     * Renders only the visible portion of the grid based on the viewport.
+     */
     drawGrid() {
         if (!this.ctx) return;
 
-        // 1. Calculate which tile coordinates the viewport starts at
         const startCol = Math.floor(this.viewPort.x / TILE_SIZE);
         const startRow = Math.floor(this.viewPort.y / TILE_SIZE);
 
-        // 2. Calculate pixel offset for smooth scrolling (how much the first tile is clipped)
         const offsetX = this.viewPort.x % TILE_SIZE;
         const offsetY = this.viewPort.y % TILE_SIZE;
 
         this.ctx.clearRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
-        // Loop over the fixed viewport size, plus one extra tile to cover edges
         for (let r = 0; r <= VIEWPORT_HEIGHT_TILES; r++) {
             const mapRow = startRow + r;
 
             for (let c = 0; c <= VIEWPORT_WIDTH_TILES; c++) {
                 const mapCol = startCol + c;
 
-                // Calculate screen position relative to the viewport offset
                 const screenX = c * TILE_SIZE - offsetX;
                 const screenY = r * TILE_SIZE - offsetY;
 
-                // Check if the map coordinates are valid (within the actual level map bounds)
                 if (mapRow >= 0 && mapRow < this.rows && mapCol >= 0 && mapCol < this.cols) {
                     const tileId = this.levelMap[mapRow][mapCol];
                     const tile = this.getTile(tileId);
@@ -214,41 +333,38 @@ export class DesignerApp {
                     if (tile.texture) {
 
                         const asset = this.assets![tile.texture];
-                        
-                        if(asset){
 
-                        
-                        const image = asset.generatedTexture;
+                        if (asset) {
 
-                        const offset = tile.offset;
+                            const image = asset.generatedTexture;
+                            const offset = tile.offset;
+
+                            this.ctx.drawImage(image,
+                                0, 0, image.width, image.height,
+                                screenX + (offset?.x || 0), screenY + (offset?.y || 0), tile.width!, tile.height!);
 
 
-                        
-                        this.ctx.drawImage(image,
-                            screenX + (offset?.x || 0), screenY + (offset?.y || 0), tile.width, tile.height);
-
+                        } else {
+                            this.ctx.fillStyle = tile.color || "black";
+                            this.ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
                         }
 
                     } else {
 
-                        // Draw Tile
                         this.ctx.fillStyle = tile.color || "black";
                         this.ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
 
                     }
 
                     if (this.gridLines) {
-                        // Draw Grid Lines
-                        this.ctx.strokeStyle = '#374151'; // Darker gray for grid lines
+                        this.ctx.strokeStyle = '#374151';
                         this.ctx.strokeRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
                     }
 
                 } else {
-                    // Draw the 'Empty' tile color for areas outside the map bounds
                     this.ctx.fillStyle = TILE_BLUEPRINTS[0].color || "#111827";
                     this.ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
 
-                    // Draw outline for out-of-bounds area
                     this.ctx.strokeStyle = '#000000';
                     this.ctx.strokeRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
                 }
@@ -257,8 +373,8 @@ export class DesignerApp {
     }
 
     /**
-    * Updates the dimension display element.
-    */
+     * Updates the dimension display element.
+     */
     updateDimensionDisplay() {
         if (this.dimsDisplay) {
             this.dimsDisplay.textContent = `${this.cols} x ${this.rows}`;
@@ -266,25 +382,22 @@ export class DesignerApp {
     }
 
     /**
-    * Dynamically resizes the level map (grows the underlying data structure).
-    */
+     * Dynamically resizes the level map (grows the underlying data structure).
+     */
     resizeGrid(direction: string, count: number) {
         if (count <= 0) return;
 
         if (direction === 'up' || direction === 'down') {
-            // Create new rows filled with the empty tile ID (0)
             const newRows = Array(count).fill(0).map(() => Array(this.cols).fill(0));
 
             if (direction === 'up') {
                 this.levelMap.unshift(...newRows);
-                // Adjust viewport if resizing up so the visible area stays centered on old content
                 this.viewPort.y += count * TILE_SIZE;
             } else {
                 this.levelMap.push(...newRows);
             }
             this.rows += count;
         } else if (direction === 'left' || direction === 'right') {
-            // New columns array filled with the empty tile ID (0)
             const newCols = Array(count).fill(0);
 
             this.levelMap = this.levelMap.map(row => {
@@ -296,7 +409,6 @@ export class DesignerApp {
             });
 
             if (direction === 'left') {
-                // Adjust viewport if resizing left
                 this.viewPort.x += count * TILE_SIZE;
             }
 
@@ -308,8 +420,8 @@ export class DesignerApp {
     }
 
     /**
-    * Sets up the tile selection panel UI and click handlers.
-    */
+     * Sets up the tile selection panel UI and click handlers.
+     */
     initializePalette() {
         if (!this.paletteOptions) return;
 
@@ -319,60 +431,63 @@ export class DesignerApp {
             const id = parseInt(idString);
             const tileDiv = document.createElement('div');
             tileDiv.className = 'tile-option rounded';
-            tileDiv.dataset.id = id.toString(); // Store the numerical ID
+            tileDiv.dataset.id = id.toString();
             tileDiv.title = tile.name!;
 
             if (!tile.texture) {
-                // Draw color tiles directly
                 tileDiv.style.backgroundColor = tile.color || "black";
+                if (id === 0) {
+                    tileDiv.textContent = 'X';
+                    tileDiv.classList.add('text-gray-600', 'text-xl', 'font-bold');
+                }
             } else {
-                // --- FIX APPLIED HERE ---
-                // Problem: Appending asset.generatedTexture repeatedly MOVED the element.
-                // Solution: Draw the asset onto a dedicated canvas for the palette preview.
                 const asset = this.assets?.[tile.texture];
-                
+
                 if (asset) {
                     const src = asset.generatedTexture;
 
-                    // Create a dedicated canvas for the preview
                     const previewCanvas = document.createElement('canvas');
                     const previewCtx = previewCanvas.getContext('2d');
-                    
+
                     const PREVIEW_SIZE = 32;
                     previewCanvas.width = PREVIEW_SIZE;
                     previewCanvas.height = PREVIEW_SIZE;
 
                     if (previewCtx) {
-                        // Draw the full texture onto the small canvas, scaling it to fit 32x32
+                        const scale = Math.min(PREVIEW_SIZE / src.width, PREVIEW_SIZE / src.height);
+                        const drawW = src.width * scale;
+                        const drawH = src.height * scale;
+                        const drawX = (PREVIEW_SIZE - drawW) / 2;
+                        const drawY = (PREVIEW_SIZE - drawH) / 2;
+
                         previewCtx.drawImage(
-                            src, 
-                            0, 0, src.width, src.height, // Source (full asset)
-                            0, 0, PREVIEW_SIZE, PREVIEW_SIZE // Destination (scaled to 32x32)
+                            src,
+                            0, 0, src.width, src.height,
+                            drawX, drawY, drawW, drawH
                         );
-                        
+
                         tileDiv.append(previewCanvas);
                     }
                 }
-                // --- END FIX ---
             }
 
             tileDiv.addEventListener('click', () => {
-                this.setSelectedTile(id); // Pass the numerical ID
+                this.setSelectedTile(id);
+
+                this.hideTileSettingsPanel();
             });
 
             this.paletteOptions?.appendChild(tileDiv);
         });
     }
 
-
-
     /**
-    * Updates the selected tile ID and the palette visual state.
-    * @param {number} tileId - The numerical ID of the tile to select.
-    */
+     * Updates the selected tile ID and the palette visual state.
+     * @param {number} tileId - The numerical ID of the tile to select.
+     */
     setSelectedTile(tileId: number) {
         this.selectedTileId = tileId;
-        const tile = this.getTile(tileId); // Get the tile properties for display
+        const tile = this.getTile(tileId);
 
         document.querySelectorAll('.tile-option').forEach(div => {
             div.classList.remove('selected');
@@ -385,33 +500,46 @@ export class DesignerApp {
         if (this.selectedTileDisplay && this.selectedTileNameDisplay) {
             this.selectedTileDisplay.style.backgroundColor = tile.color!;
             this.selectedTileNameDisplay.textContent = tile.name!;
+
+            this.selectedTileDisplay.innerHTML = '';
+            if (tile.texture) {
+                const asset = this.assets?.[tile.texture];
+                if (asset) {
+                    const previewCanvas = document.createElement('canvas');
+                    previewCanvas.width = 32;
+                    previewCanvas.height = 32;
+                    const previewCtx = previewCanvas.getContext('2d');
+                    if (previewCtx) {
+                        previewCtx.drawImage(asset.generatedTexture, 0, 0, 32, 32);
+                        this.selectedTileDisplay.appendChild(previewCanvas);
+                    }
+                }
+            }
         }
     }
 
     /**
-    * Calculates mouse position relative to the canvas.
-    */
+     * Calculates mouse position relative to the canvas.
+     */
     getMousePos(event: MouseEvent) {
         if (!this.canvas) return { x: 0, y: 0 };
         const rect = this.canvas.getBoundingClientRect();
 
-        // Account for CSS scaling if necessary, though in our setup it's 1:1
         const scaleX = this.canvas.width / rect.width;
         const scaleY = this.canvas.height / rect.height;
 
         return {
-            x: (event.clientX - rect.left) * scaleX, // Screen X relative to canvas
-            y: (event.clientY - rect.top) * scaleY  // Screen Y relative to canvas
+            x: (event.clientX - rect.left) * scaleX,
+            y: (event.clientY - rect.top) * scaleY
         };
     }
 
     /**
-    * Updates the map data by translating screen click to map coordinates.
-    * @param {number} x - Screen X position
-    * @param {number} y - Screen Y position
-    */
+     * Updates the map data by translating screen click to map coordinates.
+     * @param {number} x - Screen X position
+     * @param {number} y - Screen Y position
+     */
     paintTile(x: number, y: number) {
-        // Convert screen coordinates to map pixel coordinates using viewport offset
         const mapX = x + this.viewPort.x;
         const mapY = y + this.viewPort.y;
 
@@ -419,28 +547,23 @@ export class DesignerApp {
         const row = Math.floor(mapY / TILE_SIZE);
 
         if (row >= 0 && row < this.rows && col >= 0 && col < this.cols) {
-            // Use the selected ID (number) directly
             if (this.levelMap[row][col] !== this.selectedTileId!) {
                 this.levelMap[row][col] = this.selectedTileId!;
-                this.drawGrid(); // Redraw only the viewport
+                this.drawGrid();
             }
         }
     }
 
     /**
-    * Adjusts the viewport position and clamps it within the map boundaries.
-    */
+     * Adjusts the viewport position and clamps it within the map boundaries.
+     */
     handlePan(dx: number, dy: number) {
-        // Calculate total map dimensions in pixels
         const mapWidth = this.cols * TILE_SIZE;
         const mapHeight = this.rows * TILE_SIZE;
 
-        // Determine maximum scrollable position (map size minus viewport size). 
-        // If map is smaller than viewport, max scroll is 0.
         const maxX = Math.max(0, mapWidth - VIEWPORT_WIDTH);
         const maxY = Math.max(0, mapHeight - VIEWPORT_HEIGHT);
 
-        // Update viewport position and clamp it between 0 and maxX/maxY
         this.viewPort.x = Math.max(0, Math.min(this.viewPort.x + dx, maxX));
         this.viewPort.y = Math.max(0, Math.min(this.viewPort.y + dy, maxY));
 
@@ -448,10 +571,9 @@ export class DesignerApp {
     }
 
     /**
-    * Handles keyboard input for panning the map (WASD or Arrow Keys).
-    */
+     * Handles keyboard input for panning the map (WASD or Arrow Keys).
+     */
     handleKeyDown = (e: { key: any; preventDefault: () => void; }) => {
-        // Only pan if we have more map than viewport to show
         if (this.cols * TILE_SIZE <= VIEWPORT_WIDTH && this.rows * TILE_SIZE <= VIEWPORT_HEIGHT) return;
 
         let dx = 0;
@@ -474,13 +596,12 @@ export class DesignerApp {
             case 'd':
                 dx = PANNING_STEP;
                 break;
-            case 'Shift': // Ignore shift key
+            case 'Shift':
                 return;
-            case '0': // Quickly select the 'Empty' tile
+            case '0':
                 this.setSelectedTile(0);
                 break;
             default:
-                // Only prevent default for handled keys
                 return;
         }
 
@@ -489,17 +610,56 @@ export class DesignerApp {
     }
 
     /**
-    * Sets up all necessary DOM event listeners for drawing, saving, resizing, and panning.
-    */
+     * Hides the tile settings action panel.
+     */
+    hideTileSettingsPanel() {
+        if (this.tileSettingsPanel) {
+            this.tileSettingsPanel.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Displays the tile settings action panel for a specific tile.
+     */
+    showTileSettingsPanel(settingKey: string, setting: ISettingsBagItem) {
+        if (!this.tileSettingsPanel) return;
+
+        $D.get('#settings-key')!.textContent = settingKey;
+        $D.get('#settings-coords')!.textContent = `(${setting.x}, ${setting.y})`;
+        $D.get('#settings-action')!.textContent = setting.action;
+
+        const propsJson = JSON.stringify(setting.props, null, 2);
+        $D.get('#settings-props')!.innerHTML = `<pre>${propsJson}</pre>`;
+
+        this.tileSettingsPanel.classList.remove('hidden');
+    }
+
+    findTileSettingByCoordinates(mapX: number, mapY: number) {
+        const worldX = Math.floor(mapX / TILE_SIZE) * TILE_SIZE;
+        const worldY = Math.floor(mapY / TILE_SIZE) * TILE_SIZE;
+
+        for (const key in this.tileSettings) {
+            const setting = this.tileSettings[key];
+            if (setting.x === worldX && setting.y === worldY) {
+                return { key, setting };
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Sets up all necessary DOM event listeners for drawing, saving, resizing, and panning.
+     */
     setupEventListeners() {
         if (!this.canvas) return;
 
-        // Drawing Listeners
-        this.canvas.addEventListener('mousedown', (e) => {
-            if (e.button === 0) { // Left click
+        this.canvas.addEventListener('mousedown', (e: MouseEvent) => {
+            const pos = this.getMousePos(e);
+
+            if (e.button === 0) {
                 this.isDrawing = true;
-                const pos = this.getMousePos(e);
                 this.paintTile(pos.x, pos.y);
+            } else if (e.button == 1) {
             }
         });
 
@@ -515,13 +675,31 @@ export class DesignerApp {
         });
 
         this.canvas.addEventListener('contextmenu', (e) => {
-            e.preventDefault(); // Prevent context menu on canvas
+            e.preventDefault();
+            this.hideTileSettingsPanel();
+
+            const pos = this.getMousePos(e);
+            const mapX = pos.x + this.viewPort.x;
+            const mapY = pos.y + this.viewPort.y;
+
+
+            const foundSetting = this.findTileSettingByCoordinates(mapX, mapY);
+
+
+            if (foundSetting) {
+                this.showTileSettingsPanel(foundSetting.key, foundSetting.setting);
+            } else {
+                console.log(`No settings found for world coordinates (${mapX}, ${mapY}).`);
+            }
+
         });
 
-        // Save Button Listener
+        this.closeSettingsButton?.addEventListener('click', () => {
+            this.hideTileSettingsPanel();
+        });
+
         this.saveButton?.addEventListener('click', this.exportLevel.bind(this));
 
-        // Resize Button Listeners
         const resizeButtons = document.querySelectorAll('.resize-control-row button, .resize-control-col button');
         resizeButtons.forEach(button => {
             button.addEventListener('click', (e) => {
@@ -535,15 +713,16 @@ export class DesignerApp {
             });
         });
 
-        // Keyboard Listener for Panning
         window.addEventListener('keydown', this.handleKeyDown);
     }
 
+
+
     /**
-    * Exports the level map as a JSON file for download.
-    */
+     * Exports the level map as a JSON file for download.
+     */
     exportLevel() {
-        const levelData = {
+        const levelData: ILevelData = {
             metadata: {
                 name: 'Generated Level',
                 description: `Level generated on ${new Date().toISOString()}`,
@@ -553,8 +732,13 @@ export class DesignerApp {
                 width: this.cols * TILE_SIZE,
                 height: this.rows * TILE_SIZE
             },
-            map: this.levelMap
+            map: this.levelMap,
+            settings: this.tileSettings
+
         };
+
+
+
 
         const jsonString = JSON.stringify(levelData, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
