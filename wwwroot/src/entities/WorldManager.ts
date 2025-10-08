@@ -6,7 +6,7 @@ import { IGameEntity } from '../interface/IGameEntity';
 import { IPlayerProps } from '../interface/IPlayerProps';
 import { isEntityInView } from '../utils/collitionHelpers';
 import { StateHelper } from './StateHelper';
-import { LevelEntity } from './level/levelEntity';
+import { LevelEntityRenderer } from './level/LevelEntityRenderer';
 import { Sequence } from '../../../src';
 import { Camera2D } from '../camera/Camera2D';
 import { IWorldProps } from './IWorldProps';
@@ -66,8 +66,10 @@ export class WorldManager extends Canvas2DEntity<IWorldProps> implements IGameEn
 
         this.stateHelper = new StateHelper(props);
 
-        GameState.worldWidth = props.worldWidth;
-        GameState.worldHeight = props.worldHeight;
+        GameState.getInstance().worldWidth = props.worldWidth;
+        GameState.getInstance().worldHeight = props.worldHeight;
+
+        GameState.getInstance().camera = this.camera;
 
         this.props.viewportWidth = Math.round(this.props.viewportWidth);
         this.props.viewportHeight = Math.round(this.props.viewportHeight);
@@ -98,8 +100,8 @@ export class WorldManager extends Canvas2DEntity<IWorldProps> implements IGameEn
 
         const targetProps = this.camera.followTarget.props as IPlayerProps;
 
-        const targetCenterX = targetProps.positioned.x + targetProps.positioned.width / 2;
-        const targetCenterY = targetProps.positioned.y + targetProps.positioned.height / 2;
+        const targetCenterX = targetProps.position.x + targetProps.position.width / 2;
+        const targetCenterY = targetProps.position.y + targetProps.position.height / 2;
 
         const effectiveTargetX = targetCenterX + this.camera.offsetX;
         const effectiveTargetY = targetCenterY + this.camera.offsetY;
@@ -128,7 +130,7 @@ export class WorldManager extends Canvas2DEntity<IWorldProps> implements IGameEn
     }
 
     updateEntities(ts: number, deltaTime: number): void {
-        const allEntities = [...GameState.entities];
+        const allEntities = [...GameState.getInstance().entities];
         allEntities.sort((a, b) => (a.props.zIndex || 0) - (b.props.zIndex || 0));
 
         allEntities.forEach(entity => {
@@ -153,12 +155,12 @@ export class WorldManager extends Canvas2DEntity<IWorldProps> implements IGameEn
 
     setViewportX(x: number): void {
         this.props.viewportX = x;
-        GameState.viewport.x = this.props.viewportX;
+        GameState.getInstance().viewport.x = this.props.viewportX;
     }
 
     setViewportY(y: number): void {
         this.props.viewportY = y;
-        GameState.viewport.y = this.props.viewportY;
+        GameState.getInstance().viewport.y = this.props.viewportY;
     }
 
     private worldEntityRenderer = (
@@ -170,10 +172,10 @@ export class WorldManager extends Canvas2DEntity<IWorldProps> implements IGameEn
         ctx.save();
         ctx.translate(-this.props.viewportX, -this.props.viewportY);
 
-        let tileEntity: LevelEntity | undefined;
+        let tileEntity: LevelEntityRenderer | undefined;
         const otherEntities: IGameEntity<any>[] = [];
-        for (const entity of GameState.entities) {
-            if (entity instanceof LevelEntity) {
+        for (const entity of GameState.getInstance().entities) {
+            if (entity instanceof LevelEntityRenderer) {
                 tileEntity = entity;
             } else {
                 otherEntities.push(entity);
@@ -190,6 +192,11 @@ export class WorldManager extends Canvas2DEntity<IWorldProps> implements IGameEn
                 x: this.props.viewportX, y: this.props.viewportY
             }, this.props.viewportWidth, this.props.viewportHeight)) {
                 entity.onDraw(entity, canvasHelper);
+
+                if(entity.onPostDraw){
+                    entity.onPostDraw(entity,canvasHelper);
+                }
+
             }
         }
 
@@ -197,12 +204,13 @@ export class WorldManager extends Canvas2DEntity<IWorldProps> implements IGameEn
             tileEntity.onDrawForeground(tileEntity, canvasHelper, ts);
         }
 
+        GameState.getInstance().particles = GameState.getInstance().particles.filter(particle => {
 
-        GameState.particles = GameState.particles.filter(particle => {
-            const isStillAlive = particle.update!(GameState.ctx!.canvas.height);
+            const isStillAlive = particle.update!(GameState.getInstance().ctx!.canvas.height);
             if (isStillAlive) {
-                particle.draw!(GameState.ctx!);
+                particle.draw!(GameState.getInstance().ctx!);
             }
+            
             return isStillAlive;
         });
 

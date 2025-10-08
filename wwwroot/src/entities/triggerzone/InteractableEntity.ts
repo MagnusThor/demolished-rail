@@ -1,17 +1,19 @@
+
+// Minimum downward velocity required to trigger a screen shake upon hard landing.
+
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
+import { GameEntity } from "../GameEntity";
+import { LevelEntityRenderer } from "../level/LevelEntityRenderer";
+
+import { WorldManager } from "../WorldManager";
 import { CollisionAxis } from "../../enums/CollisionAxis";
 import { ICollisionResult } from "../../interface/ICollisionResult";
 import { IGameEntityBase, IGameEntity } from "../../interface/IGameEntity";
-import { GameState } from "../../global/GameState";
 import { isHardImpact } from "../../utils/impactHelpers";
 import { getSurroundingTiles, getTileProperties } from "../../utils/tileEntityHelpers";
-import { GameEntity } from "../GameEntity";
-import { LevelEntity } from "../level/levelEntity";
-import { ExtendedCollisionHelper } from "../player/collisiondetectors/extendedCollitionHelper";
-import { PlayerEntity } from "../player/playerEntity";
-import { WorldManager } from "../WorldManager";
-
-// Minimum downward velocity required to trigger a screen shake upon hard landing.
+import { ExtendedCollisionHelper } from "../../utils/extendedCollitionHelper";
+import { GameState } from "../../global/GameState";
+import { BoundingBox } from "../../interface/IBoundingBox";
 
 export interface IInteractableProps extends IGameEntityBase {
     velX: number; // Horizontal velocity
@@ -29,15 +31,18 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
 
     constructor(props: IInteractableProps) {
         super("interactable", props);
+
         this.collisionDetectors = [{
             targetName: "tileBlock",
-            detectorFn: (interactableEntity: InteractableEntity, tileEntity: LevelEntity) => {
+            detectorFn: (interactableEntity: InteractableEntity, tileEntity: LevelEntityRenderer) => {
+                
                 const results = new Array<ICollisionResult>();
+
                 const nearbyTiles = getSurroundingTiles(tileEntity.tileSpatialGrid,
-                    interactableEntity.props.positioned.getBoundingBox(), tileEntity.props.tileWidth);
+                    interactableEntity.props.position.getBoundingBox(), tileEntity.props.tileWidth);
 
-                const bbox = interactableEntity.props.positioned.getBoundingBox();
-
+                const bbox = interactableEntity.props.position.getBoundingBox();
+             
                 nearbyTiles.forEach(tile => {
                     const tileBBox = {
                         x: tile.x,
@@ -63,7 +68,7 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
                 });
                 return results;
             },
-            onCollision: (interactableEntity: InteractableEntity, result: ICollisionResult, tileEntity: LevelEntity) => {
+            onCollision: (interactableEntity: InteractableEntity, result: ICollisionResult, tileEntity: LevelEntityRenderer) => {
                 const interactableProps = interactableEntity.props;
                 const snapTo = result.snapTo;
                 
@@ -78,7 +83,7 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
                     // Check if the entity is falling or jumping
                     if (previousVelY > 0) { // Falling and hitting floor
                         // Snap to the top of the object
-                        interactableProps.positioned.y = snapTo.y - interactableProps.positioned.height;
+                        interactableProps.position.y = snapTo.y - interactableProps.position.height;
                         // Reset rotation when it lands
                         interactableProps.rotation = 0;
 
@@ -90,20 +95,21 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
                         
                     } else if (previousVelY < 0) { // Jumping and hitting ceiling
                         // Snap to the bottom of the object
-                        interactableProps.positioned.y = snapTo.y + snapTo.height;
+                        interactableProps.position.y = snapTo.y + snapTo.height;
                     }
                     interactableProps.velY = 0;
                 } else if (result.axis === CollisionAxis.X) {
                     // Check if the entity is moving right or left
 
-              
-
+                   // console.log(`Collided with`,result.targetEntity)
+                 
                     if (interactableProps.velX > 0) {
                         // Snap to the left side of the object
-                        interactableProps.positioned.x = snapTo.x - interactableProps.positioned.width;
+                        interactableProps.position.x = snapTo.x - interactableProps.position.width;
+
                     } else if (interactableProps.velX < 0) {
                         // Snap to the right side of the object
-                        interactableProps.positioned.x = snapTo.x + snapTo.width;
+                        interactableProps.position.x = snapTo.x + snapTo.width;
                     }
 
                     
@@ -114,7 +120,15 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
     }
 
     getBoundingBox? = (self: IGameEntity<IInteractableProps>) => {
-        return self.props.positioned.getBoundingBox!();
+
+        
+        const bbox = new BoundingBox(self.props.position.getBoundingBox!())
+
+
+     
+
+        return bbox;//;.worldToViewport();
+
     }
 
     onUpdate? = (self: IGameEntity<IInteractableProps>, timeStamp: number) => {
@@ -129,8 +143,8 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
         }
 
         // Update the position
-        props.positioned.x += props.velX;
-        props.positioned.y += props.velY;
+        props.position.x += props.velX;
+        props.position.y += props.velY;
 
         // Run collision detectors to correct position if there's any overlap from the move
         this.runCollitionDetectors();
@@ -139,12 +153,21 @@ export class InteractableEntity extends GameEntity<IInteractableProps> {
     onDraw? = (self: IGameEntity<IInteractableProps>, helper: CanvasHelper) => {
         const props = self.props;
 
+
+        
+        const bbox = self.getBoundingBox!(self);
+
+        ExtendedCollisionHelper.visualizeBBox(
+            helper.ctx,
+            bbox,"interactable",3)
+
+
         // Use the new drawRotatedRect helper method
         helper.drawRotatedRect(
-            props.positioned.x,
-            props.positioned.y,
-            props.positioned.width,
-            props.positioned.height,
+            props.position.x,
+            props.position.y,
+            props.position.width,
+            props.position.height,
             props.rotation,
             {
                 strokeStyle: 'blue',

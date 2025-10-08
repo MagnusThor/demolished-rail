@@ -2,7 +2,8 @@ import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { IIndexedTile } from "../../interface/IIndexedTile";
-import { IAnimatedTileInstance, ILevelProps } from "../../interface/ILevelProps";
+import { ILevelProps } from "../../interface/ILevelProps";
+import { IAnimatedTileInstance } from "../../interface/IAnimatedTileInstance";
 import { ISpriteAnimation } from "../../interface/ISpriteAnimation";
 import { TileDefinitions } from "../../factory/TileDefinitions";
 import { GameState } from "../../global/GameState";
@@ -11,7 +12,7 @@ import { GameEntity } from "../GameEntity";
 import { StateHelper } from "../StateHelper";
 
 
-export class LevelEntity extends GameEntity<ILevelProps> {
+export class LevelEntityRenderer extends GameEntity<ILevelProps> {
 
     public tileSpatialGrid: Map<string, IIndexedTile[]> = new Map();
     public logicalCollisionMap: { type: number, x: number, y: number, row: number, col: number }[][] = [];
@@ -149,7 +150,7 @@ export class LevelEntity extends GameEntity<ILevelProps> {
     }
 
     onUpdate? = (self: IGameEntity<ILevelProps>, timeStamp: number) => {
-        const viewport = GameState.viewport;
+       
     };
 
     /**
@@ -162,7 +163,7 @@ export class LevelEntity extends GameEntity<ILevelProps> {
     private drawAnimatedTiles(self: IGameEntity<ILevelProps>, helper: CanvasHelper, tilesToDraw: IAnimatedTileInstance[], timeStamp: number) {
         const props = self.props;
         const ctx = helper.ctx;
-        const viewport = GameState.viewport;
+        const viewport = GameState.getInstance().viewport;
         const screenWidth = viewport.viewportWidth;
         const screenHeight = viewport.viewportHeight;
 
@@ -183,14 +184,14 @@ export class LevelEntity extends GameEntity<ILevelProps> {
                 const currentFrameTextureName = animation.frames[animation.currentFrameIndex];
                 const tileTexture = self.props.textures![currentFrameTextureName];
                 
-                if (tileTexture && tileTexture.texture) {
+                if (tileTexture && tileTexture.asset) {
                     const offsetX = tileProperties?.offset?.x || 0;
                     const offsetY = tileProperties?.offset?.y || 0;
                     const drawX = tileInstance.x + offsetX;
                     const drawY = tileInstance.y + offsetY;
 
                     ctx.drawImage(
-                        tileTexture.texture.src,
+                        tileTexture.asset.data!,
                         tileTexture.x,
                         tileTexture.y,
                         tileTexture.width,
@@ -210,7 +211,7 @@ export class LevelEntity extends GameEntity<ILevelProps> {
     private drawTiles(self: IGameEntity<ILevelProps>, helper: CanvasHelper, tilesToDraw: IIndexedTile[]) {
         const props = self.props;
         const ctx = helper.ctx;
-        const viewport = GameState.viewport;
+        const viewport = GameState.getInstance().viewport;
         const screenWidth = viewport.viewportWidth;
         const screenHeight = viewport.viewportHeight;
 
@@ -226,9 +227,9 @@ export class LevelEntity extends GameEntity<ILevelProps> {
 
                 if (tileProperties.texture) {
                     const tileTexture = self.props.textures![tileProperties.texture!];
-                    if (tileTexture.texture) {
+                    if (tileTexture.asset) {
                         ctx.drawImage(
-                            tileTexture.texture.src,
+                            tileTexture.asset.data!,
                             tileTexture.x,
                             tileTexture.y,
                             tileTexture.width,

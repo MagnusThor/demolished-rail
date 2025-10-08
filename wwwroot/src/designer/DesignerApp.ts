@@ -2,11 +2,8 @@ import { $D } from "dathor-helpers";
 
 import { GameAssets } from "../global/GameAssets";
 
-import { TILE_BLUEPRINTS } from "./TileBluePrints";
-import { getTileProperties } from "../utils/tileEntityHelpers";
-import { IGameAsset } from "../interface/IGameAsset";
 import { IGameTexture } from "../interface/ITexture";
-import { getSettigsBag } from "../factory/LevelGraph";
+import { TILE_BLUEPRINTS } from "../blueprints/TileBluePrints";
 
 
 export function valieDateLevel(
@@ -57,16 +54,18 @@ export interface ISettingsSerialized {
     [key: string]: ISettingsBagItem;
 }
 
+export interface ILevelMetadata {
+    name: string,
+    description: string,
+    tileSize: number,
+    columns: number,
+    rows: number
+    width: number,
+    height: number
+}
+
 export interface ILevelData {
-    metadata: {
-        name: string,
-        description: string,
-        tileSize: number,
-        columns: number,
-        rows: number
-        width: number,
-        height: number
-    }
+    metadata: ILevelMetadata
     map: number[][],
     settings?: ISettingsSerialized
 }
@@ -97,7 +96,7 @@ const mockedTileSettings: ISettingsSerialized = {
 
     },
     "ds0321": {
-        action: "textCreatorSettings",
+        action: "textCreator",
         x: 288,
         y: 224,
         props: {
@@ -428,6 +427,11 @@ export class DesignerApp {
         this.paletteOptions.innerHTML = '';
 
         Object.entries(TILE_BLUEPRINTS).forEach(([idString, tile]) => {
+
+
+            console.log("adding blurprint", idString,tile)
+
+
             const id = parseInt(idString);
             const tileDiv = document.createElement('div');
             tileDiv.className = 'tile-option rounded';
@@ -439,6 +443,11 @@ export class DesignerApp {
                 if (id === 0) {
                     tileDiv.textContent = 'X';
                     tileDiv.classList.add('text-gray-600', 'text-xl', 'font-bold');
+                }else{
+                    tileDiv.textContent = idString;
+                    tileDiv.classList.add('text-gray-600', 'text-xl', 'font-bold');
+                    tileDiv.style.backgroundColor = tile.color!
+
                 }
             } else {
                 const asset = this.assets?.[tile.texture];
@@ -700,7 +709,7 @@ export class DesignerApp {
 
         this.saveButton?.addEventListener('click', this.exportLevel.bind(this));
 
-        const resizeButtons = document.querySelectorAll('.resize-control-row button, .resize-control-col button');
+        const resizeButtons = document.querySelectorAll('.resize-control-row,.resize-control-col');
         resizeButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 const target = e.currentTarget as HTMLElement;

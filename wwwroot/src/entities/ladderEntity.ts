@@ -3,7 +3,7 @@ import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../interface/IBoundingBox";
 import { ICollisionDetector } from "../interface/ICollisionDetector";
 import { IGameEntity, IGameEntityBase } from "../interface/IGameEntity";
-import { IPositioned } from "../interface/IPositioned";
+import { IPosition2D } from "../interface/IPosition2D";
 import { IGameTexture } from "../interface/ITexture";
 import { GameEntity } from "./GameEntity";
 import { StateHelper } from "./StateHelper";
@@ -12,7 +12,7 @@ import { StateHelper } from "./StateHelper";
 export interface ILadderProps extends IGameEntityBase{
     width:number,
     height:number
-    positioned: IPositioned
+    position: IPosition2D
     texture?: IGameTexture
     
 }
@@ -59,20 +59,20 @@ export class LadderEntity extends GameEntity<ILadderProps> implements IGameEntit
         
         if (ladderTexture) {
             ctx.drawImage(
-                ladderTexture.texture.src,
+                ladderTexture.asset.data!,
                 ladderTexture.x,
                 ladderTexture.y,
                 ladderTexture.width,
                 ladderTexture.height,
-                props.positioned.x,
-                props.positioned.y-16,
+                props.position.x,
+                props.position.y-16,
                 props.width,
                 props.height
             );
         } else {
             // Fallback: draw a simple rectangle if no texture is found.
             ctx.fillStyle = '#2e6612ff'; // Sienna color for a wooden ladder
-            ctx.fillRect(props.positioned.x, props.positioned.y, props.width, props.height);
+            ctx.fillRect(props.position.x, props.position.y, props.width, props.height);
         }
     };
 
@@ -81,8 +81,8 @@ export class LadderEntity extends GameEntity<ILadderProps> implements IGameEntit
      */
     getBoundingBox = (self: IGameEntity<ILadderProps>): IBoundingBox => {
         return {
-            x: self.props.positioned.x,
-            y: self.props.positioned.y,
+            x: self.props.position.x,
+            y: self.props.position.y,
             width: self.props.width,
             height: self.props.height,
         };

@@ -1,10 +1,10 @@
 import { IParticle } from "../../interface/IParticle";
-import { IPositioned, Positioned } from "../../interface/IPositioned";
+import { IPosition2D, Positioned } from "../../interface/IPosition2D";
 import { GameState } from "../../global/GameState";
 
 export class DebrisParticle implements IParticle {
     uuid: string;
-    Positioned: IPositioned;
+    position: IPosition2D;
     data: HTMLCanvasElement | HTMLImageElement;
     width: number;
     height: number;
@@ -31,7 +31,7 @@ export class DebrisParticle implements IParticle {
     ) {
         this.uuid = crypto.randomUUID();
         this.data = data;
-        this.Positioned = new Positioned(x, y, data.width , data.height);
+        this.position = new Positioned(x, y, data.width , data.height);
         this.width = data.width ;
         this.height = data.height;
         this.isAlive = true;
@@ -64,12 +64,12 @@ export class DebrisParticle implements IParticle {
         // Apply velocities to the Positioned object's coordinates
         this.posX += this.velX;
         this.posY += this.velY;
-        this.Positioned.x = this.posX;
-        this.Positioned.y = this.posY;
+        this.position.x = this.posX;
+        this.position.y = this.posY;
 
         // Handle collision with the bottom of the canvas
-        if (this.Positioned.y + this.height > canvasHeight) {
-            this.Positioned.y = canvasHeight - this.height;
+        if (this.position.y + this.height > canvasHeight) {
+            this.position.y = canvasHeight - this.height;
             this.velY *= -this.bounciness;
             this.velX *= (1 - this.friction);
             
@@ -78,14 +78,14 @@ export class DebrisParticle implements IParticle {
             if (Math.abs(this.velY) < 0.1) this.velY = 0;
         }
 
-        const { width, height } = GameState.gameCanvas!;
+        const { width, height } = GameState.getInstance().gameCanvas!;
 
         // Check if the particle is outside the canvas and mark as not alive.
         if (
-            this.Positioned.x > width ||
-            this.Positioned.x + this.width < 0 ||
-            this.Positioned.y > height ||
-            (this.Positioned.y >= height - this.height - 1 && Math.abs(this.velY) < 1 && Math.abs(this.velX) < 1)
+            this.position.x > width ||
+            this.position.x + this.width < 0 ||
+            this.position.y > height ||
+            (this.position.y >= height - this.height - 1 && Math.abs(this.velY) < 1 && Math.abs(this.velX) < 1)
         ) {
             this.isAlive = false;
         }
@@ -94,7 +94,7 @@ export class DebrisParticle implements IParticle {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        const { x, y } = this.Positioned;
+        const { x, y } = this.position;
         if (this.isAlive) {
             ctx.drawImage(this.data as HTMLCanvasElement, x, y, this.width * this.scale, this.height * this.scale);
         }

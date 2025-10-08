@@ -1,7 +1,8 @@
-import { Positioned } from "../../interface/IPositioned";
+import { Positioned } from "../../interface/IPosition2D";
 import { GameState } from "../../global/GameState";
 import { messageLibrary } from "./messageLibrary";
 import { OverlayTextEntity } from "./OverlayTextEntity";
+import { ITileSettings, ITileSettingsBag } from "../../interface/ITileSettings";
 
 export class TextOverlayManager {
     private static instance: TextOverlayManager;
@@ -21,38 +22,34 @@ export class TextOverlayManager {
      * Shows a text overlay by ID.
      * @param textId The key from TEXT_MAP.
      */
-    public showText(textId: string) {
+    public showText(tileSettings: ITileSettingsBag) {
         if (this._isShowing) {
             // If already showing, update the text instead of creating a new entity
-            this._overlayTextEntity?.resetText(messageLibrary.get(textId)?.text || "Text not found.");
+            this._overlayTextEntity?.resetText(messageLibrary.get(tileSettings.bag.textId)?.text || "Text not found.");
             return;
         }
 
         // Create or get the single entity instance
         if (!this._overlayTextEntity) {
 
-            const bag =messageLibrary.get(textId)!;
-         
+            const props =messageLibrary.get(tileSettings.textId)!;
 
+          
             this._overlayTextEntity = new OverlayTextEntity({
-        
-                text: bag.text || "Text not found.",
-                speed: bag.speed, // words per second
-                font: bag.font,
-                color: bag.color,
-                onComplete: undefined,
-                isOneShot: false,
-                isInitialized: true,
-                states: {},
-                positioned: new Positioned(0,0,0,0),
-                zIndex:1,
-                isCollidable: false
+                text: props.text,
+                speed: props.speed,
+                color: props.color,
+                font: props.font
             });
+
+            console.log("Text is not showing, lets se what the bag is",props);
+         
+       
             // Add the entity to the game state to be updated and drawn
-            GameState.entities.push(this._overlayTextEntity);
+            GameState.getInstance().entities.push(this._overlayTextEntity);
         } else {
             // Update the existing entity's text
-            this._overlayTextEntity.resetText(messageLibrary.get(textId)?.text || "Text not found.");
+            this._overlayTextEntity.resetText(messageLibrary.get(tileSettings.textId)?.text || "Text not found.");
         }
         this._isShowing = true;
     }

@@ -5,6 +5,7 @@
  * @property key - A unique string identifier for the asset.
  */
 export interface IGameAsset {
-    src: HTMLImageElement;
+    data: HTMLImageElement| null | undefined;
     key: string;
+    kind?: string
 }

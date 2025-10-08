@@ -1,107 +1,77 @@
 import { Point2D } from "../../../../../src";
 import { CollisionAxis } from "../../../enums/CollisionAxis";
-import { IBoundingCircle } from "../../../interface/IBoundingBox";
 import { ICollisionResult } from "../../../interface/ICollisionResult";
 import { GameState } from "../../../global/GameState";
-import { getTileProperties, getTileImageDataAndProps } from "../../../utils/tileEntityHelpers";
+import { getTileProperties } from "../../../utils/tileEntityHelpers";
 import { CollectibleEntity } from "../../collectible/CollectibleEntity";
 import { LadderEntity } from "../../ladderEntity";
 import { PlatformEntity } from "../../platform/PlatformEntity";
 import { RopeEntity } from "../../platform/RopeEntity";
-import { LevelEntity } from "../../level/levelEntity";
 import { PlayerEntity } from "../playerEntity";
-import { ExtendedCollisionHelper } from "./extendedCollitionHelper";
 import { WorldManager } from "../../WorldManager";
+import { ExtendedCollisionHelper } from "../../../utils/extendedCollitionHelper";
+import { LevelEntityRenderer } from "../../level/LevelEntityRenderer";
 import { isHardImpact, calculateShakeIntensity } from "../../../utils/impactHelpers";
 
+/** Helper: get player's bounding box from current sprite */
+function getPlayerBox(player: PlayerEntity) {
+    return player.getBoundingBox(player);
+}
 
-export const playerCollisionDetectors =
-    [
-        {
-            targetName: "tileBlock",
-            detectorFn: (playerEntity: PlayerEntity, tileEntity: LevelEntity) => {
-                const playerProps = playerEntity.props;
-                const collisionResults = new Array<ICollisionResult>();
-                const gridWidth = 32;
-                const gridHeight = 32;
-                const logicalCollisionMap = tileEntity.logicalCollisionMap;
+export const playerCollisionDetectors = [
+    // ---------------- TILE BLOCK ----------------
+    {
+        targetName: "tileBlock",
+        detectorFn: (player: PlayerEntity, tile: LevelEntityRenderer) => {
+            const collisionResults: ICollisionResult[] = [];
+            const playerBox = getPlayerBox(player);
+            const gridW = 32;
+            const gridH = 32;
+            const map = tile.logicalCollisionMap;
 
-                const playerCircle: IBoundingCircle = {
-                    x: playerProps.positioned.x + playerProps.positioned.width / 2,
-                    y: playerProps.positioned.y + playerProps.positioned.height / 2,
-                    radius: (playerProps.positioned.width / 2)
-                };
+            const tileX = Math.floor(playerBox.x / gridW);
+            const tileY = Math.floor(playerBox.y / gridH);
+            const radius = Math.ceil(playerBox.width / gridW);
 
-                const playerTileX = Math.floor(playerCircle.x / gridWidth);
-                const playerTileY = Math.floor(playerCircle.y / gridHeight);
+            for (let row = tileY - radius; row <= tileY + radius; row++) {
+                for (let col = tileX - radius; col <= tileX + radius; col++) {
+                    if (row < 0 || row >= map.length || col < 0 || col >= map[0].length) continue;
+                    const logicalTile = map[row][col];
+                    if (!logicalTile) continue;
 
-                const checkRadius = 1;
+                    const tileProps = getTileProperties(logicalTile.type);
+                    if (!tileProps) continue;
 
-                for (let row = playerTileY - checkRadius; row <= playerTileY + checkRadius; row++) {
-                    for (let col = playerTileX - checkRadius; col <= playerTileX + checkRadius; col++) {
-                        if (row >= 0 && row < logicalCollisionMap.length && col >= 0 && col < logicalCollisionMap[0].length) {
-                            const logicalTile = logicalCollisionMap[row][col];
+                    const tileBox = {
+                        x: logicalTile.x,
+                        y: logicalTile.y,
+                        width: tileProps.width,
+                        height: tileProps.height,
+                    };
 
-                            if (logicalTile) {
-                                const tileType = logicalTile.type;
-                                const tileDimensions = getTileProperties(tileType);
-                                if (!tileDimensions) continue;
-
-                                const tileBox = {
-                                    x: logicalTile.x,
-                                    y: logicalTile.y,
-                                    width: tileDimensions.width,
-                                    height: tileDimensions.height,
-                                    tileType: tileType
-                                };
-
-                                const tileTexture = getTileImageDataAndProps(tileEntity.tileImageData, tileType);
-
-                                if (tileTexture && tileTexture.data) {
-                                    const collisionResult = ExtendedCollisionHelper.isCirclePixelColliding(
-                                        playerCircle,
-                                        tileBox,
-
-                                        tileTexture.data
-                                    );
-                                    if (collisionResult) {
-                                        collisionResult.targetEntity = tileEntity;
-                                        collisionResults.push(collisionResult);
-                                        return collisionResults;
-                                    }
-                                } else {
-                                    const collisionResult = ExtendedCollisionHelper.isRectRectColliding(
-                                        playerProps.positioned.x, playerProps.positioned.y, playerProps.positioned.width, playerProps.positioned.height,
-                                        tileBox.x, tileBox.y, tileBox.width, tileBox.height
-                                    );
-                                    if (collisionResult) {
-                                        collisionResults.push(collisionResult);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    const collision = ExtendedCollisionHelper.isRectRectColliding(
+                        playerBox.x, playerBox.y, playerBox.width, playerBox.height,
+                        tileBox.x, tileBox.y, tileBox.width, tileBox.height
+                    );
+                    if (collision) collisionResults.push(collision);
                 }
-                return collisionResults;
-            },
-            onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult) => {
-                const playerProps = playerEntity.props;
+            }
+            return collisionResults;
+        },
+        onCollision: (player: PlayerEntity, collisionData: ICollisionResult) => {
+            if (!collisionData) return;
+            const playerBox = getPlayerBox(player);
+            const { x: tileX, y: tileY, width: tileW, height: tileH, axis } = collisionData;
+            if (axis === CollisionAxis.X) {
+                if (player.props.velX > 0) player.props.position.x = tileX - playerBox.width / 2;
+                else if (player.props.velX < 0) player.props.position.x = tileX + tileW + playerBox.width / 2;
+                player.props.velX = 0;
+            } else if (axis === CollisionAxis.Y) {
+                if (player.props.velY > 0) {
+                    player.props.position.y = tileY;
+                    player.stateHelper.set("isGrounded", true);
 
-                if (!collisionData) {
-                    return;
-                }
-                const { x: tileX, y: tileY, width: tileWidth, height: tileHeight, axis } = collisionData;
-
-                if (axis === CollisionAxis.X) {
-                    if (playerProps.velX > 0) {
-                        playerProps.positioned.x = tileX - playerProps.positioned.width;
-                    } else if (playerProps.velX < 0) {
-                        playerProps.positioned.x = tileX + tileWidth;
-                    }
-                    playerProps.velX = 0;
-                } else if (axis === CollisionAxis.Y) {
-                    if (playerProps.velY > 0) {
-                        const impactVelocity = playerProps.velY;
+                     const impactVelocity = player.props.velY;
 
                         if (isHardImpact(impactVelocity)) {
                             const shakeIntensity = calculateShakeIntensity(impactVelocity);
@@ -114,133 +84,126 @@ export const playerCollisionDetectors =
                             }
                         }
 
-                        playerProps.positioned.y = tileY - playerProps.positioned.height;
-                        playerEntity.stateHelper.set<boolean>("isGrounded", true);
-                        playerProps.velY = 0;
 
-
-                    } else if (playerProps.velY < 0) {
-                        playerProps.positioned.y = tileY + tileHeight;
-                        playerEntity.stateHelper.set<boolean>("isGrounded", false);
-
-                        const impactVelocity = playerProps.velY;
-
-                        const impactMagnitude = Math.abs(impactVelocity);
-
-                        if (isHardImpact(impactMagnitude)) {
-                            let shakeIntensity = calculateShakeIntensity(impactMagnitude);
-
-                            shakeIntensity *= 0.6;
-
-                            if (shakeIntensity > 0) {
-                                WorldManager.getCamera()?.runEffect('shake', shakeIntensity);
-                            }
-                        }
-
-                    }
-                    playerProps.velY = 0;
+                    player.props.velY = 0;
+                    
+                } else if (player.props.velY < 0) {
+                    player.props.position.y = tileY + tileH + playerBox.height;
+                    player.stateHelper.set("isGrounded", false);
+                    player.props.velY = 0;
                 }
             }
         },
-        {
-            targetName: "collectibleBlock",
-            detectorFn: (playerEntity: PlayerEntity, collectibleEntity: CollectibleEntity) => {
-                const playerProps = playerEntity.props;
-                const collisionResults = new Array<ICollisionResult>();
-                const collisionResult = ExtendedCollisionHelper.isRectRectColliding(
-                    playerProps.positioned.x, playerProps.positioned.y, playerProps.positioned.width, playerProps.positioned.height,
-                    collectibleEntity.props.positioned.x, collectibleEntity.props.positioned.y, collectibleEntity.props.positioned.width, collectibleEntity.props.positioned.height
-                );
-                if (collisionResult) {
-                    collisionResults.push(collisionResult);
-                    collisionResult.type = "collectible";
-                }
-                return collisionResults;
-            },
-            onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, collectibleEntity: CollectibleEntity) => {
-                GameState.removeEntityByUUID(collectibleEntity.uuid);
+    },
+
+    // ---------------- COLLECTIBLE ----------------
+    {
+        targetName: "collectibleBlock",
+        detectorFn: (player: PlayerEntity, collectible: CollectibleEntity) => {
+            const collisionResults: ICollisionResult[] = [];
+            const playerBox = getPlayerBox(player);
+            const colBox = collectible.props.position;
+
+            const collision = ExtendedCollisionHelper.isRectRectColliding(
+                playerBox.x, playerBox.y, playerBox.width, playerBox.height,
+                colBox.x, colBox.y, colBox.width, colBox.height
+            );
+            if (collision) {
+                collision.type = "collectible";
+                collisionResults.push(collision);
+            }
+            return collisionResults;
+        },
+        onCollision: (player: PlayerEntity, collisionData: ICollisionResult, collectible: CollectibleEntity) => {
+            GameState.getInstance().removeEntityByUUID(collectible.uuid);
+        },
+    },
+
+    // ---------------- PLATFORM ----------------
+    {
+        targetName: "platformBlock",
+        detectorFn: (player: PlayerEntity, platform: PlatformEntity) => {
+            const collisionResults: ICollisionResult[] = [];
+            const playerBox = getPlayerBox(player);
+            const platBox = platform.props.position;
+
+            const collision = ExtendedCollisionHelper.isRectRectColliding(
+                playerBox.x, playerBox.y, playerBox.width, playerBox.height,
+                platBox.x, platBox.y, platBox.width, platBox.height
+            );
+            if (collision) {
+                collision.type = "platform";
+                collisionResults.push(collision);
+            }
+            return collisionResults;
+        },
+        onCollision: (player: PlayerEntity, collisionData: ICollisionResult, platform: PlatformEntity) => {
+            if (player.props.velY >= 0) {
+                const playerBox = getPlayerBox(player);
+                player.props.position.y = platform.props.position.y;
+                player.props.velY = platform.props.velY;
+                player.stateHelper.set("isGrounded", true);
+                player.stateHelper.set("onPlatform", true);
             }
         },
-        {
-            targetName: "platformBlock",
-            detectorFn: (playerEntity: PlayerEntity, platformEntity: PlatformEntity) => {
-                const playerProps = playerEntity.props;
-                const collisionResults = new Array<ICollisionResult>();
-                const collisionResult = ExtendedCollisionHelper.isRectRectColliding(
-                    playerProps.positioned.x, playerProps.positioned.y, playerProps.positioned.width, playerProps.positioned.height,
-                    platformEntity.props.positioned.x, platformEntity.props.positioned.y, platformEntity.props.positioned.width, platformEntity.props.positioned.height
-                );
-                if (collisionResult) {
-                    collisionResults.push(collisionResult);
-                    collisionResult.type = "platform";
-                }
-                return collisionResults;
-            },
-            onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, platformEntity: PlatformEntity) => {
-                if (playerEntity.props.velY >= 0) {
-                    playerEntity.props.positioned.y = platformEntity.props.positioned.y - playerEntity.props.positioned.height;
-                    playerEntity.props.velY = 0;
-                    playerEntity.props.velY = platformEntity.props.velY;
-                    playerEntity.stateHelper.set("isGrounded", true);
-                    playerEntity.stateHelper.set("onPlatform", true);
-                }
+    },
+
+    // ---------------- LADDER ----------------
+    {
+        targetName: "ladder",
+        detectorFn: (player: PlayerEntity, ladder: LadderEntity) => {
+            const collisionResults: ICollisionResult[] = [];
+            const playerBox = getPlayerBox(player);
+            const ladderBox = ladder.props.position;
+
+            const collision = ExtendedCollisionHelper.isRectRectColliding(
+                playerBox.x, playerBox.y, playerBox.width, playerBox.height,
+                ladderBox.x, ladderBox.y, ladderBox.width, ladderBox.height
+            );
+            if (collision) {
+                collision.type = "ladder";
+                collisionResults.push(collision);
             }
+            return collisionResults;
         },
-        {
-            targetName: "ladder",
-            detectorFn: (playerEntity: PlayerEntity, ladderEntity: LadderEntity) => {
-                const playerProps = playerEntity.props;
-                const collisionResults = new Array<ICollisionResult>();
-                const collisionResult = ExtendedCollisionHelper.isRectRectColliding(
-                    playerProps.positioned.x, playerProps.positioned.y, playerProps.positioned.width, playerProps.positioned.height,
-                    ladderEntity.props.positioned.x, ladderEntity.props.positioned.y,
-                    ladderEntity.props.positioned.width, ladderEntity.props.positioned.height,
-                );
-                if (collisionResult) {
-                    collisionResults.push(collisionResult);
-                    collisionResult.type = "ladder";
-                }
-                return collisionResults;
-            },
-            onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, ladderEntity: LadderEntity) => {
-                playerEntity.stateHelper.set("onLadder", true);
-
-            }
+        onCollision: (player: PlayerEntity) => {
+            player.stateHelper.set("onLadder", true);
         },
-        {
-            targetName: "rope",
-            detectorFn: (playerEntity: PlayerEntity, ropeEntity: RopeEntity) => {
-                const playerProps = playerEntity.props;
-                const collisionResults = new Array<ICollisionResult>();
+    },
 
-                const ropeStart = new Point2D(ropeEntity.props.positioned.x, ropeEntity.props.positioned.y);
-                const ropeEnd = new Point2D(ropeEntity.endX - (playerProps.positioned.width / 2),
-                    ropeEntity.endY - (playerProps.positioned.height / 2));
-                const ropeControl = new Point2D(ropeEntity.controlX, ropeEntity.controlY);
+    // ---------------- ROPE ----------------
+    {
+        targetName: "rope",
+        detectorFn: (player: PlayerEntity, rope: RopeEntity) => {
+            const collisionResults: ICollisionResult[] = [];
+            const playerBox = getPlayerBox(player);
 
-                const collisionResult = ExtendedCollisionHelper.isRectCurveColliding(
-                    playerEntity.props.positioned.getBoundingBox!(),
-                    ropeStart,
-                    ropeControl,
-                    ropeEnd
-                );
+            const ropeStart = new Point2D(rope.props.position.x, rope.props.position.y);
+            const ropeEnd = new Point2D(
+                rope.endX - playerBox.width / 2,
+                rope.endY - playerBox.height / 2
+            );
+            const ropeControl = new Point2D(rope.controlX, rope.controlY);
 
-                if (collisionResult) {
-                    collisionResults.push(collisionResult);
-                }
-                return collisionResults;
-            },
-            onCollision: (playerEntity: PlayerEntity, collisionData: ICollisionResult, ropeEntity: RopeEntity) => {
-                playerEntity.stateHelper.set("isSwinging", true);
-                playerEntity.stateHelper.set("onLadder", false);
-                playerEntity.stateHelper.set("isGrounded", false);
-                playerEntity.props.attachedTo = ropeEntity;
+            const collision = ExtendedCollisionHelper.isRectCurveColliding(
+                playerBox,
+                ropeStart,
+                ropeControl,
+                ropeEnd
+            );
+            if (collision) collisionResults.push(collision);
 
-                WorldManager.getCamera()?.runEffect("zoom",2.5);
+            return collisionResults;
+        },
+        onCollision: (player: PlayerEntity, collisionData: ICollisionResult, rope: RopeEntity) => {
+            player.stateHelper.set("isSwinging", true);
+            player.stateHelper.set("onLadder", false);
+            player.stateHelper.set("isGrounded", false);
+            player.props.attachedTo = rope;
 
-                playerEntity.props.velX = 0;
-                playerEntity.props.velY = 0;
-
-            }
-        }
-    ];
+            WorldManager.getCamera()?.runEffect("zoom", 2.5);
+            player.props.velX = 0;
+            player.props.velY = 0;
+        },
+    },
+];

@@ -1,11 +1,11 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { IGameEntityBase, IGameEntity } from "../../interface/IGameEntity";
-import { IPositioned, Positioned } from "../../interface/IPositioned";
+import { IPosition2D, Positioned } from "../../interface/IPosition2D";
 import { GameEntity } from "../GameEntity";
 
 export interface IRopeProps extends IGameEntityBase {
-    positioned: IPositioned;
+    position: IPosition2D;
     isInitialized: boolean;
     states: { [key: string]: any };
     zIndex: number;
@@ -37,7 +37,7 @@ export class RopeEntity extends GameEntity<IRopeProps> {
         const initialAngle = (initialAngleDeg * Math.PI) / 180;
 
         const props: IRopeProps = {
-            positioned: new Positioned(x - 16, y-32, 10, lengthOfRope),
+            position: new Positioned(x - 16, y-32, 10, lengthOfRope),
             zIndex: 10,
             isInitialized: true,
             states: {},
@@ -55,7 +55,7 @@ export class RopeEntity extends GameEntity<IRopeProps> {
 
 
      getBoundingBox = (self: IGameEntity<IRopeProps>): IBoundingBox => {
-            return self.props.positioned.getBoundingBox!();
+            return self.props.position.getBoundingBox!();
         }
 
     public onUpdate(self: IGameEntity<IRopeProps>): void {
@@ -86,12 +86,12 @@ export class RopeEntity extends GameEntity<IRopeProps> {
         props.states.endAngle += props.states.endVelocity;
 
         // end position
-        this.endX = props.positioned.x + props.lengthOfRope * Math.sin(props.states.endAngle);
-        this.endY = props.positioned.y + props.lengthOfRope * Math.cos(props.states.endAngle);
+        this.endX = props.position.x + props.lengthOfRope * Math.sin(props.states.endAngle);
+        this.endY = props.position.y + props.lengthOfRope * Math.cos(props.states.endAngle);
 
         // straight midpoint
-        this.controlX = (props.positioned.x + this.endX) / 2;
-        this.controlY = (props.positioned.y + this.endY) / 2;
+        this.controlX = (props.position.x + this.endX) / 2;
+        this.controlY = (props.position.y + this.endY) / 2;
     }
 
     public onDraw(self: IGameEntity<IRopeProps>, helper: CanvasHelper): void {
@@ -103,7 +103,7 @@ export class RopeEntity extends GameEntity<IRopeProps> {
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(self.props.positioned.x, self.props.positioned.y);
+        ctx.moveTo(self.props.position.x, self.props.position.y);
         ctx.lineTo(this.endX, this.endY);
         ctx.stroke();
 

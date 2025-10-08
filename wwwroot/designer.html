@@ -4,14 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D Tile-Based Level Designer</title>
+    <title>Level Designer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="assets/css/designer.css" rel="stylesheet">
-
 </head>
-
-
 
 
 <body class="p-6 md:p-10 text-white min-h-screen">
@@ -20,7 +17,7 @@
     <header class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center">
 
         <!-- Left: Title -->
-        <h1 class="text-4xl font-extrabold text-indigo-400 mb-4 sm:mb-0">2D Level Designer</h1>
+        <h1 class="text-4xl font-extrabold text-indigo-400 mb-4 sm:mb-0">Level Designer</h1>
 
         <!-- Right: Status and Main Actions (Better Grouping) -->
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
@@ -99,18 +96,18 @@
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <button data-direction="up" data-count="1"
-                            class="w-[48%] bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition duration-150 shadow-md">Add
+                            class="w-[48%] bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition duration-150 shadow-md resize-control-row">Add
                             Row Top</button>
                         <button data-direction="down" data-count="1"
-                            class="w-[48%] bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition duration-150 shadow-md">Add
+                            class="w-[48%] bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition duration-150 shadow-md resize-control-row">Add
                             Row Bottom</button>
                     </div>
                     <div class="flex justify-between">
                         <button data-direction="left" data-count="1"
-                            class="w-[48%] bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition duration-150 shadow-md">Add
+                            class="w-[48%] bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition duration-150 shadow-md resize-control-col">Add
                             Col Left</button>
                         <button data-direction="right" data-count="1"
-                            class="w-[48%] bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition duration-150 shadow-md">Add
+                            class="w-[48%] bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition duration-150 shadow-md resize-control-col">Add
                             Col Right</button>
                     </div>
                 </div>

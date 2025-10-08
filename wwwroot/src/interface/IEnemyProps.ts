@@ -3,7 +3,7 @@ import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { IHealthProps } from "./IHealthProps";
 import { IBoundingBox } from "./IBoundingBox";
 
-import { IPositioned, Positioned } from "./IPositioned";
+import { IPosition2D, Positioned } from "./IPosition2D";
 import { CanvasHelper } from "../../../src/Engine/Helpers/CanvasHelper";
 import { IGameEntity, IGameEntityBase, IGameEntityBehavior } from "./IGameEntity";
 import { ISpriteAnimation } from "./ISpriteAnimation";
@@ -15,7 +15,7 @@ import { ISpriteAnimation } from "./ISpriteAnimation";
 // }
 
 export interface IEnemyProps extends IGameEntityBase{
-    positioned: Positioned;
+    position: Positioned;
     health: IHealthProps;
     velX: number; 
     velY: number;

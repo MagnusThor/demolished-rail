@@ -35,7 +35,7 @@ export abstract class GameEntity<T extends IGameEntityBase> implements IGameEnti
         const detectors = this.collisionDetectors;
 
         detectors.forEach(detector => {
-            const targetEntities = getFilteredAndSortedEntities(GameState, this, detector.targetName)
+            const targetEntities = getFilteredAndSortedEntities(GameState.getInstance(), this, detector.targetName)
 
             if (targetEntities && targetEntities.length > 0) {
                 targetEntities.forEach((targetEntity: any) => {

@@ -1,12 +1,12 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { IGameEntity, IGameEntityBase } from "../../interface/IGameEntity";
-import { IPositioned, Positioned } from "../../interface/IPositioned";
+import { IPosition2D, Positioned } from "../../interface/IPosition2D";
 import { GameState } from "../../global/GameState";
 import { GameEntity } from "../GameEntity";
 
 export interface ISmokeRingProps extends IGameEntityBase {
-    positioned: IPositioned
+    position: IPosition2D
     radius: number;
     lifespan: number; // in milliseconds
     states: { [key: string]: any };
@@ -22,7 +22,7 @@ export class SmokeRingEntity extends GameEntity<ISmokeRingProps> implements IGam
 
         super("smokeRing", { 
             isCollidable: false,
-            radius, lifespan, positioned: new Positioned(x - radius, y - radius, radius * 2, radius * 2), isInitialized: false, zIndex: 1, states: {} });
+            radius, lifespan, position: new Positioned(x - radius, y - radius, radius * 2, radius * 2), isInitialized: false, zIndex: 1, states: {} });
 
         this.initialLifespan = lifespan;
         this.createdAt = performance.now();
@@ -32,7 +32,7 @@ export class SmokeRingEntity extends GameEntity<ISmokeRingProps> implements IGam
     onDestroy?: ((self: IGameEntity<ISmokeRingProps>) => void) | undefined;
 
     getBoundingBox = (self: IGameEntity<ISmokeRingProps>): IBoundingBox => {
-        return self.props.positioned.getBoundingBox!();
+        return self.props.position.getBoundingBox!();
     }
 
 
@@ -43,7 +43,7 @@ export class SmokeRingEntity extends GameEntity<ISmokeRingProps> implements IGam
 
         // If the ring's lifespan is over, mark it for removal
         if (progress >= 1) {
-            GameState.removeEntityByUUID(self.uuid);
+            GameState.getInstance().removeEntityByUUID(self.uuid);
         }
 
         // Gradually shrink and fade the ring
@@ -63,9 +63,9 @@ export class SmokeRingEntity extends GameEntity<ISmokeRingProps> implements IGam
 
             // Draw a fluffy cloud shape
             ctx.beginPath();
-            ctx.arc(self.props.positioned.x - 5, self.props.positioned.y, self.props.radius, 0, 2 * Math.PI);
-            ctx.arc(self.props.positioned.x + 5, self.props.positioned.y, self.props.radius * 1.2, 0, 2 * Math.PI);
-            ctx.arc(self.props.positioned.x, self.props.positioned.y + 5, self.props.radius * 0.8, 0, 2 * Math.PI);
+            ctx.arc(self.props.position.x - 5, self.props.position.y, self.props.radius, 0, 2 * Math.PI);
+            ctx.arc(self.props.position.x + 5, self.props.position.y, self.props.radius * 1.2, 0, 2 * Math.PI);
+            ctx.arc(self.props.position.x, self.props.position.y + 5, self.props.radius * 0.8, 0, 2 * Math.PI);
             ctx.fill();
 
             ctx.restore();

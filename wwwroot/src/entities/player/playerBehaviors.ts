@@ -1,15 +1,14 @@
-import { Point2D } from "../../../../src";
-import { IGameEntityBehavior } from "../../interface/IGameEntity";
 import { IPlayerBehavior } from "../../interface/IPlayerProps";
-import { Positioned } from "../../interface/IPositioned";
+import { Positioned } from "../../interface/IPosition2D";
 import { GameState } from "../../global/GameState";
-import { getSurroundingTiles, getTileProperties, getTileXY } from "../../utils/tileEntityHelpers";
-import { LevelEntity } from "../level/levelEntity";
+import { getSurroundingTiles, getTileXY } from "../../utils/tileEntityHelpers";
+import { LevelEntityRenderer } from "../level/LevelEntityRenderer";
 import { RopeEntity } from "../platform/RopeEntity";
-import { InteractableEntity } from "../triggerzone/InteractableEntity";
 
-import { ExtendedCollisionHelper } from "./collisiondetectors/extendedCollitionHelper";
-import { PlayerEntity } from "./playerEntity";
+import { normalizePlayerBoundingBox, PlayerEntity } from "./playerEntity";
+import { InteractableEntity } from "../triggerzone/InteractableEntity";
+import { ExtendedCollisionHelper } from "../../utils/extendedCollitionHelper";
+import { BoundingBox } from "../../interface/IBoundingBox";
 
 
 export const ResetState: IPlayerBehavior = {
@@ -24,44 +23,46 @@ export const ResetState: IPlayerBehavior = {
     }
 }
 
-
-
 export const CollisionBehavior: IPlayerBehavior = {
     name: "player-entity-collition",
     order: 65,
     criteria: (player:PlayerEntity) => true,
     onUpdate: (player:PlayerEntity) => {
         const props = player.props;
-        const gameEntities = GameState.entities;       
-        const levelEntity = GameState.findEntities("tileBlock")[0] as LevelEntity;        
+        const gameEntities = GameState.getInstance().entities;       
+        const levelEntity = GameState.getInstance().findEntities("tileBlock")[0] as LevelEntityRenderer;        
         // Calculate the player's potential next position
-        const nextX = props.positioned.x + props.velX;
-        const nextY = props.positioned.y + props.velY
+        const nextX = props.position.x + props.velX;
+        const nextY = props.position.y + props.velY
         const nextBoundingBox = {
             x: nextX,
             y: nextY,
-            width: props.positioned.width,
-            height: props.positioned.height
+            width: props.position.width,
+            height: props.position.height
         };
         // Get surrounding tiles based on the next position
         const surroundingTiles = getSurroundingTiles(levelEntity.tileSpatialGrid,nextBoundingBox,32);
         // Check collisions with surrounding tiles
         for (const tile of surroundingTiles) {
-            // find the game entity that corresponds to this tile's coordinates            
-            const playerPosition = props.positioned;
             gameEntities.forEach(entity => {
-                     const entityBBox = new Positioned(entity.props.positioned.x , entity.props.positioned.y,32,32).getBoundingBox(); // we use 32x32 as default tile size
-                     const playerBBox = playerPosition.getBoundingBox();
+    
+                    const entityPos =  new Positioned(entity.props.position.x , entity.props.position.y,32,32);
+                    const entityBBox = new BoundingBox(entityPos).worldToViewport(); // we use 32x32 as default tile size
+                    const playerBBox = normalizePlayerBoundingBox(player.props);
+
                      if(ExtendedCollisionHelper.AABBColliding(playerBBox, entityBBox!)){
+
                         if(entity.uuid !== player.uuid){
-                            // lets of we got and interactable entity  
+                            // let of we got and interactable entity  
                             if(entity.name === "interactable"){
+                                console.log("htting interactable",entity);
                                 const castedEntity = entity as InteractableEntity;
                                 // lets is just move it;
-                                castedEntity.props.positioned.x += props.velX;                             
+                                castedEntity.props.position.x += props.velX;                             
                             }
                             else if(entity.name === "triggerZone"){
                                 // do ops
+
                             }
                         }
                      }
@@ -96,6 +97,12 @@ export const JumpBehavior: IPlayerBehavior = {
             const JUMP_SPEED = 8;
             props.velY = -JUMP_SPEED;
             stateHelper.set<boolean>("isJumping", true);
+
+            if (player.props.currentAnimation!.name !== 'jump') {
+            player.props.currentAnimation = player.props.animations.jump;
+            player.props.currentAnimation.currentFrameIndex = 0;
+                }   
+
         }
         stateHelper.set<boolean>("wantsToJump", false);
     }
@@ -152,8 +159,8 @@ export const MovementBehavior: IPlayerBehavior = {
     order: 60, // Updates position based on velocity
     criteria: (player:PlayerEntity) => !player.stateHelper.get<boolean>("isSwinging"),
     onUpdate: (player:PlayerEntity) => {
-        player.props.positioned.x += player.props.velX;
-        player.props.positioned.y += player.props.velY;
+        player.props.position.x += player.props.velX;
+        player.props.position.y += player.props.velY;
     }
 };
 
@@ -163,8 +170,8 @@ export const SwingingBehavior: IPlayerBehavior = {
     criteria: (player:PlayerEntity) => player.stateHelper.get<boolean>("isSwinging"),
     onUpdate: (player:PlayerEntity) => {
         const ropeEntity = player.props.attachedTo as RopeEntity;
-        player.props.positioned.x = ropeEntity.endX - (player.props.positioned.width / 2);
-        player.props.positioned.y = ropeEntity.endY - (player.props.positioned.height /2);
+        player.props.position.x = ropeEntity.endX - (player.props.position.width / 2);
+        player.props.position.y = ropeEntity.endY - (player.props.position.height /2);
     }
 };
 
@@ -173,7 +180,7 @@ export const UpdatePriorPositionBehavior: IPlayerBehavior = {
     order: 80, // Last step in the physics update
     criteria: (player:PlayerEntity) => true, // This behavior always runs
     onUpdate: (player:PlayerEntity) => {
-        player.props.positioned.updatePriorPosition!();
+        player.props.position.updatePriorPosition!();
     }
 };
 

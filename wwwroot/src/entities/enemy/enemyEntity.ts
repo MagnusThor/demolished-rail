@@ -7,7 +7,7 @@ import { ICollisionResult } from "../../interface/ICollisionResult";
 import { IEnemyProps } from "../../interface/IEnemyProps";
 import { IGameEntity, IGameEntityBehavior } from "../../interface/IGameEntity";
 import { IIndexedTile } from "../../interface/IIndexedTile";
-import { Positioned } from "../../interface/IPositioned";
+import { Positioned } from "../../interface/IPosition2D";
 import { EnemyChasingBehavior } from "./behavior/EnemyChasingBehavior";
 import { EnemyPatrollingBehavior } from "./behavior/EnemyPatrollingBehavior";
 import { enemyCollisionDetectors } from "./enemyCollisionDetectors";
@@ -37,7 +37,7 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
         this.props = {
             // The position is now set directly with world coordinates
-            positioned: new Positioned(startX - 128, startY - 128, 128, 128),
+            position: new Positioned(startX - 128, startY - 128, 128, 128),
             health: {
                 health: 100,
                 damage: 10
@@ -107,10 +107,10 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
         const props = self.props;
 
         // --- BEHAVIOR MANAGER LOGIC ---
-        const player = GameState.player;
+        const player = GameState.getInstance().player;
         if (player) {
-            const playerPos = player.props.positioned.toPoint2D();
-            const enemyPos = props.positioned.toPoint2D();
+            const playerPos = player.props.position.toPoint2D();
+            const enemyPos = props.position.toPoint2D();
             const distance = playerPos.distanceTo(enemyPos);
 
             // Set a placeholder for the next behavior to apply
@@ -120,7 +120,7 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
                 // Player is within range, switch to chasing behavior
                 // Only create a new behavior instance if it's different from the current one
                 if (this._currentBehavior.name !== "chasing") {
-                    nextBehavior = EnemyChasingBehavior(props.positioned.x, props.positioned.y);
+                    nextBehavior = EnemyChasingBehavior(props.position.x, props.position.y);
                 }
             } else {
                 // Player is too far, revert to patrolling/guarding behavior
@@ -139,12 +139,12 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
         // Apply gravity and movement to the enemy's position
         props.velY += props.gravity;
-        props.positioned.x += props.velX;
-        props.positioned.y += props.velY;
+        props.position.x += props.velX;
+        props.position.y += props.velY;
         props.isGrounded = false;
 
         // After moving, process collisions to resolve any overlaps
-        this.processCollisions!(self, GameState.findEntities("tileBlock"));
+        this.processCollisions!(self, GameState.getInstance().findEntities("tileBlock"));
 
         // The behavior now sets the enemy's velocity for the next frame
         if (this._currentBehavior) {
@@ -166,7 +166,7 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
     };
     onDraw? = (self: IGameEntity<IEnemyProps>, helper: CanvasHelper) => {
-        if (!GameState || !GameState.viewport) {
+        if (!GameState || !GameState.getInstance().viewport) {
             console.warn("gameState or viewport not initialized, skipping enemy drawing.");
             return;
         }
@@ -179,7 +179,7 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
 
             helper.drawAnimatedSprite(
                 currentAnim,
-                props.positioned.x, props.positioned.y, performance.now(),
+                props.position.x, props.position.y, performance.now(),
                 props.flippedX
             );
 
@@ -187,23 +187,23 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
             // Fallback to drawing a red box if the spritesheet isn't available
             ctx.fillStyle = "#DC3545";
             ctx.fillRect(
-                props.positioned.x,
-                props.positioned.y,
-                props.positioned.width,
-                props.positioned.height,
+                props.position.x,
+                props.position.y,
+                props.position.width,
+                props.position.height,
             );
         }
         // --- END DRAW ANIMATED SPRITE ---
 
         // Draw the health bar
         const healthBarHeight = 8;
-        const healthBarWidth = props.positioned.width * (props.health.health / 100);
+        const healthBarWidth = props.position.width * (props.health.health / 100);
 
         if (healthBarWidth > 0) {
             ctx.fillStyle = "rgba(6, 78, 23, 1)";
             ctx.fillRect(
-                props.positioned.x,
-                props.positioned.y - healthBarHeight - 2,
+                props.position.x,
+                props.position.y - healthBarHeight - 2,
                 healthBarWidth,
                 healthBarHeight,
             );
@@ -212,6 +212,6 @@ export class EnemyEntity implements IGameEntity<IEnemyProps> {
     }
 
     getBoundingBox? = (self: IGameEntity<IEnemyProps>): IBoundingBox => {
-        return self.props.positioned.getBoundingBox!();
+        return self.props.position.getBoundingBox!();
     };
 }

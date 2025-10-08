@@ -17,10 +17,10 @@ export const createFlashlightPostProcessor = (): IPostProcessor => {
         name: "flashlight",
         isActive: false,
         update: (ctx: CanvasRenderingContext2D, sequence: Sequence, delta: number) => {
-            if (!GameState.player) return;
+            if (!GameState.getInstance().player) return;
 
             const canvas = ctx.canvas;
-            const player = GameState.player.props.positioned;
+            const player = GameState.getInstance().player!.props.position;
             const lightRadius = 150;
 
             // Ensure overlay canvas matches target size
@@ -32,8 +32,8 @@ export const createFlashlightPostProcessor = (): IPostProcessor => {
             // Player center in screen space (World Position - Viewport Offset + Half Width/Height)
             const playerCenterX = player.x + (player.width || 32) / 2;
             const playerCenterY = player.y + (player.height || 32) / 2;
-            const playerScreenX = playerCenterX - GameState.viewport.x;
-            const playerScreenY = playerCenterY - GameState.viewport.y;
+            const playerScreenX = playerCenterX - GameState.getInstance().viewport.x;
+            const playerScreenY = playerCenterY - GameState.getInstance().viewport.y;
 
             // Step 1: fill overlay with semi-transparent black
             overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);

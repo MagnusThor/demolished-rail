@@ -1,11 +1,11 @@
 import { Canvas2DEntity, ITexture } from "../../../src";
 import { IGameTexture } from "../interface/ITexture";
 import { GameAssets } from "../global/GameAssets";
+import { GameState } from "../global/GameState";
 
 export class BackgroundEntity extends Canvas2DEntity<{}> {
-    private layers: { texture: IGameTexture; scrollFactor: number; }[];
-    private gameState: any;
-
+    private layers: any[];
+   
     constructor(
         public name: string,
         public props: {},
@@ -22,10 +22,9 @@ export class BackgroundEntity extends Canvas2DEntity<{}> {
             screenWidth,
             screenHeight
         );
-        this.gameState = gameState;
-
+      
         // Define the parallax layers with the loaded textures and scroll speeds
-        this.layers = [
+        this.layers =  [
             { texture: GameAssets.createTexture("backgroundlayer_1",0,0,576,324,false)!, scrollFactor: 0.1 },
             { texture: GameAssets.createTexture("backgroundlayer_2",0,0,576,324,false)!, scrollFactor: 0.3 },
             { texture: GameAssets.createTexture("backgroundlayer_3",0,0,576,324,false)!, scrollFactor: 0.5 },
@@ -44,7 +43,7 @@ export class BackgroundEntity extends Canvas2DEntity<{}> {
         ctx.fillRect(0, 0, this.screenWidth, this.screenHeight);
 
         // Get the player's current x position for the parallax effect
-        const playerX = this.gameState.player.props.positioned.x;
+        const playerX = GameState.getInstance().player!.props.position.x;
 
         // Loop through each layer and draw the parallax effect
         this.layers.forEach(layer => {
@@ -52,7 +51,7 @@ export class BackgroundEntity extends Canvas2DEntity<{}> {
 
             // Draw the texture at its current position
             ctx.drawImage(
-                layer.texture.texture.src,
+                layer.texture.asset.data!,
                 -parallaxOffset,
                 0,
                 this.screenWidth,
@@ -61,7 +60,7 @@ export class BackgroundEntity extends Canvas2DEntity<{}> {
 
             // Draw the texture again next to the first one to create a seamless loop
             ctx.drawImage(
-                layer.texture.texture.src,
+                layer.texture.asset.data!,
                 this.screenWidth - parallaxOffset,
                 0,
                 this.screenWidth,

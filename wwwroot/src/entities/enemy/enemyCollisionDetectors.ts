@@ -12,7 +12,7 @@ import { GameAssets } from "../../global/GameAssets";
 import { GameState } from "../../global/GameState";
 import { DebrisHelper } from "../../utils/debrisHelper";
 import { isSolidTile, getTileProperties, getSurroundingTiles } from "../../utils/tileEntityHelpers";
-import { LevelEntity } from "../level/levelEntity";
+import { LevelEntityRenderer } from "../level/LevelEntityRenderer";
 import { EnemyEntity } from "./enemyEntity";
 
 /**
@@ -27,11 +27,11 @@ import { EnemyEntity } from "./enemyEntity";
 const generateDebrisFromEnemy = (enemy: EnemyEntity) => {
     const sourceImage = 
     enemy.props.animations[
-    enemy.props.currentAnimationKey].spriteSheet.src;
-    const centerX = enemy.props.positioned.x + enemy.props.positioned.width / 2;
-    const centerY = enemy.props.positioned.y + enemy.props.positioned.height / 2;
-    const particleCanvas = DebrisHelper.generateDebris(sourceImage, 25,centerX,centerY,0.25,1);
-    GameState.particles.push(...particleCanvas);  
+    enemy.props.currentAnimationKey].spriteSheet.data;
+    const centerX = enemy.props.position.x + enemy.props.position.width / 2;
+    const centerY = enemy.props.position.y + enemy.props.position.height / 2;
+    const particleCanvas = DebrisHelper.generateDebris(sourceImage!, 25,centerX,centerY,0.25,1);
+    GameState.getInstance().particles.push(...particleCanvas);  
 };
 
 
@@ -42,10 +42,10 @@ export const enemyCollisionDetectors = [
             const collisionResults = new Array<ICollisionResult>();
             if (CollisionHelper.AABBColliding(enemy.getBoundingBox!(enemy), bullet.getBoundingBox!(bullet))) {
                 collisionResults.push({
-                    x: bullet.props.positioned.x,
-                    y: bullet.props.positioned.y,
-                    width: bullet.props.positioned.width,
-                    height: bullet.props.positioned.height,
+                    x: bullet.props.position.x,
+                    y: bullet.props.position.y,
+                    width: bullet.props.position.width,
+                    height: bullet.props.position.height,
                     axis: CollisionAxis.X,
                     targetEntity: bullet
                 });
@@ -54,10 +54,10 @@ export const enemyCollisionDetectors = [
         },
         onCollision: (enemy: EnemyEntity, collisionData: ICollisionResult) => {
             enemy.props.health.health -= collisionData.targetEntity!.props.health.damage;
-            GameState.removeEntityByUUID(collisionData.targetEntity!.uuid);
+            GameState.getInstance().removeEntityByUUID(collisionData.targetEntity!.uuid);
             if (enemy.props.health.health <= 0) {
                 generateDebrisFromEnemy(enemy);
-                GameState.removeEntityByUUID(enemy.uuid);
+                GameState.getInstance().removeEntityByUUID(enemy.uuid);
 
             }
         }
@@ -67,12 +67,12 @@ export const enemyCollisionDetectors = [
         detectorFn: (enemy: EnemyEntity, player: IGameEntity<IPlayerProps>) => {
 
             const collisionResults = new Array<ICollisionResult>();
-            if (CollisionHelper.AABBColliding(enemy.props.positioned.getBoundingBox!(), player.getBoundingBox!(player))) {
+            if (CollisionHelper.AABBColliding(enemy.props.position.getBoundingBox!(), player.getBoundingBox!(player))) {
                 collisionResults.push({
-                    x: player.props.positioned.x,
-                    y: player.props.positioned.y,
-                    width: player.props.positioned.width,
-                    height: player.props.positioned.height,
+                    x: player.props.position.x,
+                    y: player.props.position.y,
+                    width: player.props.position.width,
+                    height: player.props.position.height,
                     axis: CollisionAxis.X,
                     targetEntity: player
                 });
@@ -86,9 +86,9 @@ export const enemyCollisionDetectors = [
     },
     {
         targetName: "tileBlock",
-        detectorFn: (enemy: EnemyEntity, tileEntity: LevelEntity) => {
+        detectorFn: (enemy: EnemyEntity, tileEntity: LevelEntityRenderer) => {
             const collisionResults = new Array<ICollisionResult>();
-            const enemyBbox = enemy.props.positioned.getBoundingBox!();
+            const enemyBbox = enemy.props.position.getBoundingBox!();
             //const indexedTiles = tileEntity.props.indexedTiles;
 
 
@@ -131,31 +131,31 @@ export const enemyCollisionDetectors = [
                 width: collisionData.width,
                 height: collisionData.height
             };
-            const dx = (selfProps.positioned.x + selfProps.positioned.width / 2) - (tileBbox.x + tileBbox.width / 2);
-            const dy = (selfProps.positioned.y + selfProps.positioned.height / 2) - (tileBbox.y + tileBbox.height / 2);
-            const width = (selfProps.positioned.width + tileBbox.width) / 2;
-            const height = (selfProps.positioned.height + tileBbox.height) / 2;
+            const dx = (selfProps.position.x + selfProps.position.width / 2) - (tileBbox.x + tileBbox.width / 2);
+            const dy = (selfProps.position.y + selfProps.position.height / 2) - (tileBbox.y + tileBbox.height / 2);
+            const width = (selfProps.position.width + tileBbox.width) / 2;
+            const height = (selfProps.position.height + tileBbox.height) / 2;
             const crossWidth = width * dy;
             const crossHeight = height * dx;
 
             if (crossWidth > crossHeight) {
                 if (crossWidth > -crossHeight) {
                     // Collision from above
-                    selfProps.positioned.y = tileBbox.y + tileBbox.height;
+                    selfProps.position.y = tileBbox.y + tileBbox.height;
                     selfProps.velY = 0;
                 } else {
                     // Collision from left
-                    selfProps.positioned.x = tileBbox.x - selfProps.positioned.width;
+                    selfProps.position.x = tileBbox.x - selfProps.position.width;
                     selfProps.velX = 0;
                 }
             } else {
                 if (crossWidth > -crossHeight) {
-                    selfProps.positioned.x = tileBbox.x + tileBbox.width;
+                    selfProps.position.x = tileBbox.x + tileBbox.width;
                     selfProps.velX = 0;
 
                 } else {
                     // Collision from below
-                    selfProps.positioned.y = tileBbox.y - selfProps.positioned.height;
+                    selfProps.position.y = tileBbox.y - selfProps.position.height;
                     selfProps.velY = 0;
                     selfProps.isGrounded = true;
                 }

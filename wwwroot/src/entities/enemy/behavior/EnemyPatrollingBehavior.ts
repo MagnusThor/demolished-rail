@@ -6,7 +6,7 @@ import { IGameEntityBehavior } from "../../../interface/IGameEntity";
 import { TileDefinitions } from "../../../factory/TileDefinitions";
 import { GameState } from "../../../global/GameState";
 import { getSurroundingTiles, isSolidTile, getTileProperties } from "../../../utils/tileEntityHelpers";
-import { LevelEntity } from "../../level/levelEntity";
+import { LevelEntityRenderer } from "../../level/LevelEntityRenderer";
 import { PlayerEntity } from "../../player/playerEntity";
 import { EnemyEntity } from "../enemyEntity";
 
@@ -22,9 +22,9 @@ export const EnemyPatrollingBehavior = (): IGameEntityBehavior => {
             const props = enemy.props
 
             // Get the player entity and calculate distance
-            const player = GameState.player! as PlayerEntity
-            const playerPos = player.props.positioned.toPoint2D()
-            const enemyPos = enemy.props.positioned.toPoint2D();
+            const player = GameState.getInstance().player! as PlayerEntity
+            const playerPos = player.props.position.toPoint2D()
+            const enemyPos = enemy.props.position.toPoint2D();
             const distance = playerPos.distanceTo(enemyPos);
 
             // Determine if the enemy should face the player
@@ -48,14 +48,14 @@ export const EnemyPatrollingBehavior = (): IGameEntityBehavior => {
             } else {
                 // Otherwise, continue patrolling
                 // Get the level entity to access the spatial grid for look-ahead checks
-                const levelEntity = GameState.findEntities("tileBlock")[0] as LevelEntity;
+                const levelEntity = GameState.getInstance().findEntities("tileBlock")[0] as LevelEntityRenderer;
                 if (!levelEntity) {
                     console.error("Level entity not found in game state.");
                     return;
                 }
 
                 // Create a small "look-ahead" bounding box a few pixels in the direction of movement
-                const enemyBbox = props.positioned.getBoundingBox!();
+                const enemyBbox = props.position.getBoundingBox!();
                 const lookAheadX = props.direction > 0 ? enemyBbox.x + enemyBbox.width + 5 : enemyBbox.x - 5;
                 const lookAheadBbox: IBoundingBox = {
                     x: lookAheadX,

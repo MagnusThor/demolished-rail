@@ -5,17 +5,19 @@ import { ILadderProps, LadderEntity } from "../entities/ladderEntity";
 
 import { PlatformEntity } from "../entities/platform/PlatformEntity";
 import { RopeEntity } from "../entities/platform/RopeEntity";
-import { InteractableEntity } from "../entities/triggerzone/InteractableEntity";
 import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
 
 import { IGameEntity } from "../interface/IGameEntity";
-import { ITileProps, ITileSettings } from "../interface/ILevelProps";
-import { Positioned } from "../interface/IPositioned";
+import { ITileProps } from "../interface/ITileProps";
+import { ITileSettings } from "../interface/ITileSettings";
+import { Positioned } from "../interface/IPosition2D";
 import { GameState } from "../global/GameState";
-import { getTileRowCol, getTileXY } from "../utils/tileEntityHelpers";
+import { getUnderlayingtileSettings, getTileRowCol, getTileXY } from "../utils/tileEntityHelpers";
 import { bridgeCreator } from "../creators/bridgeCreator";
 import { doorTogglerCreator } from "../creators/doorTogglerCreator";
-import { getSettigsBag } from "./LevelGraph";
+import { LavaTileEntity } from "../entities/lava/LavaTileEntity";
+import { EnemyChasingBehavior } from "../entities/enemy/behavior/EnemyChasingBehavior";
+import { InteractableEntity } from "../entities/triggerzone/InteractableEntity";
 
 
 
@@ -104,6 +106,33 @@ export const TileDefinitions: { [key: number]: ITileProps  } = {
         name: "Large Bush",
         color: '#388E3C' // Darker Green
     },
+        0x06:{
+        id:6,
+        width: 32,
+        height: 32,
+        isSolid: false,
+        offset: {
+            x: 0,
+            y: 0
+        },
+        useLevelCreator: false,
+        texture:"lava-texture-1",
+        creator: (levelProps, tile) => {
+
+          const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x)
+
+                return new LavaTileEntity({
+                        isCollidable:false,
+                        isInitialized:true,
+                        position: new Positioned(x,y,32,32),
+                        states: {},
+                        zIndex:4
+                })
+        },
+        zIndex: 2,
+        name: "Lava",
+        color: '#d14027ff'   
+        },
 
     // platform
 
@@ -208,7 +237,7 @@ export const TileDefinitions: { [key: number]: ITileProps  } = {
                 ...levelProps,
                 width: 32,
                 height: 32,
-                positioned: new Positioned(x, y, 32, 32),
+                position: new Positioned(x, y, 32, 32),
                 isInitialized: false,
                 texture: texture,
                 zIndex: 1,
@@ -245,13 +274,9 @@ export const TileDefinitions: { [key: number]: ITileProps  } = {
         isSolid: false,
         creator: (levelProps, tile) => {
             const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
-            return {
-                ...new CollectibleEntity(tile.x, tile.y),
-                props: {
-                    ...new CollectibleEntity(tile.x, tile.y).props,
-                    positioned: new Positioned(x, y, 16, 16)
-                }
-            };
+                
+                return new CollectibleEntity(x,y);
+
         },
         useLevelCreator: false,
         zIndex: 1,
@@ -284,24 +309,23 @@ export const TileDefinitions: { [key: number]: ITileProps  } = {
         creator: (levelProps, tile) => {
             const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
 
-            console.log(tile.x, tile.y, x, y);
+            const tileSettings = getUnderlayingtileSettings(levelProps.level.settings,x, y);
 
-            const tileSettings = getSettigsBag(levelProps.level.settings,x, y);
 
-            console.log(tileSettings);
-
+          
             return new TriggerZoneEntity({
                 ...levelProps,
-                positioned: new Positioned(x, y, 32, 32),
+                position: new Positioned(x, y, 32, 32),
                 isInitialized: false,
-                onTrigger: (triggerZone) => {
+                onTrigger: (triggerZone,tileSettings:ITileSettings) => {
+
                     if (tileSettings?.activate)
-                        tileSettings.activate(triggerZone, GameState.player!)
+                        tileSettings.activate(triggerZone, GameState.getInstance().player!,tileSettings.bag)
 
                 },
                 onLeave: (triggerZone) => {
                     if (tileSettings?.deactivate)
-                        tileSettings.deactivate(triggerZone);
+                        tileSettings.deactivate(triggerZone,GameState.getInstance().player!,tileSettings.bag);
                 },
                 states: {},
                 settings: tileSettings
@@ -324,7 +348,7 @@ export const TileDefinitions: { [key: number]: ITileProps  } = {
         creator: (levelProps, tile) => {
             const { x, y } = getTileXY(levelProps.tileMap, tile.y, tile.x);
             return new InteractableEntity({
-                positioned: new Positioned(x, y, 32, 32),
+                position: new Positioned(x, y, 32, 32),
                 zIndex: 10,
                 isInitialized: true,
                 states: {},

@@ -1,4 +1,5 @@
 import { IGameEntityBase } from "../../interface/IGameEntity";
+import { ITileSettings } from "../../interface/ITileSettings";
 import { TriggerZoneEntity } from "./triggerZoneEntity";
 
 /**
@@ -11,7 +12,7 @@ import { TriggerZoneEntity } from "./triggerZoneEntity";
 
 
 export interface ITriggerZoneProps extends IGameEntityBase {
-    onTrigger: (self: TriggerZoneEntity) => void;
-    onLeave?: (self: any) => void;
+    onTrigger: (self: TriggerZoneEntity,tileSettings:ITileSettings) => void;
+    onLeave?: (self: TriggerZoneEntity,tileSettings:ITileSettings) => void;
 
 }

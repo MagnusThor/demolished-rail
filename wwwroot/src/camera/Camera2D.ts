@@ -6,6 +6,8 @@ import { cameraEffects } from "./cameraEffectBlueprints";
 
 const TARGET_FRAME_TIME = 1000 / 60;
 
+
+
 export class Camera2D implements ICamera2D {
 
     followTarget?: IGameEntity<any>;
@@ -35,7 +37,7 @@ export class Camera2D implements ICamera2D {
         let calculatedScale = 1.0; 
 
         if (this.followTarget) {
-            const targetPos = this.followTarget.props.positioned;
+            const targetPos = this.followTarget.props.position;
             this.position.x = targetPos.x + targetPos.width / 2;
             this.position.y = targetPos.y + targetPos.height / 2;
         }

@@ -1,5 +1,5 @@
-import { ITileProps } from "../interface/ILevelProps";
-import { ITileBlueprint } from "./ITileBlueprint";
+import { ITileProps } from "../interface/ITileProps";
+import { ITileBlueprint } from "../interface/ITileBlueprint";
 
 export const TILE_BLUEPRINTS: { [key: number]: ITileBlueprint  } = {
     // Empty space, no collision (Used for erasing)
@@ -77,6 +77,15 @@ export const TILE_BLUEPRINTS: { [key: number]: ITileBlueprint  } = {
         zIndex: 2,
         name: "Large Bush",
         color: '#388E3C' // Darker Green
+    },
+
+        0x06: {
+        id:0x06,
+        width: 32,
+        height: 32,
+        zIndex: 1,
+        name: "Lava",
+        color: '#d05504ff' 
     },
 
     // platform

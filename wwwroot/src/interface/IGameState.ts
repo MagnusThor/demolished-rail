@@ -9,29 +9,36 @@ import { IGameEntity } from "./IGameEntity";
 import { IViewport } from "./IViewport";
 import { IPlayerProps } from "./IPlayerProps";
 import { IParticle } from "./IParticle";
-import { LevelEntity } from "../entities/level/levelEntity";
+import { LevelEntityRenderer } from "../entities/level/LevelEntityRenderer";
+import { IViewportState } from "./IViewportState";
+import { IBoundingBox } from "./IBoundingBox";
 
 
 export interface IGameState {
 
- 
-    sequence?: Sequence,  
+
+
+    sequence?: Sequence,
     ctx: CanvasRenderingContext2D | undefined
     viewport: IViewport;
     input: InputHelper | undefined
     gameCanvas?: HTMLCanvasElement
-    player?: IGameEntity<IPlayerProps>; 
-    worldWidth: number; 
+    player?: IGameEntity<IPlayerProps>;
+    worldWidth: number;
     worldHeight: number;
 
+
     entities: IGameEntity<any>[];
-    particles:IParticle[];
+    particles: IParticle[];
 
-    findEntities(key: string): IGameEntity<any>[]; 
-    removeEntityByUUID: (uuid:string) => void; 
-    addEntity: (entity:IGameEntity<any>) => void;     
+    worldToViewport(bbox: IBoundingBox): IBoundingBox;
 
-    get currentLevel(): LevelEntity
+
+    findEntities(key: string): IGameEntity<any>[];
+    removeEntityByUUID: (uuid: string) => void;
+    addEntity: (entity: IGameEntity<any>) => void;
+
+    get currentLevel(): LevelEntityRenderer
 
 
 

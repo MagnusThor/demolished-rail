@@ -1,7 +1,7 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { IGameEntityBase, IGameEntity } from "../../interface/IGameEntity";
-import { IPositioned, Positioned } from "../../interface/IPositioned";
+import { IPosition2D, Positioned } from "../../interface/IPosition2D";
 import { GameEntity } from "../GameEntity";
 
 
@@ -49,11 +49,11 @@ export class OverlayTextEntity extends GameEntity<IOverlayTextProps>
     private _revealTimer: any;
     isDestroyed: boolean = false;
 
-    constructor(props: IOverlayTextProps) {
+    constructor(props: any) {
         super("overlayText", {
             ...props,
             isCollidable: false,
-            positioned: new Positioned(0, 0, 0, 0), // Positioned dynamically
+            position: new Positioned(0, 0, 1000, 1000), 
             zIndex: 1000,
             alpha: 0
         });
@@ -198,6 +198,6 @@ export class OverlayTextEntity extends GameEntity<IOverlayTextProps>
     }
 
     getBoundingBox? = (self: IGameEntity<IOverlayTextProps>) => {
-        return self.props.positioned.getBoundingBox!();
+        return self.props.position.getBoundingBox!();
     };
 }

@@ -2,7 +2,7 @@ import { IPoint2D, Point2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { GameState } from "../global/GameState";
 import { IBoundingBox } from "./IBoundingBox";
 
-export interface IPositioned {
+export interface IPosition2D {
     x: number;
     y: number;
     width: number;
@@ -11,9 +11,12 @@ export interface IPositioned {
     isMoving?(): boolean;
     updatePriorPosition(): void;
     toPoint2D(): Point2D;
-    prior?:IPositioned[]
+    prior?:IPosition2D[]
+    offset?:{
+        x:number,
+        y:number
+    }
 }
-
 
 /**
  * Represents an entity with a position and size in 2D space, 
@@ -22,11 +25,13 @@ export interface IPositioned {
  * Provides methods for movement checks, bounding box retrieval, 
  * and scaling operations.
  * 
- * @implements IPositioned
+ * @implements IPosition2D
  */
-export class Positioned implements IPositioned {
+export class Positioned implements IPosition2D {
     public priorX: number;
     public priorY: number;
+
+   offset?: { x: number; y: number; } | undefined;
 
     /**
      * Creates an instance of the class with specified position and size.
@@ -42,11 +47,18 @@ export class Positioned implements IPositioned {
         public x: number,
         public y: number,
         public width: number,
-        public height: number
+        public height: number,
+        offsetX?:number,offsetY?:number
     ) {
 
         this.priorX = x;
         this.priorY = y;
+
+        this.offset = {
+            x: offsetX || 0,
+            y : offsetY || 0
+        };
+        
 
     }
     
@@ -84,7 +96,7 @@ export class Positioned implements IPositioned {
     getBoundingBox(): IBoundingBox {
         return {
             x: this.x,
-            y: this.y,
+            y:  this.y,
             width: this.width,
             height: this.height
         };

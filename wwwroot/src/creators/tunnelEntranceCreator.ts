@@ -1,6 +1,6 @@
 import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
 import { IGameEntity } from "../interface/IGameEntity";
-import { ITileSettings } from "../interface/ILevelProps";
+import { ITileSettings } from "../interface/ITileSettings";
 import { GameState } from "../global/GameState";
 
 export const tunnelEntranceCreator = (bag: any): ITileSettings => {
@@ -19,11 +19,11 @@ export const tunnelEntranceCreator = (bag: any): ITileSettings => {
 
             // Set the tunnel effect flag to true.
             //gameState.isTunnelEffectActive = true;
-            GameState.sequence!.setPostProcessorState("flashlight",true);
+            GameState.getInstance().sequence!.setPostProcessorState("flashlight",true);
 
             // Teleport the player.
-            player!.props.positioned.x = destinationX;
-            player!.props.positioned.y = destinationY;
+            player!.props.position.x = destinationX;
+            player!.props.position.y = destinationY;
         },
 
         deactivate: (self: TriggerZoneEntity, player?: IGameEntity<any>) => {
@@ -49,12 +49,12 @@ export const tunnelExitCreator = (bag: any): ITileSettings => {
 
 
             //gameState.isTunnelEffectActive = false;
-            GameState.sequence!.setPostProcessorState("flashlight",false);
+            GameState.getInstance().sequence!.setPostProcessorState("flashlight",false);
 
 
             // Teleport the player.
-            player!.props.positioned.x = destinationX;
-            player!.props.positioned.y = destinationY;
+            player!.props.position.x = destinationX;
+            player!.props.position.y = destinationY;
         },
 
         deactivate: (self: TriggerZoneEntity, player?: IGameEntity<any>) => {

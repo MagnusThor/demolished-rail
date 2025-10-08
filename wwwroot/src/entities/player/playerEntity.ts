@@ -9,13 +9,24 @@ import { runCollitionDetectors } from "../../utils/collitionHelpers";
 import { getSurroundingTiles } from "../../utils/tileEntityHelpers";
 
 import { GameEntity } from "../GameEntity";
-import { LevelEntity } from "../level/levelEntity";
+import { LevelEntityRenderer } from "../level/LevelEntityRenderer";
 import { playerCollisionDetectors } from "./collisiondetectors/playerCollitionDetectors";
 import { EntityEvent } from "../EntityEvent";
 import { setupPlayerInput } from "./playerInput";
 import { allPlayerBehaviors } from "./playerBehaviors";
 import { BulletEntity } from "../bullet/BulletEntity";
 import { SmokeRingEntity } from "./SmokeRingEntity";
+
+
+export const normalizePlayerBoundingBox = (props: IPlayerProps): IBoundingBox => {
+    const sprite = props.currentAnimation!.spriteSheet;
+    return {
+        x: props.position.x - sprite.renderWidth / 2,
+        y: props.position.y - sprite.renderHeight, // moves from feet → top
+        width: sprite.renderWidth,
+        height: sprite.renderHeight,
+    };
+}
 
 export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntity<IPlayerProps> {
     entityEvents: EntityEvent;
@@ -34,13 +45,23 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
     onDestroy?: ((self: IGameEntity<IPlayerProps>) => void) | undefined;
 
     getBoundingBox = (self: IGameEntity<IPlayerProps>): IBoundingBox => {
-        return self.props.positioned.getBoundingBox!();
+
+        const props = self.props;
+
+        const sprite = props.currentAnimation!.spriteSheet;
+
+        return {
+        x: props.position.x - sprite.renderWidth / 2,
+        y: props.position.y - sprite.renderHeight,
+        width: sprite.renderWidth,
+        height:  sprite.renderHeight,
+    };
     }
 
     getSurroundingTilesOfPlayer(): IIndexedTile[] {
-        const tileEntity = GameState.findEntities("tileBlock")[0] as unknown as LevelEntity;
+        const tileEntity = GameState.getInstance().findEntities("tileBlock")[0] as unknown as LevelEntityRenderer;
         return getSurroundingTiles(tileEntity.tileSpatialGrid,
-            this.props.positioned.getBoundingBox(), tileEntity.props.tileWidth);
+            this.props.position.getBoundingBox(), tileEntity.props.tileWidth);
     }
 
     onInit = (self: IGameEntity<IPlayerProps>) => {
@@ -86,9 +107,10 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
 
         self.entityEvents!.subscribe("playerShoot", (self, results) => {
             const direction = results.direction;
+            const bulletPos = this.getBoundingBox(this);
             const bullet = new BulletEntity(
-                this.props.positioned.x, self.props.positioned.y, direction);
-            GameState.entities.push(bullet);
+                bulletPos.x , bulletPos.y  , direction);
+            GameState.getInstance().entities.push(bullet);
 
         });
     }
@@ -119,9 +141,9 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
         }
 
         if (this.stateHelper.get<boolean>("isJetpacking")) {
-            const ring = new SmokeRingEntity(self.props.positioned.x+self.props.positioned.width / 2, self.props.positioned.y + self.props.positioned.height);
+            const ring = new SmokeRingEntity(self.props.position.x+self.props.position.width / 2, self.props.position.y + self.props.position.height);
 
-            GameState.entities.push(ring);
+            GameState.getInstance().entities.push(ring);
         }
     }
 
@@ -129,11 +151,23 @@ export class PlayerEntity extends GameEntity<IPlayerProps> implements IGameEntit
         const stateHelper = this.stateHelper;
         const props = self.props;
 
+        const flipX =    stateHelper.get<string>("lastDirection") === "left";
+
+        const sprite = props.currentAnimation!.spriteSheet;
+         
+        const drawX = props.position.x - sprite.renderWidth / 2;
+        const drawY = props.position.y - sprite.renderHeight;
+
+        // // derive draw position from bottom-center
+        // const drawX = props.position.x - props.position.width / 2;
+        // const drawY = props.position.y - props.position.height;
+
         helper.drawAnimatedSprite(
             props.currentAnimation!,
-            props.positioned.x,
-            props.positioned.y,
-            performance.now()
+            drawX,
+            drawY,
+            performance.now(),
+            flipX
         );
     }
 }

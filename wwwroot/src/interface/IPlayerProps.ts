@@ -1,7 +1,7 @@
 import { InputHelper } from "../../../src";
 import { IHealthProps } from "./IHealthProps";
 import { IGameEntity, IGameEntityBase, IGameEntityBehavior } from "../interface/IGameEntity";
-import { IPositioned, Positioned } from "./IPositioned";
+import { IPosition2D, Positioned } from "./IPosition2D";
 import { IGameSpriteProps } from "./IGameSpriteProps";
 import { IEntityState } from "./IEntityState";
 import { PlayerEntity } from "../entities/player/playerEntity";
@@ -19,7 +19,7 @@ export interface IPlayerBehavior extends IGameEntityBehavior {
 }
 
 export interface IPlayerProps extends IGameSpriteProps, IGameEntityBase {
-    positioned: Positioned;
+    position: Positioned;
     velX: number;
     velY: number;
     gravity: number;

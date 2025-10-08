@@ -6,13 +6,13 @@ import { IBulletProps } from "../../interface/IBulletProps";
 import { ICollisionResult } from "../../interface/ICollisionResult";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { ILevelProps } from "../../interface/ILevelProps";
-import { Positioned } from "../../interface/IPositioned";
+import { Positioned } from "../../interface/IPosition2D";
 import { isSolidTile } from "../../utils/tileEntityHelpers";
 import { GameEntity } from "../GameEntity";
 import { IEnemyProps } from "../../interface/IEnemyProps";
 import { StateHelper } from "../StateHelper";
 import { EnemyEntity } from "../enemy/enemyEntity";
-import { LevelEntity } from "../level/levelEntity"; // Ensure this import is available for LevelEntity type
+import { LevelEntityRenderer } from "../level/LevelEntityRenderer"; // Ensure this import is available for LevelEntity type
 
 const BULLET_SPEED = 10;
 
@@ -27,12 +27,12 @@ type LevelEntityWithMap = IGameEntity<ILevelProps> & {
 export class BulletEntity extends GameEntity<IBulletProps> {
     
     constructor(startX: number, startY: number, direction: string) {
-        const props = {
+        const props:IBulletProps = {
             health: {
                 health: 100,
                 damage: 10
             },
-            positioned: new Positioned(startX, startY, 8, 8),
+            position: new Positioned(startX, startY, 8, 8),
             velX: direction === "right" ? BULLET_SPEED : -BULLET_SPEED,
             velY: 0,
             isAlive: true,
@@ -62,7 +62,7 @@ export class BulletEntity extends GameEntity<IBulletProps> {
                     const bulletProps = bulletEntity.props;
 
                     const collisionResults = new Array<ICollisionResult>();
-                    const bulletBBox = bulletProps.positioned.getBoundingBox!();
+                    const bulletBBox = bulletProps.position.getBoundingBox!();
                     const enemyBBox = enemyEntity.getBoundingBox!(enemyEntity);
 
                     if (CollisionHelper.AABBColliding(bulletBBox, enemyBBox)) {
@@ -87,12 +87,12 @@ export class BulletEntity extends GameEntity<IBulletProps> {
     }
     
     getBoundingBox = (self: IGameEntity<IBulletProps>): IBoundingBox => {
-        return self.props.positioned.getBoundingBox!();
+        return self.props.position.getBoundingBox!();
     }
     
     onUpdate? =(self: IGameEntity<IBulletProps>, timeStamp: number): void => {
         // Simple linear movement
-        self.props.positioned.x += self.props.velX;
+        self.props.position.x += self.props.velX;
         
         // Decrement life time and check for death
         self.props.lifeTime -= timeStamp;
@@ -111,10 +111,10 @@ export class BulletEntity extends GameEntity<IBulletProps> {
         // Draw the bullet as a small filled rectangle
         ctx.fillStyle = "#FFC107";
         ctx.fillRect(
-            props.positioned.x,
-            props.positioned.y,
-            props.positioned.width,
-            props.positioned.height,
+            props.position.x,
+            props.position.y,
+            props.position.width,
+            props.position.height,
         );
     }
     
@@ -129,7 +129,7 @@ export class BulletEntity extends GameEntity<IBulletProps> {
 
         const bulletProps = bulletEntity.props;
         const collisionResults = new Array<ICollisionResult>();
-        const bulletBBox = bulletProps.positioned.getBoundingBox!();
+        const bulletBBox = bulletProps.position.getBoundingBox!();
 
         // Safely cast the IGameEntity to the expected LevelEntity type to access its internal maps
         const levelEntity = tileEntity as unknown as LevelEntityWithMap; 

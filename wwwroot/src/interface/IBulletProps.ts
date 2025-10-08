@@ -2,13 +2,13 @@ import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { IHealthProps } from "./IHealthProps";
 import { IGameEntityBase } from "../interface/IGameEntity";
 
-import { IPositioned } from "./IPositioned";
+import { IPosition2D } from "./IPosition2D";
 
 
 
 export interface IBulletProps extends IGameEntityBase {
 
-    positioned: IPositioned; // The position of the bullet in the game world
+    position: IPosition2D; // The position of the bullet in the game world
     velX: number;
     velY: number;
     isAlive: boolean;

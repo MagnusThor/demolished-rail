@@ -3,7 +3,7 @@ import { IBoundingBox } from "../interface/IBoundingBox";
 import { IGameState } from "../interface/IGameState";
 import { ICollidable, ICollisionDetector } from "../interface/ICollisionDetector";
 import { CollisionHelper } from "../../../src/Engine/Helpers/CollisionHelper";
-import { IPositioned } from "../interface/IPositioned";
+import { IPosition2D } from "../interface/IPosition2D";
 import { GameState } from "../global/GameState";
 
 /**
@@ -22,53 +22,50 @@ export const isEntityInView = (
     screenHeight: number,
     buffer: number = 32
 ): boolean => {
-  
-     // Get the bounding box from the entity's dedicated method
-        if(!entity.getBoundingBox) {
-            console.warn(`Entity ${entity.name} does not have a getBoundingBox method.`);
-            return false;
-        } 
-        const entityBox: IBoundingBox = entity.getBoundingBox!(entity);
-        
-        // Create a bounding box for the viewport with the buffer
-        const viewportBox: IBoundingBox = {
-            x: viewport.x - buffer,
-            y: viewport.y - buffer,
-            width: screenWidth + 2 * buffer,
-            height: screenHeight + 2 * buffer
-        };
-        
-        // Use the AABBColliding helper to perform the check
-        return CollisionHelper.AABBColliding(entityBox, viewportBox);
+
+    // Get the bounding box from the entity's dedicated method
+    if (!entity.getBoundingBox) {
+        console.warn(`Entity ${entity.name} does not have a getBoundingBox method.`);
+        return false;
+    }
+    const entityBox: IBoundingBox = entity.getBoundingBox!(entity);
+
+    // Create a bounding box for the viewport with the buffer
+    const viewportBox: IBoundingBox = {
+        x: viewport.x - buffer,
+        y: viewport.y - buffer,
+        width: screenWidth + 2 * buffer,
+        height: screenHeight + 2 * buffer
+    };
+
+    // Use the AABBColliding helper to perform the check
+    return CollisionHelper.AABBColliding(entityBox, viewportBox);
 };
 
 export const runCollitionDetectors = <T>(
-        entity: IGameEntity<any>,detectors: ICollisionDetector[],_gameState?:IGameState,) => {
-
-        if(!_gameState) _gameState = GameState; // no state provided use global
-
-        detectors.forEach(detector => {
-            const targetEntities =  getFilteredAndSortedEntities(_gameState,entity, detector.targetName)
-            
-            if (targetEntities && targetEntities.length > 0) {
-                targetEntities.forEach((targetEntity: any) => {
-                    const collisionResults = detector.detectorFn(entity, targetEntity);
-                    if (Array.isArray(collisionResults)) {
-                        collisionResults.forEach(collisionData => {
-                            detector.onCollision(entity, collisionData, targetEntity);
-                        });
-                    }
-                });
-            }
-        });
-    }
+    entity: IGameEntity<any>, detectors: ICollisionDetector[], _gameState?: IGameState,) => {
+    if (!_gameState) _gameState = GameState.getInstance(); // no state provided use global
+    detectors.forEach(detector => {
+        const targetEntities = getFilteredAndSortedEntities(_gameState, entity, detector.targetName)
+        if (targetEntities && targetEntities.length > 0) {
+            targetEntities.forEach((targetEntity: any) => {
+                const collisionResults = detector.detectorFn(entity, targetEntity);
+                if (Array.isArray(collisionResults)) {
+                    collisionResults.forEach(collisionData => {
+                        detector.onCollision(entity, collisionData, targetEntity);
+                    });
+                }
+            });
+        }
+    });
+}
 
 
-export const getFilteredAndSortedEntities = (gameState: IGameState, 
-    sourceEntity:IGameEntity<IGameEntityBase> , targetName: string) => {
+export const getFilteredAndSortedEntities = (gameState: IGameState,
+    sourceEntity: IGameEntity<IGameEntityBase>, targetName: string) => {
     // --- Defensive Check for Source Entity ---
     // If the source entity or its 'positioned' property is missing, we can't do anything.
-    if (!sourceEntity || !sourceEntity.props.positioned) {
+    if (!sourceEntity || !sourceEntity.props.position) {
         console.log(sourceEntity);
         console.error("Source entity or its 'positioned' property is missing.");
         return [];
@@ -79,21 +76,21 @@ export const getFilteredAndSortedEntities = (gameState: IGameState,
     if (targetEntities && targetEntities.length > 0) {
         // --- Filter for Viewport AND Valid Position ---
         // We'll add a check to make sure the 'positioned' property exists before filtering.
-        targetEntities = targetEntities.filter(entity => 
-            entity.props && entity.props.positioned && isEntityInView(entity, gameState.viewport, gameState.viewport.viewportWidth, gameState.viewport.viewportHeight)
+        targetEntities = targetEntities.filter(entity =>
+            entity.props && entity.props.position && isEntityInView(entity, gameState.viewport, gameState.viewport.viewportWidth, gameState.viewport.viewportHeight)
         );
 
         // --- Sort Entities with a Safer Check ---
         try {
-            targetEntities.sort((a: { props: { positioned: { x: number; y: number; }; }; }, b: { props: { positioned: { x: number; y: number; }; }; }) => {
+            targetEntities.sort((a: { props: { position: { x: number; y: number; }; }; }, b: { props: { position: { x: number; y: number; }; }; }) => {
                 // If either 'a' or 'b' is missing the necessary properties,
                 // we'll return 0 to keep the sort from crashing.
-                if (!a.props || !a.props.positioned || !b.props || !b.props.positioned) {
+                if (!a.props || !a.props.position || !b.props || !b.props.position) {
                     return 0;
                 }
                 // Now that we've checked, it's safe to calculate the distances.
-                const distA = Math.sqrt(Math.pow(a.props.positioned.x - sourceEntity.props.positioned.x, 2) + Math.pow(a.props.positioned.y - sourceEntity.props.positioned.y, 2));
-                const distB = Math.sqrt(Math.pow(b.props.positioned.x - sourceEntity.props.positioned.x, 2) + Math.pow(b.props.positioned.y - sourceEntity.props.positioned.y, 2));
+                const distA = Math.sqrt(Math.pow(a.props.position.x - sourceEntity.props.position.x, 2) + Math.pow(a.props.position.y - sourceEntity.props.position.y, 2));
+                const distB = Math.sqrt(Math.pow(b.props.position.x - sourceEntity.props.position.x, 2) + Math.pow(b.props.position.y - sourceEntity.props.position.y, 2));
                 return distA - distB;
             });
         }
@@ -101,8 +98,18 @@ export const getFilteredAndSortedEntities = (gameState: IGameState,
             console.error("An error occurred during entity sorting:", error);
             // We can return the unfiltered list to prevent a complete crash
             // while the root problem is being debugged.
-            return targetEntities; 
+            return targetEntities;
         }
     }
     return targetEntities;
 };
+
+export const getBoundingBoxBottomCenter = (pos: { x: number; y: number; width: number; height: number }) => {
+    return {
+        x: pos.x - pos.width / 2,
+        y: pos.y - pos.height,
+        width: pos.width,
+        height: pos.height
+    };
+}
+

@@ -16,7 +16,7 @@ export const EnemyChasingBehavior = (startX:number,startY:number):IGameEntityBeh
             const props = enemy.props;
 
             // Check if the player exists in the game state before attempting to chase
-            const playerEntity = GameState.player as IGameEntity<IPlayerProps>;
+            const playerEntity = GameState.getInstance().player as IGameEntity<IPlayerProps>;
             if (!playerEntity) {
                 // If the player is not found, do nothing.
                 props.velX = 0;
@@ -26,8 +26,8 @@ export const EnemyChasingBehavior = (startX:number,startY:number):IGameEntityBeh
             const playerProps = playerEntity.props;
 
             // Get the distance to the player to determine if the enemy should chase.
-            const distanceX = playerProps.positioned.x - props.positioned.x;
-            const distanceY = playerProps.positioned.y - props.positioned.y;
+            const distanceX = playerProps.position.x - props.position.x;
+            const distanceY = playerProps.position.y - props.position.y;
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 
             // A threshold for when the enemy should start chasing.

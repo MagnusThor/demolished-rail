@@ -1,11 +1,11 @@
-import { IPositioned } from "../interface/IPositioned";
+import { IPosition2D } from "./IPosition2D";
 
 
 export interface IParticle {
     uuid: string;
     update?: (height: number) => boolean; // Updated to return a boolean
     draw?: (ctx: CanvasRenderingContext2D) => void;
-    Positioned: IPositioned;
+    position: IPosition2D;
     data: HTMLCanvasElement | HTMLImageElement | CanvasImageSource;
     isAlive: boolean; // New property to track state
     scale: number;

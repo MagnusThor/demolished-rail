@@ -1,4 +1,5 @@
 import { ISpriteAnimation } from "../../../wwwroot/src/interface/ISpriteAnimation";
+import { IHeatProperties } from "../../../wwwroot/src/interface/IHeatProperties";
 
 export class CanvasHelper {
     constructor(public ctx: CanvasRenderingContext2D) {
@@ -44,12 +45,14 @@ export class CanvasHelper {
         x: number,
         y: number,
         timeStamp: number,
-        flippedX: boolean = false
+        flippedX: boolean = false,
+        flippedY: boolean = false
     ): void {
         const now = timeStamp;
         const elapsed = now - animation.lastFrameChangeTime;
         const frameDuration = 1000 / animation.frameRate;
 
+        // Advance frame if enough time has passed
         if (elapsed > frameDuration) {
             animation.currentFrameIndex = (animation.currentFrameIndex + 1) % animation.frames.length;
             animation.lastFrameChangeTime = now;
@@ -57,28 +60,33 @@ export class CanvasHelper {
 
         const frameNumber = animation.frames[animation.currentFrameIndex];
         const spriteSheet = animation.spriteSheet;
+
+        // --- Source rectangle (cut from sprite sheet)
         const sx = (frameNumber % spriteSheet.columns) * spriteSheet.frameWidth;
         const sy = Math.floor(frameNumber / spriteSheet.columns) * spriteSheet.frameHeight;
 
+        // --- Destination size (scaled)
+        const dw = spriteSheet.renderWidth;
+        const dh = spriteSheet.renderHeight;
+
         this.ctx.save();
 
-        // Translate to the center of the sprite and scale to flip
-        if (flippedX) {
-            this.ctx.translate(x + spriteSheet.frameWidth / 2, y + spriteSheet.frameHeight / 2);
-            this.ctx.scale(-1, 1);
-            this.ctx.translate(-(x + spriteSheet.frameWidth / 2), -(y + spriteSheet.frameHeight / 2));
+        // --- Handle flipping
+        if (flippedX || flippedY) {
+            // Translate to sprite center, then apply scaling
+            this.ctx.translate(x + dw / 2, y + dh / 2);
+            this.ctx.scale(flippedX ? -1 : 1, flippedY ? -1 : 1);
+            this.ctx.translate(-(x + dw / 2), -(y + dh / 2));
         }
 
+        // --- Draw the frame (scaled)
         this.ctx.drawImage(
-            spriteSheet.src,
-            sx,
-            sy,
-            spriteSheet.frameWidth,
-            spriteSheet.frameHeight,
-            x,
-            y,
-            spriteSheet.frameWidth,
-            spriteSheet.frameHeight
+            spriteSheet.data!,
+            sx, sy,                        // source position
+            spriteSheet.frameWidth,        // source width
+            spriteSheet.frameHeight,       // source height
+            x, y,                          // destination position
+            dw, dh                         // render width/height
         );
 
         this.ctx.restore();
@@ -136,4 +144,43 @@ export class CanvasHelper {
 
         this.ctx.restore();
     }
+
+    /**
+    * Draws a glowing heat effect with physics properties.
+    * Can simulate flicker, intensity, and optionally radius propagation.
+    */
+    public drawHeatGlow(
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        heat: IHeatProperties,
+        color: string = "255,100,0"
+    ) {
+        const ctx = this.ctx;
+        const t = performance.now() * 0.002 * (heat.flickerSpeed ?? 1);
+
+        // Flicker is stronger at higher temperature
+        const flicker = 0.8 + Math.sin(t * 3.1 + x) * 0.2 * (heat.temperature ?? 1);
+
+        const radius = (heat.radius ?? Math.max(width, height) * 1.5) * (1 + 0.5 * flicker);
+        const intensity = (heat.intensity ?? 1) * (heat.temperature ?? 1);
+
+        const gradient = ctx.createRadialGradient(
+            x, y, 0,
+            x, y, radius
+        );
+        gradient.addColorStop(0, `rgba(${color}, ${0.6 * intensity + 0.3 * flicker})`);
+        gradient.addColorStop(1, `rgba(${color}, 0)`);
+
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+
 }

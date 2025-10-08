@@ -1,4 +1,4 @@
-import { ITileSettings } from "../interface/ILevelProps";
+import { ITileSettings } from "./ITileSettings";
 
 
 export interface ILevelTile {

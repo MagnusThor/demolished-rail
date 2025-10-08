@@ -1,4 +1,6 @@
+import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { IGameEntity } from "../interface/IGameEntity";
+import { IPosition2D } from "../interface/IPosition2D";
 
 
 /**
@@ -34,4 +36,6 @@ export interface ICamera2D {
     follow(target: IGameEntity<any>): void; 
     update(delta: number): void;
     runEffect(name: string, intensity?: number): void;
+
+    position:IPoint2D
 }

@@ -1,6 +1,6 @@
-import { LevelEntity } from "../entities/level/levelEntity";
+import { LevelEntityRenderer } from "../entities/level/LevelEntityRenderer";
 import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
-import { ITileSettings } from "../interface/ILevelProps";
+import { ITileSettings } from "../interface/ITileSettings";
 import { GameState } from "../global/GameState";
 
 
@@ -16,7 +16,7 @@ export const bridgeCreator= (bag: any): ITileSettings =>  {
     activate: (self: TriggerZoneEntity) => {
         const { bag } = self.props.settings!;
         const { direction, bridgeTileIndex, wallTileIndex } = bag;
-        const { x, y } = self.props.positioned;
+        const { x, y } = self.props.position;
 
 
     
@@ -24,7 +24,7 @@ export const bridgeCreator= (bag: any): ITileSettings =>  {
         console.log(`Creating a bridge to the ${direction} from (${x}, ${y})`);
 
         // Get a reference to the level entity and ensure it has the update method
-        const levelEntity = GameState.currentLevel as LevelEntity;
+        const levelEntity = GameState.getInstance().currentLevel as LevelEntityRenderer;
         if (!levelEntity || typeof levelEntity.updateTileAt !== 'function') {
             console.error("LevelEntity not found or updateTileAt method is missing.");
             return;

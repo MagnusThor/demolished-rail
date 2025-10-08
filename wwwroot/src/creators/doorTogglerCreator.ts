@@ -1,5 +1,5 @@
 import { TriggerZoneEntity } from "../entities/triggerzone/triggerZoneEntity";
-import { ITileSettings } from "../interface/ILevelProps";
+import { ITileSettings } from "../interface/ITileSettings";
 import { GameState } from "../global/GameState";
 import { getTileRowCol } from "../utils/tileEntityHelpers";
 
@@ -51,7 +51,7 @@ export const doorTogglerCreator = (bag: any): ITileSettings => {
             const { doorX, doorY, closedTileType, openTileType, durationInSeconds } = settings;
 
             // Ensure the game state and level entity are available.
-            const levelEntity = GameState.currentLevel;
+            const levelEntity = GameState.getInstance().currentLevel;
             if (!levelEntity || typeof levelEntity.updateTileAt !== 'function') {
                 console.error("LevelEntity not found or updateTileAt method is missing.");
                 return;

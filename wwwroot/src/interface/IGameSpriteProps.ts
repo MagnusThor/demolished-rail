@@ -1,6 +1,6 @@
 import { IGameAsset } from "./IGameAsset";
 import { IGameEntity } from "./IGameEntity";
-import { Positioned } from "./IPositioned";
+import { Positioned } from "./IPosition2D";
 import { ISpriteAnimation } from "./ISpriteAnimation";
 
 

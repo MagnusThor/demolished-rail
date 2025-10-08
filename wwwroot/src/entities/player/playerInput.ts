@@ -13,7 +13,7 @@ import { PlayerEntity } from "./playerEntity";
 export const setupPlayerInput = (player: PlayerEntity) => {
     const props = player.props;
     const stateHelper = player.stateHelper;
-    const input = GameState.input!;
+    const input = GameState.getInstance().input!;
     const MOVE_SPEED = 4;
     const JUMP_SPEED = 8;
 

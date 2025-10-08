@@ -1,18 +1,80 @@
-import { IBoundingBox, IBoundingCircle } from "../../../interface/IBoundingBox";
-import { ICollisionResult } from "../../../interface/ICollisionResult";
-import { CollisionAxis } from "../../../enums/CollisionAxis";
-import { IPositioned } from "../../../interface/IPositioned";
+import { Point2D } from "../../../src";
+import { CollisionAxis } from "../enums/CollisionAxis";
+import { GameState } from "../global/GameState";
+import { IBoundingCircle, IBoundingBox } from "../interface/IBoundingBox";
+import { ICollisionResult } from "../interface/ICollisionResult";
+import { IPosition2D } from "../interface/IPosition2D";
 
-// A basic 2D point/vector class required for the pixel collision logic.
-class Point2D {
-    constructor(public x: number, public y: number) { }
 
-    length(): number {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-    }
-}
+
+
+// // A basic 2D point/vector class required for the pixel collision logic.
+// class Point2D {
+//     constructor(public x: number, public y: number) { }
+
+//     length(): number {
+//         return Math.sqrt(this.x * this.x + this.y * this.y);
+//     }
+// }
 
 export class ExtendedCollisionHelper {
+
+
+    
+
+
+    /**
+     * Visualizes a bounding box on the canvas for debugging or inspection purposes.
+     *
+     * Draws a rectangle representing the given bounding box, optionally with a label.
+     * The bounding box can be expanded or contracted by a scale offset. The box is
+     * rendered with a random bright color and a dashed outline for visibility.
+     *
+     * @param box - The bounding box to visualize, defined by its position and size.
+     * @param label - Optional label to display above the bounding box.
+     * @param scaleOffset - Optional value to expand (positive) or contract (negative) the bounding box. Defaults to 0.
+     */
+    static visualizeBBox(ctx:CanvasRenderingContext2D,box: IBoundingBox, label?: string, scaleOffset: number = 0) {
+  
+        
+        ctx.save();
+
+        // Random stroke color (bright, distinct)
+        const color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+        ctx.strokeStyle = color;
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 2;
+
+        // Apply scale offset (expand or contract)
+        const x = box.x - scaleOffset;
+        const y = box.y - scaleOffset;
+        const width = box.width + scaleOffset * 2;
+        const height = box.height + scaleOffset * 2;
+
+        // Draw the bounding box
+        ctx.strokeRect(x, y, width, height);
+
+        // Draw the label (if provided)
+        if (label) {
+            const padding = 2;
+            const labelHeight = 10;
+            ctx.font = '8px monospace';
+            ctx.textBaseline = 'top';
+            const textWidth = ctx.measureText(label).width;
+
+            // Semi-transparent background box
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(x, y - labelHeight, textWidth + padding * 2, labelHeight);
+
+            // Label text in the same color as the stroke
+            ctx.fillStyle = color;
+            ctx.fillText(label, x + padding, y - labelHeight + 1);
+        }
+
+        ctx.restore();
+    }
+
+
     /**
      * Checks for a collision between two rectangles and returns detailed collision data.
      */
@@ -268,12 +330,12 @@ export class ExtendedCollisionHelper {
  * This is useful for "interact" prompts or sound triggers, as it checks distance
  * from the center point of each entity.
  *
- * @param {IPositioned} entity1 - The first positioned entity.
- * @param {IPositioned} entity2 - The second positioned entity.
+ * @param {IPosition2D} entity1 - The first positioned entity.
+ * @param {IPosition2D} entity2 - The second positioned entity.
  * @param {number} radius - The proximity radius.
  * @returns {boolean} - True if entity1 is within the specified radius of entity2, otherwise false.
  */
-    static checkProximity(entity1: IPositioned, entity2: IPositioned, radius: number): boolean {
+    static checkProximity(entity1: IPosition2D, entity2: IPosition2D, radius: number): boolean {
         // Calculate the center coordinates of each entity.
         const center1X = entity1.x + entity1.width / 2;
         const center1Y = entity1.y + entity1.height / 2;

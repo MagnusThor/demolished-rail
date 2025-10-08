@@ -4,7 +4,7 @@ import { IGameEntityBehavior } from "../../../interface/IGameEntity";
 import { TileDefinitions } from "../../../factory/TileDefinitions";
 import { GameState } from "../../../global/GameState";
 import { getSurroundingTiles, isSolidTile, getTileProperties } from "../../../utils/tileEntityHelpers";
-import { LevelEntity } from "../../level/levelEntity";
+import { LevelEntityRenderer } from "../../level/LevelEntityRenderer";
 import { EnemyEntity } from "../enemyEntity";
 
 
@@ -29,8 +29,8 @@ export const EnemyGuardingBehavior = (waitTimeInSeconds: number): IGameEntityBeh
             const currentState = stateHelper.get<string>("state");
 
             // Look for a player to see if we should override the behavior.
-            const player = GameState.player!;
-            const distance = player.props.positioned.toPoint2D().distanceTo(props.positioned.toPoint2D());
+            const player = GameState.getInstance().player!;
+            const distance = player.props.position.toPoint2D().distanceTo(props.position.toPoint2D());
             if (distance < 200) {
                 // Here, you could transition to a "chasing" or "attacking" behavior
                 // For now, we'll just stop the guard behavior.
@@ -42,14 +42,14 @@ export const EnemyGuardingBehavior = (waitTimeInSeconds: number): IGameEntityBeh
             switch (currentState) {
                 case "patrolling": {
                     // Get the level entity for tile look-ups
-                    const levelEntity = GameState.findEntities("tileBlock")[0] as LevelEntity;
+                    const levelEntity = GameState.getInstance().findEntities("tileBlock")[0] as LevelEntityRenderer;
                     if (!levelEntity) {
                         console.error("Level entity not found in game state.");
                         return;
                     }
 
                     // Create a small "look-ahead" bounding box a few pixels in the direction of movement
-                    const enemyBbox = props.positioned.getBoundingBox!();
+                    const enemyBbox = props.position.getBoundingBox!();
                     const direction = stateHelper.get<number>("direction")!;
                     const lookAheadX = direction > 0 ? enemyBbox.x + enemyBbox.width + 5 : enemyBbox.x - 5;
                     const lookAheadBbox: IBoundingBox = {

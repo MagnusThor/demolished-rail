@@ -1,5 +1,5 @@
 import { IGameEntity, IGameEntityBase } from "./IGameEntity";
-import { IPositioned } from "./IPositioned";
+import { IPosition2D } from "./IPosition2D";
 /**
  * Represents the properties of a platform object.
  *
@@ -11,7 +11,7 @@ import { IPositioned } from "./IPositioned";
  * @property color - The color of the platform, as a string.
  */
 export interface IPlatformProps extends IGameEntityBase {
-    positioned: IPositioned
+    position: IPosition2D
     velY: number;
     minY: number;
     maxY: number;

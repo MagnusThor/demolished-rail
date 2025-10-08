@@ -1,14 +1,14 @@
 import { CanvasHelper } from "../../../../src/Engine/Helpers/CanvasHelper";
 import { IBoundingBox } from "../../interface/IBoundingBox";
 import { IGameEntity, IGameEntityBase } from "../../interface/IGameEntity";
-import { IPositioned, Positioned } from "../../interface/IPositioned";
+import { IPosition2D, Positioned } from "../../interface/IPosition2D";
 import { GameEntity } from "../GameEntity";
 import { CollisionHelper } from "../../../../src/Engine/Helpers/CollisionHelper";
 import { ICollisionResult } from "../../interface/ICollisionResult";
 import { CollisionAxis } from "../../enums/CollisionAxis";
 import { isSolidTile, getTileProperties } from "../../utils/tileEntityHelpers";
 import { runCollitionDetectors } from "../../utils/collitionHelpers";
-import { LevelEntity  } from "../level/levelEntity";
+import { LevelEntityRenderer  } from "../level/LevelEntityRenderer";
 import { PlayerEntity } from "../player/playerEntity";
 
 /**
@@ -16,7 +16,7 @@ import { PlayerEntity } from "../player/playerEntity";
  * Includes properties for movement, color, and lifespan.
  */
 export interface IBeamProps extends IGameEntityBase {
-    positioned: IPositioned;
+    position: IPosition2D;
     isInitialized: boolean;
     states: { [key: string]: any };
     zIndex: number;
@@ -38,7 +38,7 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
     constructor(x: number, y: number, direction: number) {
         const props: IBeamProps = {
             // Position the beam as a small rectangle
-            positioned: new Positioned(x, y, 40, 10),
+            position: new Positioned(x, y, 40, 10),
             zIndex: 30, // High zIndex to appear on top of other elements
             isInitialized: true,
             states: {
@@ -64,8 +64,8 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
             {
                 targetName: "playerBlock",
                 detectorFn: (beam: BeamEntity, player: PlayerEntity) => {
-                    const beamBBox = beam.props.positioned.getBoundingBox!();
-                    const playerBBox = player.props.positioned.getBoundingBox!();
+                    const beamBBox = beam.props.position.getBoundingBox!();
+                    const playerBBox = player.props.position.getBoundingBox!();
                     // Check for a collision between the beam and the player's bounding box.
                     if (CollisionHelper.AABBColliding(beamBBox, playerBBox)) {
                         return [{
@@ -91,7 +91,7 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
      * @param self The current instance of the BeamEntity.
      */
     getBoundingBox = (self: IGameEntity<IBeamProps>): IBoundingBox => {
-        return self.props.positioned.getBoundingBox!();
+        return self.props.position.getBoundingBox!();
     };
 
     /**
@@ -108,7 +108,7 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
         const props = self.props;
 
         // Move the beam horizontally based on its direction and speed
-        props.positioned.x += props.speed * props.direction;
+        props.position.x += props.speed * props.direction;
 
         // Change the hue of the beam over time for a cycling color effect
         props.hue = (props.hue + 5) % 360;
@@ -130,10 +130,10 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
         
         // Draw the beam as a filled rectangle
         ctx.fillRect(
-            props.positioned.x,
-            props.positioned.y,
-            props.positioned.width,
-            props.positioned.height
+            props.position.x,
+            props.position.y,
+            props.position.width,
+            props.position.height
         );
 
         ctx.restore();
@@ -146,11 +146,11 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
      * @param tileEntity The Level entity containing the tile map.
      * @returns An array of collision results or false if no collision.
      */
-    private detectTileCollision(beamEntity: BeamEntity, tileEntity: LevelEntity ): ICollisionResult[] | false {
+    private detectTileCollision(beamEntity: BeamEntity, tileEntity: LevelEntityRenderer ): ICollisionResult[] | false {
         const beamProps = beamEntity.props;
         const tileProps = tileEntity.props;
         const collisionResults = new Array<ICollisionResult>();
-        const beamBBox = beamProps.positioned.getBoundingBox!();
+        const beamBBox = beamProps.position.getBoundingBox!();
 
         // Calculate the tile coordinates for both the current and the next potential tile
         const currentTileCol = Math.floor(beamBBox.x / tileProps.tileWidth);
@@ -206,8 +206,8 @@ export class BeamEntity extends GameEntity<IBeamProps> implements IGameEntity<IB
     private handleTileCollision(beam: BeamEntity, collisionData: ICollisionResult): void {
         const selfProps = beam.props;
         // "Restart" the beam by resetting its position to its origin
-        selfProps.positioned.x = selfProps.initialX;
-        selfProps.positioned.y = selfProps.initialY;
+        selfProps.position.x = selfProps.initialX;
+        selfProps.position.y = selfProps.initialY;
         
         // Signal the game engine to spawn a new beam
         selfProps.states.spawnNewBeam = true;

@@ -14,6 +14,9 @@ import { IGameAsset } from "./IGameAsset";
 export interface ISpriteSheetAsset extends IGameAsset {
     frameWidth: number;
     frameHeight: number;
+    renderWidth: number;
+    renderHeight: number;
+    scale: number;
     columns: number;
     rows: number;
     frameCount: number;

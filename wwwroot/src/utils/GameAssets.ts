@@ -55,7 +55,7 @@ export class GameAssetsManager {
 
         const filename = url.split("/").pop()!;
         if (this.assets.has(filename)) {
-            return this.assets.get(filename)!.src;
+            return this.assets.get(filename)!.data!;
         }
 
         return new Promise((resolve, reject) => {
@@ -63,7 +63,7 @@ export class GameAssetsManager {
             img.src = url;
 
             img.onload = () => {
-                this.assets.set(key, { src: img, key: key });
+                this.assets.set(key, { data: img!, key: key });
 
                 resolve(img);
             };
@@ -113,23 +113,22 @@ export class GameAssetsManager {
 
         // Draw cropped part of the source image into canvas
         ctx.drawImage(
-            asset.src,
+            asset.data!,
             srcX, srcY, srcWidth, srcHeight, // source rect
             0, 0, srcWidth, srcHeight        // destination rect
         );
 
         const generatedTexture = new Image();
-    generatedTexture.src = canvas.toDataURL(); // base64 encoded PNG
-
+        generatedTexture.src = canvas.toDataURL(); // base64 encoded PNG
 
         const properties: IGameTexture = {
 
            generatedTexture,
-            texture: asset,
+            asset: asset,
             key: textureKey,
             imageData:
                 createImageData ?
-                    this.getTileCollisionMaskFromArt(this.getImageData(asset.src, srcX, srcY, srcWidth, srcHeight)) : undefined,
+                    this.getTileCollisionMaskFromArt(this.getImageData(asset.data, srcX, srcY, srcWidth, srcHeight)) : undefined,
             x: srcX,
             y: srcY,
             width: srcWidth,
@@ -194,36 +193,58 @@ export class GameAssetsManager {
     }
 
     public getSpriteSheet(
-        key: string,
-        frameWidth: number,
-        frameHeight: number,
-        columns: number,
-        rows: number
-    ): ISpriteSheetAsset | undefined {
-        const asset = this.assets.get(key);
-        if (!asset) {
-            console.error(`Asset with key "${key}" not found. Did you forget to load the image first?`);
-            return undefined;
-        }
-        // Calculate the total number of frames based on columns and rows
-        const frameCount = columns * rows;
-        // Create the sprite sheet asset object
-        const spriteSheetAsset: ISpriteSheetAsset = {
-            src: asset.src, // Use the already loaded image
-            key: key,
-            frameWidth: frameWidth,
-            frameHeight: frameHeight,
-            columns: columns,
-            rows: rows,
-            frameCount: frameCount
-        };
-
-
-        this.assets.set(key, spriteSheetAsset);
-
-
-        return spriteSheetAsset;
+    key: string,
+    frameWidth: number,
+    frameHeight: number,
+    columns: number,
+    rows: number,
+    options?: {
+        renderWidth?: number;
+        renderHeight?: number;
+        scale?: number;
+        maxRenderHeight?: number;
     }
+): ISpriteSheetAsset | undefined {
+    const asset = this.assets.get(key);
+    if (!asset) {
+        console.error(`Asset with key "${key}" not found. Did you forget to load the image first?`);
+        return undefined;
+    }
+
+    const frameCount = columns * rows;
+
+    let { renderWidth, renderHeight, scale, maxRenderHeight } = options ?? {};
+
+    // Automatically determine scale based on max height
+    if (maxRenderHeight && !scale) {
+        scale = maxRenderHeight / frameHeight;
+    }
+
+    // Default scale = 1 if none given
+    scale ??= 1;
+
+    // Compute render dimensions
+    const effectiveRenderWidth = renderWidth ?? frameWidth * scale;
+    const effectiveRenderHeight = renderHeight ?? frameHeight * scale;
+
+    const spriteSheetAsset: ISpriteSheetAsset = {
+        data: asset.data,
+        key,
+        frameWidth,
+        frameHeight,
+        renderWidth: effectiveRenderWidth,
+        renderHeight: effectiveRenderHeight,
+        scale,
+        columns,
+        rows,
+        frameCount,
+    };
+
+    this.assets.set(key, spriteSheetAsset);
+    return spriteSheetAsset;
+}
+
+    
 }
 
 

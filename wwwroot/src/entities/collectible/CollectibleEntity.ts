@@ -9,7 +9,7 @@ import { ICollisionResult } from "../../interface/ICollisionResult";
 import { IGameEntity } from "../../interface/IGameEntity";
 import { ILevelProps } from "../../interface/ILevelProps";
 import { IPlayerProps } from "../../interface/IPlayerProps";
-import { Positioned } from "../../interface/IPositioned";
+import { Positioned } from "../../interface/IPosition2D";
 import { GameEntity } from "../GameEntity";
 
 /**
@@ -27,7 +27,7 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> {
         super(
             "collectibleBlock",
             {
-                positioned: new Positioned(x, y, CollectibleEntity.COLLECTIBLE_WIDTH, CollectibleEntity.COLLECTIBLE_HEIGHT),
+                position: new Positioned(x, y, CollectibleEntity.COLLECTIBLE_WIDTH, CollectibleEntity.COLLECTIBLE_HEIGHT),
                 collitionRadius: CollectibleEntity.COLLECTIBLE_RADIUS,
 
                 isInitialized: false,
@@ -52,8 +52,8 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> {
 
     getBoundingBox = (self: IGameEntity<ICollectibleProps>): IBoundingBox => {
         return {
-            x: self.props.positioned.x - self.props.collitionRadius,
-            y: self.props.positioned.y - self.props.collitionRadius,
+            x: self.props.position.x - self.props.collitionRadius,
+            y: self.props.position.y - self.props.collitionRadius,
             width: self.props.collitionRadius * 2,
             height: self.props.collitionRadius * 2,
         };
@@ -72,8 +72,8 @@ export class CollectibleEntity extends GameEntity<ICollectibleProps> {
         const props = self.props;
         helper.drawAnimatedSprite(
             props.animation,
-            props.positioned.x + props.positioned.width / 2,
-            props.positioned.y,
+            props.position.x + props.position.width / 2,
+            props.position.y,
             performance.now()
         );
     }

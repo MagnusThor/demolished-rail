@@ -2,8 +2,10 @@ import { IPoint2D } from "../../../src/Engine/Helpers/Math/Point2D";
 import { IBoundingBox } from "../interface/IBoundingBox";
 import { IGameEntity } from "../interface/IGameEntity";
 import { IIndexedTile } from "../interface/IIndexedTile";
-import { ILevelProps, ITileProps } from "../interface/ILevelProps";
-import { DEFAULT_TILE_WIDTH, DEFULT_TILE_HEIGHT } from "../factory/LevelGraph";
+import { ILevelProps } from "../interface/ILevelProps";
+import { ITileProps } from "../interface/ITileProps";
+import { ITileSettings } from "../interface/ITileSettings";
+
 import { TileDefinitions } from "../factory/TileDefinitions";
 import { isEntityInView } from "./collitionHelpers";
 
@@ -119,8 +121,8 @@ export const getTilesByType = (tileMap: number[][], type: number): IPoint2D[] =>
 
 
 export const getTileXY = (tileMap: number[][], row: number, col: number): IPoint2D => {
-    const tileWidth = DEFAULT_TILE_WIDTH;
-    const tileHeight = DEFULT_TILE_HEIGHT;
+    const tileWidth = 32;
+    const tileHeight = 32;
     const tileId = tileMap[row][col];
     const tileProperties = getTileProperties(tileId);
     if (!tileProperties) {
@@ -292,8 +294,8 @@ export const getTileAtPoint = (tileMap: number[][], worldX: number, worldY: numb
         return null;
     }
     // Use the default tile dimensions for calculation.
-    const tileWidth = DEFAULT_TILE_WIDTH;
-    const tileHeight = DEFULT_TILE_HEIGHT;
+    const tileWidth = 32;
+    const tileHeight = 32;
 
     // Convert world coordinates to tile grid coordinates
     const col = Math.floor(worldX / tileWidth);
@@ -352,3 +354,9 @@ export const tileBoxCollision = (boxA: IBoundingBox, boxB: IBoundingBox): boolea
         boxA.y < boxB.y + boxB.height &&
         boxA.y + boxA.height > boxB.y;
 }
+
+
+export function getUnderlayingtileSettings(settings:ITileSettings[],x: number, y: number): ITileSettings | undefined {
+    return settings.find(pre => pre.x === x && pre.y === y);
+ }
+

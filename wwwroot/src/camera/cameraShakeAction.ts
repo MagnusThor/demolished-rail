@@ -17,5 +17,6 @@ export const cameraShakeAction = (effect: IActiveCameraEffect, delta: number): {
     const offsetX = (Math.random() - 0.5) * randomFactor * intensity;
     const offsetY = (Math.random() - 0.5) * randomFactor * intensity;
 
+
     return { x: offsetX, y: offsetY };
 };
